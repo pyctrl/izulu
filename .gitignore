@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Tests
+.tox/
+
+# Coverage
+cover/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# C extensions
+*.so
+
+# Editors
+*~
+
+# IDE
+.idea/
+
+# MacOS
+.DS_Store
+
+# Virtual enviroments
+.venv
+venv
+
+# Packaging
+dist/
+*.egg-info/
