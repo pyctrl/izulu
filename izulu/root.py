@@ -1,13 +1,21 @@
 import copy
+import enum
 import functools
 import typing as t
 
 from izulu import _utils
 
 
+class CheckFlags(enum.Flag):
+    MISSING_FIELDS = enum.auto()
+    UNDECLARED_FIELDS = enum.auto()
+
+    DEFAULT = MISSING_FIELDS | UNDECLARED_FIELDS
+
+
 class Error(Exception):
-    _template_ = "Unknown exception (strict root)"
-    _strict_ = True
+    _template_ = "Unknown exception"
+    _checks_ = CheckFlags.DEFAULT
 
     __fields = __hints = frozenset()  # type: ignore[var-annotated]
     __registered = __defaults = frozenset()  # type: ignore[var-annotated]
@@ -29,11 +37,18 @@ class Error(Exception):
         super().__init__(self.__msg)
 
     def __validate_kwargs(self, kwargs: dict[str, t.Any]) -> None:
+        if not self._checks_:
+            return
+
         kws = frozenset(kwargs)
-        if missing := (self.__registered - self.__defaults - kws):
-            raise TypeError(f"Missing arguments: {_utils.join(missing)}")
-        if self._strict_ and (undeclared := (kws - self.__registered)):
-            raise TypeError(f"Undeclared arguments: {_utils.join(undeclared)}")
+        if CheckFlags.MISSING_FIELDS in self._checks_:
+            if missing := (self.__registered - self.__defaults - kws):
+                raise TypeError(f"Missing arguments: {_utils.join(missing)}")
+
+        if CheckFlags.UNDECLARED_FIELDS in self._checks_:
+            if undeclared := (kws - self.__registered):
+                msg = f"Undeclared arguments: {_utils.join(undeclared)}"
+                raise TypeError(msg)
 
     def __set_attrs(self, kwargs: dict[str, t.Any]) -> None:
         for k, v in kwargs.items():
@@ -61,9 +76,6 @@ class Error(Exception):
         parent[1] = tuple()
         return tuple(parent)
 
-    def is_strict(self) -> bool:
-        return self._strict_
-
     def get_message(self) -> str:
         return self.__msg
 
@@ -73,11 +85,6 @@ class Error(Exception):
             for field in self.__defaults:
                 kwargs.setdefault(field, getattr(self, field))
         return kwargs
-
-
-class LaxError(Error):
-    _template_ = "Unknown exception (lax root)"
-    _strict_ = False
 
 
 def factory(func, self: bool = False) -> functools.cached_property:
