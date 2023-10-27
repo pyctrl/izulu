@@ -6,16 +6,16 @@ import typing as t
 from izulu import _utils
 
 
-class CheckFlags(enum.Flag):
-    MISSING_FIELDS = enum.auto()
-    UNDECLARED_FIELDS = enum.auto()
+class Features(enum.Flag):
+    FORBID_MISSING_FIELDS = enum.auto()
+    FORBID_UNDECLARED_FIELDS = enum.auto()
 
-    DEFAULT = MISSING_FIELDS | UNDECLARED_FIELDS
+    DEFAULT = FORBID_MISSING_FIELDS | FORBID_UNDECLARED_FIELDS
 
 
 class Error(Exception):
     _template_ = "Unknown exception"
-    _checks_ = CheckFlags.DEFAULT
+    _features_ = Features.DEFAULT
 
     __fields = __hints = frozenset()  # type: ignore[var-annotated]
     __registered = __defaults = frozenset()  # type: ignore[var-annotated]
@@ -37,15 +37,15 @@ class Error(Exception):
         super().__init__(self.__msg)
 
     def __validate_kwargs(self, kwargs: dict[str, t.Any]) -> None:
-        if not self._checks_:
+        if not self._features_:
             return
 
         kws = frozenset(kwargs)
-        if CheckFlags.MISSING_FIELDS in self._checks_:
+        if Features.FORBID_MISSING_FIELDS in self._features_:
             if missing := (self.__registered - self.__defaults - kws):
                 raise TypeError(f"Missing arguments: {_utils.join(missing)}")
 
-        if CheckFlags.UNDECLARED_FIELDS in self._checks_:
+        if Features.FORBID_UNDECLARED_FIELDS in self._features_:
             if undeclared := (kws - self.__registered):
                 msg = f"Undeclared arguments: {_utils.join(undeclared)}"
                 raise TypeError(msg)
