@@ -32,8 +32,7 @@ class Error(Exception):
         self.__kwargs = kwargs
         self.__validate_kwargs(self.__kwargs)
         self.__set_attrs(self.__kwargs)
-        # evaluate factories with *enriched* `.get_kwargs()`
-        self.__msg = self._template_.format(**self.get_kwargs(True))
+        self.__msg = self._template_.format(**self.as_dict())
         super().__init__(self.__msg)
 
     def __validate_kwargs(self, kwargs: dict[str, t.Any]) -> None:
@@ -85,6 +84,9 @@ class Error(Exception):
             for field in self.__defaults:
                 kwargs.setdefault(field, getattr(self, field))
         return kwargs
+
+    def as_dict(self) -> dict[str, t.Any]:
+        return self.get_kwargs(True)
 
 
 def factory(func, self: bool = False) -> functools.cached_property:
