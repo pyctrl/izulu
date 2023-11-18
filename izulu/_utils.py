@@ -10,6 +10,14 @@ def join_kwargs(**kwargs: t.Any) -> str:
     return join(f"{k!s}={v!r}" for k, v in kwargs.items())
 
 
-def extract_fields(template: str) -> tuple[str, ...]:
+def extract_fields(template: str) -> t.Generator[str, None, None]:
     parsed = string.Formatter().parse(template)
-    return tuple(fn for _, fn, _, _ in parsed if fn is not None)
+    for _, fn, _, _ in parsed:
+        if fn is not None:
+            yield fn
+
+
+def extract_hints(klass: type) -> t.Generator[str, None, None]:
+    for field in t.get_type_hints(klass):
+        if field is not t.ClassVar:
+            yield field

@@ -79,7 +79,7 @@ class ExtractFieldsTestCase(unittest.TestCase):
         tpl = "Having boring message here"
         expected = tuple()
 
-        result = _utils.extract_fields(tpl)
+        result = tuple(_utils.extract_fields(tpl))
 
         self.assertEqual(result, expected)
 
@@ -87,7 +87,7 @@ class ExtractFieldsTestCase(unittest.TestCase):
         tpl = "Hello {you}!"
         expected = ("you",)
 
-        result = _utils.extract_fields(tpl)
+        result = tuple(_utils.extract_fields(tpl))
 
         self.assertEqual(result, expected)
 
@@ -95,7 +95,7 @@ class ExtractFieldsTestCase(unittest.TestCase):
         tpl = "Hello {you}! How are you, {you}"
         expected = ("you", "you")
 
-        result = _utils.extract_fields(tpl)
+        result = tuple(_utils.extract_fields(tpl))
 
         self.assertEqual(result, expected)
 
@@ -103,6 +103,6 @@ class ExtractFieldsTestCase(unittest.TestCase):
         tpl = "{owner}: Having count={count} for owner={owner}"
         expected = ("owner", "count", "owner")
 
-        result = _utils.extract_fields(tpl)
+        result = tuple(_utils.extract_fields(tpl))
 
         self.assertEqual(result, expected)

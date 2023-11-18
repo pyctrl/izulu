@@ -14,16 +14,18 @@ class Features(enum.Flag):
 
 
 class Error(Exception):
-    _template_ = "Unknown exception"
-    _features_ = Features.DEFAULT
+    _template_: t.ClassVar[str] = "Unknown exception"
+    _features_: t.ClassVar[Features] = Features.DEFAULT
 
-    __fields = __hints = frozenset()  # type: ignore[var-annotated]
-    __registered = __defaults = frozenset()  # type: ignore[var-annotated]
+    __fields: t.ClassVar[frozenset[str]]
+    __hints: t.ClassVar[frozenset[str]]
+    __registered: t.ClassVar[frozenset[str]]
+    __defaults: t.ClassVar[frozenset[str]]
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         super().__init_subclass__(**kwargs)
         cls.__fields = frozenset(_utils.extract_fields(cls._template_))
-        cls.__hints = frozenset(t.get_type_hints(cls))
+        cls.__hints = frozenset(_utils.extract_hints(cls))
         cls.__registered = cls.__hints | cls.__fields
         cls.__defaults = frozenset(attr for attr in cls.__hints
                                    if hasattr(cls, attr))
