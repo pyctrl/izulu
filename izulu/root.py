@@ -14,8 +14,8 @@ class Features(enum.Flag):
 
 
 class Error(Exception):
-    _template_: t.ClassVar[str] = "Unknown exception"
-    _features_: t.ClassVar[Features] = Features.DEFAULT
+    __template__: t.ClassVar[str] = "Unknown exception"
+    __features__: t.ClassVar[Features] = Features.DEFAULT
 
     __fields: t.ClassVar[frozenset[str]]
     __hints: t.ClassVar[frozenset[str]]
@@ -24,7 +24,7 @@ class Error(Exception):
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         super().__init_subclass__(**kwargs)
-        cls.__fields = frozenset(_utils.extract_fields(cls._template_))
+        cls.__fields = frozenset(_utils.extract_fields(cls.__template__))
         cls.__hints = frozenset(_utils.extract_hints(cls))
         cls.__registered = cls.__hints | cls.__fields
         cls.__defaults = frozenset(attr for attr in cls.__hints
@@ -32,21 +32,21 @@ class Error(Exception):
 
     def __init__(self, **kwargs: t.Any) -> None:
         self.__kwargs = kwargs
-        self.__validate_kwargs(self.__kwargs)
+        self._validate_kwargs(self.__kwargs)
         self.__set_attrs(self.__kwargs)
-        self.__msg = self._template_.format(**self.as_dict())
+        self.__msg = self.__template__.format(**self.as_dict())
         super().__init__(self.__msg)
 
-    def __validate_kwargs(self, kwargs: dict[str, t.Any]) -> None:
-        if not self._features_:
+    def _validate_kwargs(self, kwargs: dict[str, t.Any]) -> None:
+        if not self.__features__:
             return
 
         kws = frozenset(kwargs)
-        if Features.FORBID_MISSING_FIELDS in self._features_:
+        if Features.FORBID_MISSING_FIELDS in self.__features__:
             if missing := (self.__registered - self.__defaults - kws):
                 raise TypeError(f"Missing arguments: {_utils.join(missing)}")
 
-        if Features.FORBID_UNDECLARED_FIELDS in self._features_:
+        if Features.FORBID_UNDECLARED_FIELDS in self.__features__:
             if undeclared := (kws - self.__registered):
                 msg = f"Undeclared arguments: {_utils.join(undeclared)}"
                 raise TypeError(msg)
