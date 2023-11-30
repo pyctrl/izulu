@@ -37,7 +37,7 @@ Walkthrough: step by step guide
 ::
 
    class MyError(root.Error):
-       _template_ = "Having count={count} for owner={owner}"
+       __template__ = "Having count={count} for owner={owner}"
 
 
    print(MyError(count=10, owner="me"))
@@ -59,7 +59,7 @@ Walkthrough: step by step guide
 ::
 
    class MyError(root.Error):
-       _template_ = "Having count={count} for owner={owner}"
+       __template__ = "Having count={count} for owner={owner}"
        count: int
        timestamp: datetime.datetime
 
@@ -87,7 +87,7 @@ Walkthrough: step by step guide
 ::
 
    class MyError(root.Error):
-       _template_ = "Having count={count} for owner={owner}"
+       __template__ = "Having count={count} for owner={owner}"
        count: int
        owner: str = "nobody"
        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
@@ -114,7 +114,7 @@ Walkthrough: step by step guide
 ::
 
    class MyError(root.Error):
-       _template_ = "Having count={count} for owner={owner}"
+       __template__ = "Having count={count} for owner={owner}"
 
        def __make_duration(self) -> datetime.timedelta:
            return self.timestamp - self.begin
@@ -145,7 +145,7 @@ alternate syntax without method
        return self.timestamp - self.begin
 
    class MyError(root.Error):
-       _template_ = "Having count={count} for owner={owner}"
+       __template__ = "Having count={count} for owner={owner}"
 
        count: int
        begin: datetime.datetime
@@ -183,11 +183,11 @@ And ``LaxError`` is tolerant to undefined *kwargs* - it mainly ignores them
 ::
 
    class MyQuietError(root.LaxError):
-       _template_ = "Having count={count} for owner={owner}"
+       __template__ = "Having count={count} for owner={owner}"
 
 
    class MyLoudError(root.Error):
-       _template_ = "Having count={count} for owner={owner}"
+       __template__ = "Having count={count} for owner={owner}"
 
 
    print(MyQuietError(count=10, owner="me", undefined_field="you don't know me"))
@@ -206,7 +206,7 @@ String representations
 ::
 
    class MyError(root.Error):
-       _template_ = "Having count={count} for owner={owner}"
+       __template__ = "Having count={count} for owner={owner}"
        count: int
        owner: str = "nobody"
        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
