@@ -39,7 +39,7 @@ class Error(Exception):
         self.__populate_attrs()
         data = self.as_dict()
         msg = self.__process_template(data)
-        msg = self._hook(store=self.__cls_store, kwargs=kwargs, msg=msg)
+        msg = self._hook(self.__cls_store, kwargs, msg)
         super().__init__(msg)
 
     def __process_features(self):
