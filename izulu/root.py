@@ -38,10 +38,9 @@ class Error(Exception):
         self.__process_features()
         self.__populate_attrs()
         data = self.as_dict()
-        message = self._process_user(store=self.__cls_store,
-                                     kwargs=kwargs,
-                                     message=self.__process_template(data))
-        super().__init__(message)
+        msg = self.__process_template(data)
+        msg = self._hook(store=self.__cls_store, kwargs=kwargs, msg=msg)
+        super().__init__(msg)
 
     def __process_features(self):
         store = self.__cls_store
@@ -82,11 +81,11 @@ class Error(Exception):
                    + _utils.join_kwargs(**self.__kwargs))
             raise ValueError(msg) from e
 
-    def _process_user(self,
-                      store: _utils.Store,
-                      kwargs: dict[str, t.Any],
-                      message: str) -> str:
-        return message
+    def _hook(self,
+              store: _utils.Store,
+              kwargs: dict[str, t.Any],
+              msg: str) -> str:
+        return msg
 
     def __repr__(self) -> str:
         kwargs = _utils.join_kwargs(**self.as_dict())
