@@ -21,7 +21,12 @@ class Error(Exception):
     __template__: t.ClassVar[str] = "Unspecified error"
     __features__: t.ClassVar[Features] = Features.DEFAULT
 
-    __cls_store: t.ClassVar[_utils.Store]
+    __cls_store: t.ClassVar[_utils.Store] = (
+        _utils.Store(fields=frozenset(),
+                     hints=types.MappingProxyType({}),
+                     registered=frozenset(),
+                     defaults=frozenset())
+    )
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         super().__init_subclass__(**kwargs)
