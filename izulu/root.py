@@ -47,7 +47,7 @@ class Error(Exception):
         msg = self._hook(self.__cls_store, kwargs, msg)
         super().__init__(msg)
 
-    def __process_features(self):
+    def __process_features(self) -> None:
         store = self.__cls_store
         kws = frozenset(self.__kwargs)
 
@@ -73,12 +73,12 @@ class Error(Exception):
                 msg = "Unexpected types: " + _utils.join(chunks, ";")
                 raise TypeError(msg)  # ? exc type
 
-    def __populate_attrs(self):
+    def __populate_attrs(self) -> None:
         for k, v in self.__kwargs.items():
             if k in self.__cls_store.hints:
                 setattr(self, k, v)
 
-    def __process_template(self, data) -> str:
+    def __process_template(self, data: dict[str, t.Any]) -> str:
         try:
             return self.__template__.format(**data)
         except Exception as e:  # ?
@@ -96,16 +96,16 @@ class Error(Exception):
         kwargs = _utils.join_kwargs(**self.as_dict())
         return f"{self.__class__.__name__}({kwargs})"
 
-    def __copy__(self):
+    def __copy__(self) -> "Error":
         return type(self)(**self.as_dict())
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo) -> "Error":
         if self not in memo:
-            kwargs = {k: copy.deepcopy(v) for k, v in self.as_dict()}
+            kwargs = {k: copy.deepcopy(v) for k, v in self.as_dict().items()}
             memo[self] = type(self)(**kwargs)
         return memo[self]
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple[t.Any, ...]:
         parent = list(super().__reduce__())
         parent[1] = tuple()
         return tuple(parent)
