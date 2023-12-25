@@ -96,10 +96,10 @@ class Error(Exception):
         kwargs = _utils.join_kwargs(**self.as_dict())
         return f"{self.__class__.__name__}({kwargs})"
 
-    def __copy__(self) -> "Error":
+    def __copy__(self) -> t.Self:
         return type(self)(**self.as_dict())
 
-    def __deepcopy__(self, memo) -> "Error":
+    def __deepcopy__(self, memo) -> t.Self:
         if self not in memo:
             kwargs = {k: copy.deepcopy(v) for k, v in self.as_dict().items()}
             memo[self] = type(self)(**kwargs)
