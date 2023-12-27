@@ -1,30 +1,20 @@
-import unittest
 from unittest import mock
 import uuid
+
+import pytest
 
 from izulu import root
 
 
-class FactoryTestCase(unittest.TestCase):
+@pytest.mark.parametrize("flag", (True, False))
+def test_factory(flag):
+    expected = uuid.uuid4()
+    m = mock.Mock(return_value=expected)
+    attr = root.factory(m, self=flag)
+    k = type("Klass", tuple(), {"attr_with_self": attr})()
+    call_args = (k,)
 
-    def test_with_self(self):
-        expected = uuid.uuid4()
-        m = mock.Mock(return_value=expected)
-        attr = root.factory(m, self=True)
-        k = type("Klass", tuple(), {"attr_with_self": attr})()
+    result = k.attr_with_self
 
-        result = k.attr_with_self
-
-        self.assertIs(result, expected)
-        m.assert_called_once_with(k)
-
-    def test_without_self(self):
-        expected = uuid.uuid4()
-        m = mock.Mock(return_value=expected)
-        attr = root.factory(m)
-        k = type("Klass", tuple(), {"attr_with_self": attr})()
-
-        result = k.attr_with_self
-
-        self.assertIs(result, expected)
-        m.assert_called_once_with()
+    assert result is expected
+    m.assert_called_once_with(*call_args[:flag])
