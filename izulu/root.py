@@ -54,12 +54,12 @@ class Error(Exception):
         if Features.FORBID_MISSING_FIELDS in self.__features__:
             if missing := (store.registered - store.defaults - kws):
                 msg = f"Missing arguments: {_utils.join(missing)}"
-                raise TypeError(msg)  # ? exc type
+                raise TypeError(msg)
 
         if Features.FORBID_UNDECLARED_FIELDS in self.__features__:
             if undeclared := (kws - store.registered):
                 msg = f"Undeclared arguments: {_utils.join(undeclared)}"
-                raise TypeError(msg)  # ? exc type
+                raise TypeError(msg)
 
         if Features.FORBID_WRONG_TYPES in self.__features__:
             errors = []
@@ -71,7 +71,7 @@ class Error(Exception):
                 tpl = "field '{}' must be '{}' but is '{}'"
                 chunks = (tpl.format(*err) for err in errors)
                 msg = "Unexpected types: " + _utils.join(chunks, ";")
-                raise TypeError(msg)  # ? exc type
+                raise TypeError(msg)
 
     def __populate_attrs(self) -> None:
         for k, v in self.__kwargs.items():
@@ -100,10 +100,12 @@ class Error(Exception):
         return type(self)(**self.as_dict())
 
     def __deepcopy__(self, memo) -> t.Self:
-        if self not in memo:
-            kwargs = {k: copy.deepcopy(v) for k, v in self.as_dict().items()}
-            memo[self] = type(self)(**kwargs)
-        return memo[self]
+        _id = id(self)
+        if _id not in memo:
+            kwargs = {k: copy.deepcopy(v, memo)
+                      for k, v in self.as_dict().items()}
+            memo[_id] = type(self)(**kwargs)
+        return t.cast(t.Self, memo[_id])
 
     def __reduce__(self) -> tuple[t.Any, ...]:
         parent = list(super().__reduce__())
@@ -123,6 +125,9 @@ class Error(Exception):
         return d
 
 
-def factory(func, self: bool = False) -> functools.cached_property:
-    target = func if self else (lambda obj: func())
+def factory(func: t.Callable[..., t.Any],
+            self: bool = False
+            ) -> functools.cached_property:
+    target = t.cast(t.Callable[[t.Any], t.Any],
+                    func if self else (lambda obj: func()))
     return functools.cached_property(target)

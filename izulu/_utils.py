@@ -23,8 +23,6 @@ def filter_hints(cls: t.Type) -> t.Generator[tuple[str, t.Type], None, None]:
     for k, v in t.get_type_hints(cls).items():
         if t.get_origin(v) is not t.ClassVar:
             yield k, v
-        # if k.startswith("_Error__"):
-        #     continue
 
 
 # TODO(d.burmistrov): dataclass options
