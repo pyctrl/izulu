@@ -1,108 +1,52 @@
 import datetime
-import unittest
+import pytest
 
 from izulu import _utils
 
 
-class JoinTestCase(unittest.TestCase):
-
-    def test_no_args(self):
-        self.assertRaises(TypeError, _utils.join)
-
-    def test_empty(self):
-        data = tuple()
-        expected = ""
-
-        result = _utils.join(data)
-
-        self.assertEqual(result, expected)
-
-    def test_single(self):
-        data = ("item_1",)
-        expected = "item_1"
-
-        result = _utils.join(data)
-
-        self.assertEqual(result, expected)
-
-    def test_multiple(self):
-        data = ("item_1", "item_2", "item_3")
-        expected = "item_1, item_2, item_3"
-
-        result = _utils.join(data)
-
-        self.assertEqual(result, expected)
+count = 42
+owner = "somebody"
+dt = datetime.datetime.utcnow()
 
 
-class JoinKwargsTestCase(unittest.TestCase):
-
-    def test_no_args(self):
-        data = dict()
-        expected = ""
-
-        result = _utils.join_kwargs(**data)
-
-        self.assertEqual(result, expected)
-
-    def test_single_simple(self):
-        data = dict(a=42)
-        expected = "a=42"
-
-        result = _utils.join_kwargs(**data)
-
-        self.assertEqual(result, expected)
-
-    def test_single_complex(self):
-        dt = datetime.datetime.utcnow()
-        data = dict(timestamp=dt)
-        expected = f"timestamp={repr(dt)}"
-
-        result = _utils.join_kwargs(**data)
-
-        self.assertEqual(result, expected)
-
-    def test_many(self):
-        count = 42
-        owner = "somebody"
-        dt = datetime.datetime.utcnow()
-        data = dict(owner=owner, count=count, timestamp=dt)
-        expected = f"{owner=!r}, {count=!r}, timestamp={dt!r}"
-
-        result = _utils.join_kwargs(**data)
-
-        self.assertEqual(result, expected)
+@pytest.mark.parametrize(
+    "args,expected", (
+        ((tuple(),), ""),
+        ((("item_1",),), "item_1"),
+        ((("item_1", "item_2", "item_3"),), "item_1, item_2, item_3"),
+        ((tuple(), ","), ""),
+        ((("item_1",), ","), "item_1"),
+        ((("item_1", "item_2", "item_3"), ","), "item_1, item_2, item_3"),
+        ((tuple(), ";"), ""),
+        ((("item_1",), ";"), "item_1"),
+        ((("item_1", "item_2", "item_3"), ";"), "item_1; item_2; item_3"),
+    )
+)
+def test_join(args, expected):
+    assert _utils.join(*args) == expected
 
 
-class ExtractFieldsTestCase(unittest.TestCase):
+@pytest.mark.parametrize(
+    "data,expected", (
+        (dict(), ""),
+        (dict(a=42), "a=42"),
+        (dict(owner=owner, count=count, timestamp=dt),
+         f"{owner=!r}, {count=!r}, timestamp={dt!r}"),
+        (dict(timestamp=dt), f"timestamp={dt!r}")
+    )
+)
+def test_join_kwargs(data, expected):
+    assert _utils.join_kwargs(**data) == expected
 
-    def test_empty(self):
-        tpl = "Having boring message here"
-        expected = tuple()
 
-        result = tuple(_utils.extract_fields(tpl))
-
-        self.assertEqual(result, expected)
-
-    def test_single(self):
-        tpl = "Hello {you}!"
-        expected = ("you",)
-
-        result = tuple(_utils.extract_fields(tpl))
-
-        self.assertEqual(result, expected)
-
-    def test_duplicate(self):
-        tpl = "Hello {you}! How are you, {you}"
-        expected = ("you", "you")
-
-        result = tuple(_utils.extract_fields(tpl))
-
-        self.assertEqual(result, expected)
-
-    def test_many(self):
-        tpl = "{owner}: Having count={count} for owner={owner}"
-        expected = ("owner", "count", "owner")
-
-        result = tuple(_utils.extract_fields(tpl))
-
-        self.assertEqual(result, expected)
+@pytest.mark.parametrize(
+    "tpl,expected", (
+        ("Having boring message here", tuple()),
+        ("Hello {you}!", ("you",)),
+        ("Hello {you}! How are you, {you}", ("you", "you")),
+        ("{owner}: Having count={count} for owner={owner}",
+         ("owner", "count", "owner"))
+    )
+)
+def test_extract_fields(tpl, expected):
+    assert tuple(_utils.extract_fields(tpl)) == expected
