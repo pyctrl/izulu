@@ -94,7 +94,7 @@ class Error(Exception):
 
     def __repr__(self) -> str:
         kwargs = _utils.join_kwargs(**self.as_dict())
-        return f"{self.__class__.__name__}({kwargs})"
+        return f"{self.__module__}.{self.__class__.__qualname__}({kwargs})"
 
     def __copy__(self) -> t.Self:
         return type(self)(**self.as_dict())
@@ -113,7 +113,7 @@ class Error(Exception):
         return tuple(parent)
 
     def as_str(self) -> str:
-        return f"{self.__class__.__name__}: {self}"
+        return f"{self.__class__.__qualname__}: {self}"
 
     def as_kwargs(self) -> dict[str, t.Any]:
         return self.__kwargs.copy()

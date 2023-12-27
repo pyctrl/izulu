@@ -10,12 +10,46 @@ from tests import errors
 @pytest.mark.parametrize(
     "err,expected",
     (
+            (root.Error(), "izulu.root.Error()"),
+            (errors.Exc(name="John", age=10),
+             "tests.errors.Exc(name='John', age=10)"),
+    )
+)
+def test_repr(err, expected):
+    assert repr(err) == expected
+
+
+@pytest.mark.parametrize(
+    "err,expected",
+    (
             (root.Error(), "Error: Unspecified error"),
             (errors.Exc(name="John", age=10), "Exc: The John is 10 years old"),
     )
 )
 def test_as_str(err, expected):
     assert err.as_str() == expected
+
+
+@pytest.mark.parametrize(
+    "err,expected",
+    (
+            (root.Error(), dict()),
+            (errors.Exc(name="John", age=10), dict(name="John", age=10)),
+    )
+)
+def test_as_kwargs(err, expected):
+    assert err.as_kwargs() == expected
+
+
+@pytest.mark.parametrize(
+    "err,expected",
+    (
+            (root.Error(), dict()),
+            (errors.Exc(name="John", age=10), dict(name="John", age=10)),
+    )
+)
+def test_as_dict(err, expected):
+    assert err.as_dict() == expected
 
 
 @pytest.mark.parametrize("flag", (True, False))
