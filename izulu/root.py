@@ -99,7 +99,7 @@ class Error(Exception):
     def __copy__(self) -> t.Self:
         return type(self)(**self.as_dict())
 
-    def __deepcopy__(self, memo) -> t.Self:
+    def __deepcopy__(self, memo: dict[int, t.Any]) -> t.Self:
         _id = id(self)
         if _id not in memo:
             kwargs = {k: copy.deepcopy(v, memo)
