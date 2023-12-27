@@ -2,6 +2,8 @@ import datetime
 import pytest
 
 from izulu import _utils
+from izulu import root
+from tests import errors
 
 
 count = 42
@@ -50,3 +52,14 @@ def test_join_kwargs(data, expected):
 )
 def test_extract_fields(tpl, expected):
     assert tuple(_utils.extract_fields(tpl)) == expected
+
+
+@pytest.mark.parametrize(
+    "kls,expected", (
+        (type("Klass1", tuple(), dict()), tuple()),
+        (root.Error, tuple()),
+        (errors.Exc, (("name", str), ("age", int))),
+    )
+)
+def test_filter_hints(kls, expected):
+    assert tuple(_utils.filter_hints(kls)) == expected
