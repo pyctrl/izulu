@@ -9,6 +9,50 @@ from izulu import root
 from tests import errors
 
 
+def test_feature_presets():
+    default = (root.Features.FORBID_MISSING_FIELDS
+               | root.Features.FORBID_UNDECLARED_FIELDS)
+    alls = (root.Features.FORBID_MISSING_FIELDS
+            | root.Features.FORBID_UNDECLARED_FIELDS
+            | root.Features.FORBID_WRONG_TYPES)
+
+    assert root.Features.NONE is root.Features(0)
+    assert root.Features.NONE == root.Features(0)
+    assert root.Features.DEFAULT is default
+    assert root.Features.DEFAULT == default
+    assert root.Features.ALL is alls
+    assert root.Features.ALL == alls
+
+
+def test_default_features():
+    assert root.Error.__features__ is root.Features.DEFAULT
+
+
+@mock.patch("izulu.root.Error._hook")
+@mock.patch("izulu.root.Error._Error__process_template")
+@mock.patch("izulu.root.Error._Error__populate_attrs")
+@mock.patch("izulu.root.Error._Error__process_features")
+def test_init(fake_proc_ftrs, fake_set_attrs, fake_proc_tpl, fake_hook):
+    fake_proc_tpl.return_value = root.Error.__template__
+    overriden_message = "overriden message"
+    fake_hook.return_value = overriden_message
+    store = getattr(root.Error, "_Error__cls_store")
+    manager = mock.Mock()
+    manager.attach_mock(fake_proc_ftrs, "fake_proc_ftrs")
+    manager.attach_mock(fake_set_attrs, "fake_set_attrs")
+    manager.attach_mock(fake_proc_tpl, "fake_proc_tpl")
+    manager.attach_mock(fake_hook, "fake_hook")
+    expected_calls = [mock.call.fake_proc_ftrs(),
+                      mock.call.fake_set_attrs(),
+                      mock.call.fake_proc_tpl({}),
+                      mock.call.fake_hook(store, {}, root.Error.__template__)]
+
+    e = root.Error()
+
+    assert manager.mock_calls == expected_calls
+    assert str(e) == overriden_message
+
+
 @pytest.mark.parametrize(
     ("kls", "fields", "hints", "registered", "defaults"),
     (
@@ -94,6 +138,8 @@ from tests import errors
     )
 )
 def test_class_stores(kls, fields, hints, registered, defaults):
+    """validates root.Error.__init_subclass__"""
+
     store = getattr(kls, "_Error__cls_store")
 
     assert type(store.fields) is type(fields)
