@@ -7,11 +7,19 @@ import pytest
 from tests import errors
 
 
+TS = datetime.datetime.now()
+
+
 @pytest.mark.parametrize(
     ("err", "expected"),
     (
             (errors.RootError(), dict()),
             (errors.Exc(name="John", age=10), dict(name="John", age=10)),
+            (errors.DerivedError(name="John",
+                                 surname="Brown",
+                                 note="...",
+                                 box={}),
+             dict(name="John", surname="Brown", note="...", box={})),
     )
 )
 def test_as_kwargs(err, expected):
@@ -23,6 +31,22 @@ def test_as_kwargs(err, expected):
     (
             (errors.RootError(), dict()),
             (errors.Exc(name="John", age=10), dict(name="John", age=10)),
+            (errors.DerivedError(name="John",
+                                 surname="Brown",
+                                 note="...",
+                                 box={},
+                                 timestamp=TS,
+                                 updated_at=TS),
+             dict(name="John",
+                  surname="Brown",
+                  full_name="John Brown",
+                  note="...",
+                  age=0,
+                  box={},
+                  location=(50.3, 3.608),
+                  my_type="DerivedError",
+                  timestamp=TS,
+                  updated_at=TS)),
     )
 )
 def test_as_dict(err, expected):
