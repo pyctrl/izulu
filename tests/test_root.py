@@ -1,4 +1,6 @@
+import copy
 import datetime
+import pickle
 import types
 from unittest import mock
 import uuid
@@ -7,6 +9,161 @@ import pytest
 
 from izulu import root
 from tests import errors
+
+
+@pytest.mark.parametrize(
+    "err",
+    (
+            errors.RootError(),
+            errors.TemplateOnlyError(name="John", age=42),
+            errors.AttributesOnlyError(name="John", age=42),
+            errors.MixedError(name="John", note="..."),
+            errors.DerivedError(name="John",
+                                surname="Brown",
+                                note="...",
+                                box={}),
+    ),
+)
+def test_pickling(err):
+    dumped = pickle.dumps(err)
+    resurrected = pickle.loads(dumped)
+
+    assert err.as_dict() == resurrected.as_dict()
+
+
+def test_copy():  # shallow
+    ts = datetime.datetime.now()
+    orig = errors.DerivedError(name="John",
+                               surname="Brown",
+                               note="...",
+                               age=42,
+                               updated_at=ts,
+                               full_name="secret",
+                               box=dict())
+
+    copied = copy.copy(orig)
+
+    assert id(copied) != id(orig)
+    assert copied.as_dict() == orig.as_dict()
+    assert copied.box is orig.box
+    assert copied.box == orig.box == dict()
+
+    orig.box.update(a=11)
+
+    assert copied.box == dict(a=11)
+
+
+def test_deepcopy():
+    ts = datetime.datetime.now()
+    orig = errors.DerivedError(name="John",
+                               surname="Brown",
+                               note="...",
+                               age=42,
+                               updated_at=ts,
+                               full_name="secret",
+                               box=dict())
+
+    copied = copy.deepcopy(orig)
+
+    assert id(copied) != id(orig)
+    assert copied.as_dict() == orig.as_dict()
+    assert id(copied.box) != id(orig.box)
+    assert copied.box == orig.box == dict()
+
+    orig.box.update(a=11)
+
+    assert copied.box == dict()
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    (
+            dict(),
+            dict(name="John"),
+            dict(age=42),
+            dict(name="John", age=42),
+            dict(name="John", age=42, ts=53452345.3465),
+            dict(name="John", age="Karl", ts=datetime.datetime.now()),
+    ),
+)
+def test_templating(kwargs):
+    with pytest.raises(ValueError):
+        errors.ComplexTemplateOnlyError(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("kls", "features", "kwargs"),
+    (
+            (
+                    errors.TemplateOnlyError,
+                    root.Features.FORBID_MISSING_FIELDS,
+                    dict(),
+            ),
+            (
+                    errors.TemplateOnlyError,
+                    root.Features.FORBID_MISSING_FIELDS,
+                    dict(name="John"),
+            ),
+            (
+                    errors.TemplateOnlyError,
+                    root.Features.FORBID_MISSING_FIELDS,
+                    dict(age=42),
+            ),
+            (
+                    errors.AttributesOnlyError,
+                    root.Features.FORBID_MISSING_FIELDS,
+                    dict(),
+            ),
+            (
+                    errors.AttributesOnlyError,
+                    root.Features.FORBID_MISSING_FIELDS,
+                    dict(name="John"),
+            ),
+            (
+                    errors.AttributesOnlyError,
+                    root.Features.FORBID_MISSING_FIELDS,
+                    dict(age=42),
+            ),
+            (
+                    errors.RootError,
+                    root.Features.FORBID_UNDECLARED_FIELDS,
+                    dict(field="value"),
+            ),
+            (
+                    errors.TemplateOnlyError,
+                    root.Features.FORBID_UNDECLARED_FIELDS,
+                    dict(name="John", age=42, field="field"),
+            ),
+            (
+                    errors.AttributesOnlyError,
+                    root.Features.FORBID_UNDECLARED_FIELDS,
+                    dict(name="John", age=42, field="field"),
+            ),
+            (
+                    errors.AttributesOnlyError,
+                    root.Features.FORBID_WRONG_TYPES,
+                    dict(name=42),
+            ),
+            (
+                    errors.AttributesOnlyError,
+                    root.Features.FORBID_WRONG_TYPES,
+                    dict(age=42.503),
+            ),
+            (
+                    errors.AttributesOnlyError,
+                    root.Features.FORBID_WRONG_TYPES,
+                    dict(name="John", age="42"),
+            ),
+            (
+                    errors.AttributesWithStaticDefaultsError,
+                    root.Features.FORBID_WRONG_TYPES,
+                    dict(name="John", age="42"),
+            ),
+    ),
+)
+def test_features_triggered(kls, features, kwargs):
+    with pytest.raises(TypeError):
+        type("TestError", (kls,), {"__features__": features})(**kwargs)
 
 
 def test_feature_presets():
@@ -118,7 +275,8 @@ def test_init(fake_proc_ftrs, fake_set_attrs, fake_proc_tpl, fake_hook):
                                                 surname=str,
                                                 location=tuple[float, float],
                                                 updated_at=datetime.datetime,
-                                                full_name=str)),
+                                                full_name=str,
+                                                box=dict)),
                     frozenset(("name",
                                "age",
                                "note",
@@ -127,7 +285,8 @@ def test_init(fake_proc_ftrs, fake_set_attrs, fake_proc_tpl, fake_hook):
                                "surname",
                                "location",
                                "updated_at",
-                               "full_name")),
+                               "full_name",
+                               "box")),
                     frozenset(("age",
                                "timestamp",
                                "my_type",

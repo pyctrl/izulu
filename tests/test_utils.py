@@ -12,7 +12,8 @@ dt = datetime.datetime.utcnow()
 
 
 @pytest.mark.parametrize(
-    "args,expected", (
+    ("args", "expected"),
+    (
         ((tuple(),), ""),
         ((("item_1",),), "item_1"),
         ((("item_1", "item_2", "item_3"),), "item_1, item_2, item_3"),
@@ -29,7 +30,8 @@ def test_join(args, expected):
 
 
 @pytest.mark.parametrize(
-    "data,expected", (
+    ("data", "expected"),
+    (
         (dict(), ""),
         (dict(a=42), "a=42"),
         (dict(owner=owner, count=count, timestamp=dt),
@@ -42,7 +44,8 @@ def test_join_kwargs(data, expected):
 
 
 @pytest.mark.parametrize(
-    "tpl,expected", (
+    ("tpl", "expected"),
+    (
         ("Having boring message here", tuple()),
         ("Hello {you}!", ("you",)),
         ("Hello {you}! How are you, {you}", ("you", "you")),
@@ -55,7 +58,8 @@ def test_extract_fields(tpl, expected):
 
 
 @pytest.mark.parametrize(
-    "kls,expected", (
+    ("kls", "expected"),
+    (
         (type("Klass1", tuple(), dict()), tuple()),
         (root.Error, tuple()),
         (errors.Exc, (("name", str), ("age", int))),

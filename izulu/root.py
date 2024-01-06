@@ -64,6 +64,8 @@ class Error(Exception):
         if Features.FORBID_WRONG_TYPES in self.__features__:
             errors = []
             for k, v in self.__kwargs.items():
+                if k not in store.hints:
+                    continue
                 type_ = store.hints[k]
                 if not isinstance(v, type_):
                     errors.append((k, type_, type(v)))
@@ -108,9 +110,7 @@ class Error(Exception):
         return t.cast(t.Self, memo[_id])
 
     def __reduce__(self) -> tuple[t.Any, ...]:
-        parent = list(super().__reduce__())
-        parent[1] = tuple()
-        return tuple(parent)
+        return functools.partial(self.__class__, **self.as_dict()), tuple()
 
     def as_str(self) -> str:
         return f"{self.__class__.__qualname__}: {self}"

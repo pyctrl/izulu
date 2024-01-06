@@ -12,6 +12,12 @@ class TemplateOnlyError(root.Error):
     __template__ = "The {name} is {age} years old"
 
 
+class ComplexTemplateOnlyError(root.Error):
+
+    __template__ = "{name:*^20} {age: f} {age:#b} {ts:%Y-%m-%d %H:%M:%S}"
+    __features__ = root.Features.NONE
+
+
 class AttributesOnlyError(root.Error):
 
     __template__ = "Static message template"
@@ -68,6 +74,7 @@ class DerivedError(MixedError):
     updated_at: datetime.datetime = root.factory(datetime.datetime.now)
     full_name: str = root.factory(lambda self: f"{self.name} {self.surname}",
                                   self=True)
+    box: dict
 
 
 class Exc(root.Error):
