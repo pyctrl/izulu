@@ -1,6 +1,24 @@
+import datetime
+
 import pytest
 
 from tests import errors
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    (
+            dict(),
+            dict(name="John"),
+            dict(age=42),
+            dict(name="John", age=42),
+            dict(name="John", age=42, ts=53452345.3465),
+            dict(name="John", age="Karl", ts=datetime.datetime.now()),
+    ),
+)
+def test_templating(kwargs):
+    with pytest.raises(ValueError):
+        errors.ComplexTemplateOnlyError(**kwargs)
 
 
 @pytest.mark.parametrize(
