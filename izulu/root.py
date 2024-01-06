@@ -10,10 +10,10 @@ from izulu import _utils
 class Features(enum.Flag):
     FORBID_MISSING_FIELDS = enum.auto()
     FORBID_UNDECLARED_FIELDS = enum.auto()
-    FORBID_WRONG_TYPES = enum.auto()
+    # FORBID_WRONG_TYPES = enum.auto()
 
     DEFAULT = FORBID_MISSING_FIELDS | FORBID_UNDECLARED_FIELDS
-    ALL = DEFAULT | FORBID_WRONG_TYPES
+    ALL = DEFAULT  # | FORBID_WRONG_TYPES
     NONE = 0
 
 
@@ -61,19 +61,19 @@ class Error(Exception):
                 msg = f"Undeclared arguments: {_utils.join(undeclared)}"
                 raise TypeError(msg)
 
-        if Features.FORBID_WRONG_TYPES in self.__features__:
-            errors = []
-            for k, v in self.__kwargs.items():
-                if k not in store.hints:
-                    continue
-                type_ = store.hints[k]
-                if not isinstance(v, type_):
-                    errors.append((k, type_, type(v)))
-            if errors:
-                tpl = "field '{}' must be '{}' but is '{}'"
-                chunks = (tpl.format(*err) for err in errors)
-                msg = "Unexpected types: " + _utils.join(chunks, ";")
-                raise TypeError(msg)
+        # if Features.FORBID_WRONG_TYPES in self.__features__:
+        #     errors = []
+        #     for k, v in self.__kwargs.items():
+        #         if k not in store.hints:
+        #             continue
+        #         hint = store.hints[k]
+        #         if not validate_type(hint, v):
+        #             errors.append((k, hint, type(v)))
+        #     if errors:
+        #         tpl = "field '{}' must be '{}' but is '{}'"
+        #         chunks = (tpl.format(*err) for err in errors)
+        #         msg = "Unexpected types: " + _utils.join(chunks, ";")
+        #         raise TypeError(msg)
 
     def __populate_attrs(self) -> None:
         for k, v in self.__kwargs.items():

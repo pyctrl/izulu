@@ -5,86 +5,67 @@ from tests import errors
 
 
 @pytest.mark.parametrize(
-    ("kls", "features", "kwargs"),
+    ("kls", "kwargs"),
     (
-            (
-                    errors.TemplateOnlyError,
-                    root.Features.FORBID_MISSING_FIELDS,
-                    dict(),
-            ),
-            (
-                    errors.TemplateOnlyError,
-                    root.Features.FORBID_MISSING_FIELDS,
-                    dict(name="John"),
-            ),
-            (
-                    errors.TemplateOnlyError,
-                    root.Features.FORBID_MISSING_FIELDS,
-                    dict(age=42),
-            ),
-            (
-                    errors.AttributesOnlyError,
-                    root.Features.FORBID_MISSING_FIELDS,
-                    dict(),
-            ),
-            (
-                    errors.AttributesOnlyError,
-                    root.Features.FORBID_MISSING_FIELDS,
-                    dict(name="John"),
-            ),
-            (
-                    errors.AttributesOnlyError,
-                    root.Features.FORBID_MISSING_FIELDS,
-                    dict(age=42),
-            ),
-            (
-                    errors.RootError,
-                    root.Features.FORBID_UNDECLARED_FIELDS,
-                    dict(field="value"),
-            ),
-            (
-                    errors.TemplateOnlyError,
-                    root.Features.FORBID_UNDECLARED_FIELDS,
-                    dict(name="John", age=42, field="field"),
-            ),
-            (
-                    errors.AttributesOnlyError,
-                    root.Features.FORBID_UNDECLARED_FIELDS,
-                    dict(name="John", age=42, field="field"),
-            ),
-            (
-                    errors.AttributesOnlyError,
-                    root.Features.FORBID_WRONG_TYPES,
-                    dict(name=42),
-            ),
-            (
-                    errors.AttributesOnlyError,
-                    root.Features.FORBID_WRONG_TYPES,
-                    dict(age=42.503),
-            ),
-            (
-                    errors.AttributesOnlyError,
-                    root.Features.FORBID_WRONG_TYPES,
-                    dict(name="John", age="42"),
-            ),
-            (
-                    errors.AttributesWithStaticDefaultsError,
-                    root.Features.FORBID_WRONG_TYPES,
-                    dict(name="John", age="42"),
-            ),
+            (errors.TemplateOnlyError, dict()),
+            (errors.TemplateOnlyError, dict(name="John")),
+            (errors.TemplateOnlyError, dict(age=42)),
+            (errors.AttributesOnlyError, dict()),
+            (errors.AttributesOnlyError, dict(name="John")),
+            (errors.AttributesOnlyError, dict(age=42)),
     ),
 )
-def test_features_triggered(kls, features, kwargs):
+def test_forbid_missing_fields_triggered(kls, kwargs):
     with pytest.raises(TypeError):
-        type("TestError", (kls,), {"__features__": features})(**kwargs)
+        type("TestError",
+             (kls,),
+             {"__features__": root.Features.FORBID_MISSING_FIELDS}
+             )(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("kls", "kwargs"),
+    (
+            (errors.RootError,
+             dict(field="value")),
+            (errors.TemplateOnlyError,
+             dict(name="John", age=42, field="field")),
+            (errors.AttributesOnlyError,
+             dict(name="John", age=42, field="field")),
+    ),
+)
+def test_forbid_undeclared_fields_triggered(kls, kwargs):
+    with pytest.raises(TypeError):
+        type("TestError",
+             (kls,),
+             {"__features__": root.Features.FORBID_UNDECLARED_FIELDS}
+             )(**kwargs)
+
+
+# @pytest.mark.parametrize(
+#     ("kls", "kwargs"),
+#     (
+#             (errors.AttributesOnlyError, dict(name=42)),
+#             (errors.AttributesOnlyError, dict(age=42.503)),
+#             (errors.AttributesOnlyError, dict(name="John", age="42")),
+#             (errors.AttributesWithStaticDefaultsError,
+#              dict(name="John", age="42")),
+#     ),
+# )
+# def test_forbid_wrong_types_triggered(kls, kwargs):
+#     with pytest.raises(TypeError):
+#         type("TestError",
+#              (kls,),
+#              {"__features__": root.Features.FORBID_WRONG_TYPES}
+#              )(**kwargs)
 
 
 def test_feature_presets():
     default = (root.Features.FORBID_MISSING_FIELDS
                | root.Features.FORBID_UNDECLARED_FIELDS)
     alls = (root.Features.FORBID_MISSING_FIELDS
-            | root.Features.FORBID_UNDECLARED_FIELDS
-            | root.Features.FORBID_WRONG_TYPES)
+            | root.Features.FORBID_UNDECLARED_FIELDS)
+    #       | root.Features.FORBID_WRONG_TYPES)
 
     assert root.Features.NONE is root.Features(0)
     assert root.Features.NONE == root.Features(0)
