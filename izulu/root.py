@@ -18,6 +18,38 @@ class Features(enum.Flag):
 
 
 class Error(Exception):
+    """Base class for your exception trees
+
+    Example:
+
+        class MyError(root.Error):
+            __template__ = "{smth} has happened at {ts}"
+            ts: root.factory(datetime.now)
+
+    Provides 4 main features:
+
+      * instead of manual error message formatting (and copying it all over
+        the codebase) provide just `kwargs`:
+        - before: `raise MyError(f"{smth} has happened at {datetime.now()}")`
+        - after: `raise MyError(smth=smth)`
+
+        Just provide `__template__` class attribute with your error message
+        template string. New style formatting is used:
+        - `str.format()`
+        - https://pyformat.info/
+        - https://docs.python.org/3/library/string.html#formatspec
+
+      * you can attach default values to error types (even dynamic defaults):
+        this is why `datetime.now()` was omitted above
+
+      * out-of-box validation for provided `kwargs`
+        (individually enable/disable checks with `__features__` attribute)
+
+      * Automatic `kwargs` conversion into error instance attributes
+        if such kwarg is present in type hints
+        (for example above `ts` would be an attribute and `smth` won't)
+    """
+
     __template__: t.ClassVar[str] = "Unspecified error"
     __features__: t.ClassVar[Features] = Features.DEFAULT
 
@@ -48,6 +80,8 @@ class Error(Exception):
         super().__init__(msg)
 
     def __process_features(self) -> None:
+        """Execute logic for enabled features"""
+
         store = self.__cls_store
         kws = frozenset(self.__kwargs)
 
@@ -76,11 +110,15 @@ class Error(Exception):
         #         raise TypeError(msg)
 
     def __populate_attrs(self) -> None:
+        """Set hinted kwargs as attributes"""
+
         for k, v in self.__kwargs.items():
             if k in self.__cls_store.hints:
                 setattr(self, k, v)
 
     def __process_template(self, data: dict[str, t.Any]) -> str:
+        """Format the error template from provided data (kwargs & defaults)"""
+
         try:
             return self.__template__.format(**data)
         except Exception as e:  # ?
@@ -92,6 +130,23 @@ class Error(Exception):
               store: _utils.Store,
               kwargs: dict[str, t.Any],
               msg: str) -> str:
+        """Adapter method to wedge user logic into izulu machinery
+
+        This is the place to override message/formatting if regular mechanics
+        don't work for you. It has to return original or your flavored message.
+        The method is invoked between izulu preparations and original
+        `Exception` constructor receiving the result of this hook.
+
+        You can also do any other logic here. You will be provided with
+        complete set of prepared data from izulu. But it's recommended
+        to use classic OOP inheritance for ordinary behaviour extension.
+
+        Params:
+          * store: dataclass containing inner error class specifications
+          * kwargs: original kwargs from user
+          * msg: formatted message from the error template
+        """
+
         return msg
 
     def __repr__(self) -> str:
@@ -113,12 +168,18 @@ class Error(Exception):
         return functools.partial(self.__class__, **self.as_dict()), tuple()
 
     def as_str(self) -> str:
+        """Represent error as error type with message"""
+
         return f"{self.__class__.__qualname__}: {self}"
 
     def as_kwargs(self) -> dict[str, t.Any]:
+        """Return the copy of original kwargs used to initialize the error"""
+
         return self.__kwargs.copy()
 
     def as_dict(self) -> dict[str, t.Any]:
+        """Represent error as dict of fields including default values"""
+
         d = self.__kwargs.copy()
         for field in self.__cls_store.defaults:
             d.setdefault(field, getattr(self, field))
@@ -126,8 +187,17 @@ class Error(Exception):
 
 
 def factory(func: t.Callable[..., t.Any],
+            *,
             self: bool = False
             ) -> functools.cached_property:
+    """Attaches factory for dynamic default values
+
+    :param func: callable factory receiving 0 or 1 argument (see `self` param)
+    :param bool self: controls callable factory argument
+        if `True` func will receive single argument of error instance
+        otherwise func will be invoced without argument
+    """
+
     target = t.cast(t.Callable[[t.Any], t.Any],
                     func if self else (lambda obj: func()))
     return functools.cached_property(target)
