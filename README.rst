@@ -54,7 +54,7 @@ Rules
 
 * ``__init__()`` accepts only kwargs
 * final message is formatted from ``__template__`` with ``kwargs``
-* type hints triggers relevant kwargs to be also attached to error object as attribute
+* type hints triggers relevant kwargs to be attached as error object attributes
 * static defaults can be provided regularly with type hints
 * dynamic defaults can be provided with type hints and ``factory`` helper;
   there are 2 modes depending on the value of the ``self`` flag:
