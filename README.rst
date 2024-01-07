@@ -38,15 +38,15 @@ management (for details see "walkthrough" below).**
    - https://pyformat.info/
    - https://docs.python.org/3/library/string.html#formatspec
 
-#. you can attach default values to error types (even dynamic defaults):
+#. Automatic ``kwargs`` conversion into error instance attributes
+   if such kwarg is present in type hints
+   (for example above ``ts`` would be an attribute and ``smth`` won't)
+
+#. you can attach static and dynamic default values:
    this is why ``datetime.now()`` was omitted above
 
 #. out-of-box validation for provided ``kwargs``
    (individually enable/disable checks with ``__features__`` attribute)
-
-#. Automatic ``kwargs`` conversion into error instance attributes
-   if such kwarg is present in type hints
-   (for example above ``ts`` would be an attribute and ``smth`` won't)
 
 
 Walkthrough: step by step guide
@@ -80,8 +80,8 @@ Walkthrough: step by step guide
 
 * subclass ``Error``
 * provide special message template for each of your exceptions
-* use only **kwargs** to instantiate exception
-  *(no more message copying around the codebase)*
+* use **only kwargs** to instantiate exception
+  *(no more message copying across the codebase)*
 
 
 3. attribute your exceptions
