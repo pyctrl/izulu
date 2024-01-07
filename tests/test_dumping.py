@@ -14,7 +14,8 @@ TS = datetime.datetime.now()
     ("err", "expected"),
     (
             (errors.RootError(), dict()),
-            (errors.Exc(name="John", age=10), dict(name="John", age=10)),
+            (errors.MixedError(name="John", age=10, note="..."),
+             dict(name="John", age=10, note="...")),
             (errors.DerivedError(name="John",
                                  surname="Brown",
                                  note="...",
@@ -30,7 +31,12 @@ def test_as_kwargs(err, expected):
     ("err", "expected"),
     (
             (errors.RootError(), dict()),
-            (errors.Exc(name="John", age=10), dict(name="John", age=10)),
+            (errors.MixedError(name="John", age=10, note="...", timestamp=TS),
+             dict(name="John",
+                  age=10,
+                  note="...",
+                  my_type="MixedError",
+                  timestamp=TS)),
             (errors.DerivedError(name="John",
                                  surname="Brown",
                                  note="...",

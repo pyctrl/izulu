@@ -62,7 +62,11 @@ def test_extract_fields(tpl, expected):
     (
         (type("Klass1", tuple(), dict()), tuple()),
         (root.Error, tuple()),
-        (errors.Exc, (("name", str), ("age", int))),
+        (errors.MixedError,
+         (("name", str),
+          ("age", int),
+          ("timestamp", datetime.datetime),
+          ("my_type", str))),
     )
 )
 def test_filter_hints(kls, expected):

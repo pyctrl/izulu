@@ -75,13 +75,3 @@ class DerivedError(MixedError):
     full_name: str = root.factory(lambda self: f"{self.name} {self.surname}",
                                   self=True)
     box: dict
-
-
-class Exc(root.Error):
-
-    __template__ = "The {name} is {age} years old"
-
-    MY_CONST: t.ClassVar[int] = 42
-
-    name: str
-    age: int

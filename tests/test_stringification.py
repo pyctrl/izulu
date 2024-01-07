@@ -5,6 +5,9 @@ import pytest
 from tests import errors
 
 
+TS = datetime.datetime.now()
+
+
 @pytest.mark.parametrize(
     "kwargs",
     (
@@ -13,7 +16,7 @@ from tests import errors
             dict(age=42),
             dict(name="John", age=42),
             dict(name="John", age=42, ts=53452345.3465),
-            dict(name="John", age="Karl", ts=datetime.datetime.now()),
+            dict(name="John", age="Karl", ts=TS),
     ),
 )
 def test_templating(kwargs):
@@ -25,7 +28,8 @@ def test_templating(kwargs):
     ("err", "expected"),
     (
             (errors.RootError(), "Unspecified error"),
-            (errors.Exc(name="John", age=10), "The John is 10 years old"),
+            (errors.MixedError(name="John", age=10, note="..."),
+             "The John is 10 years old with ..."),
     )
 )
 def test_str(err, expected):
@@ -36,8 +40,9 @@ def test_str(err, expected):
     ("err", "expected"),
     (
             (errors.RootError(), "izulu.root.Error()"),
-            (errors.Exc(name="John", age=10),
-             "tests.errors.Exc(name='John', age=10)"),
+            (errors.MixedError(name="John", age=10, note="...", timestamp=TS),
+             ("tests.errors.MixedError(name='John', age=10,"
+              f" note='...', timestamp={TS!r}, my_type='MixedError')")),
     )
 )
 def test_repr(err, expected):
@@ -48,7 +53,8 @@ def test_repr(err, expected):
     ("err", "expected"),
     (
             (errors.RootError(), "Error: Unspecified error"),
-            (errors.Exc(name="John", age=10), "Exc: The John is 10 years old"),
+            (errors.MixedError(name="John", age=10, note="..."),
+             "MixedError: The John is 10 years old with ..."),
     )
 )
 def test_as_str(err, expected):
