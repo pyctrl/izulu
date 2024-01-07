@@ -4,12 +4,6 @@ izulu
 *"An exceptional library"*
 
 
-Features
---------
-
-First one is to bring more OOP into exception management (see *walkthrough* below).
-
-
 Installing
 ----------
 
@@ -18,10 +12,47 @@ Installing
    pip install izulu
 
 
+Features
+--------
+
+**The main and global one is to bring more OOP into error and exception
+management (for details see "walkthrough" below).**
+
+::
+
+    class MyError(root.Error):
+        __template__ = "{smth} has happened at {ts}"
+        ts: root.factory(datetime.now)
+
+
+* instead of manual error message formatting (and copying it all over
+  the codebase) provide just ``kwargs``:
+
+  - before: ``raise MyError(f"{smth} has happened at {datetime.now()}")``
+  - after: ``raise MyError(smth=smth)``
+
+  Just provide ``__template__`` class attribute with your error message
+  template string. New style formatting is used:
+
+  - ``str.format()``
+  - https://pyformat.info/
+  - https://docs.python.org/3/library/string.html#formatspec
+
+* you can attach default values to error types (even dynamic defaults):
+  this is why ``datetime.now()`` was omitted above
+
+* out-of-box validation for provided ``kwargs``
+  (individually enable/disable checks with ``__features__`` attribute)
+
+* Automatic ``kwargs`` conversion into error instance attributes
+  if such kwarg is present in type hints
+  (for example above ``ts`` would be an attribute and ``smth`` won't)
+
+
 Walkthrough: step by step guide
 -------------------------------
 
-1. imports :)
+1. imports
 ^^^^^^^^^^^^^
 
 ::
