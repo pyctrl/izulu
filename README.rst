@@ -49,6 +49,22 @@ management (for details see "walkthrough" below).**
    (individually enable/disable checks with ``__features__`` attribute)
 
 
+Rules
+-----
+
+* ``__init__()`` accepts only kwargs
+* final message is formatted from ``__template__`` with ``kwargs``
+* type hints triggers relevant kwargs to be also attached to error object as attribute
+* static defaults can be provided regularly with type hints
+* dynamic defaults can be provided with type hints and ``factory`` helper;
+  there are 2 modes depending on the value of the ``self`` flag:
+
+  * ``self=False`` (default): provide callable not accepting arguments
+  * ``self=True``: provide callable accepting single argument (error instance)
+
+* ``ClassVar`` type hints are ignored by izulu machinery
+
+
 Walkthrough: step by step guide
 -------------------------------
 
