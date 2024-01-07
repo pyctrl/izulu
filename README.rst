@@ -49,8 +49,8 @@ management (for details see "walkthrough" below).**
    (individually enable/disable checks with ``__features__`` attribute)
 
 
-Rules
------
+Izulu Machinery Rules
+---------------------
 
 * ``__init__()`` accepts only kwargs
 * final message is formatted from ``__template__`` with ``kwargs``
@@ -62,7 +62,7 @@ Rules
   * ``self=False`` (default): provide callable not accepting arguments
   * ``self=True``: provide callable accepting single argument (error instance)
 
-* ``ClassVar`` type hints are ignored by izulu machinery
+* ``ClassVar`` type hints and their attributes are ignored by izulu machinery
 
 
 Walkthrough: step by step guide
