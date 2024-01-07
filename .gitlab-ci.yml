@@ -39,6 +39,13 @@ pep8:
   script:
     - tox -e pep8
 
+rst:
+  stage: unit
+  tags:
+    - docker
+  script:
+    - tox -e rst
+
 mypy:
   stage: unit
   tags:

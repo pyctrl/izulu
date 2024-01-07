@@ -241,7 +241,7 @@ String representations
   (if data provided into *kwargs* supports ``repr`` the same way)
 
 
-Reconstruct exception from ``repr``:
+**Reconstruct exception from ``repr``:**
 
 ::
 
@@ -274,6 +274,14 @@ Running tests
 ::
 
    tox
+
+
+Building package
+^^^^^^^^^^^^^^^^
+
+::
+
+   tox -e build
 
 
 Contributing
