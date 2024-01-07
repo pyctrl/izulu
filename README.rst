@@ -105,11 +105,11 @@ Walkthrough: step by step guide
    # AttributeError: 'MyError' object has no attribute 'owner'
 
 
-* define annotations for fields you want to publish as exception instance attributes
-* you have to define desired template fields in annotations too
-  (see ``AttributeError`` for ``owner``)
-* you can provide annotation for attributes not included in template (see ``timestamp``)
-* **type hinting from annotations are not enforced or checked** (see ``timestamp``)
+#. define annotations for fields you want to publish as exception instance attributes
+#. you have to define desired template fields in annotations too
+   (see ``AttributeError`` for ``owner``)
+#. you can provide annotation for attributes not included in template (see ``timestamp``)
+#. **type hinting from annotations are not enforced or checked** (see ``timestamp``)
 
 
 4. provide desired defaults
@@ -169,6 +169,7 @@ Walkthrough: step by step guide
 
 
 alternate syntax without method
+"""""""""""""""""""""""""""""""
 
 ::
 
@@ -230,9 +231,11 @@ String representations
    e = MyError(count=10, owner="me")
 
    print(str(e))
-   # MyError: Having count=10 for owner=me
+   # Having count=10 for owner=me
    print(repr(e))
    # MyError(count=10, owner='me', timestamp=datetime.datetime(2023, 9, 27, 18, 58, 0, 340218))
+   print(e.as_str())  # just another pretty human-readable representation
+   # 'Having count=42 for owner=somebody'
 
 
 * there are different results for ``str`` and ``repr``
@@ -241,7 +244,7 @@ String representations
   (if data provided into *kwargs* supports ``repr`` the same way)
 
 
-**Reconstruct exception from ``repr``:**
+**Reconstruct exception from** ``repr``:
 
 ::
 
@@ -257,12 +260,43 @@ Other ``Error`` API
 
 ::
 
-   e.as_str()  # just another pretty human-readable representation
-   # 'Having count=42 for owner=somebody'
    e.as_kwargs()  # original kwargs
    # {'count': 42, 'owner': 'somebody', 'timestamp': datetime.datetime(2023, 9, 17, 19, 50, 31, 7578)}
    e.as_dict()  # shallow
    # {'count': 42, 'owner': 'somebody', 'timestamp': datetime.datetime(2023, 9, 17, 19, 50, 31, 7578)}
+
+
+Advanced
+^^^^^^^^
+
+There is a special method you can override and additionally manage the machinery.
+
+But it should not be need in 99,9% cases. Avoid it, please.
+
+::
+
+    def _hook(self,
+              store: _utils.Store,
+              kwargs: dict[str, t.Any],
+              msg: str) -> str:
+        """Adapter method to wedge user logic into izulu machinery
+
+        This is the place to override message/formatting if regular mechanics
+        don't work for you. It has to return original or your flavored message.
+        The method is invoked between izulu preparations and original
+        `Exception` constructor receiving the result of this hook.
+
+        You can also do any other logic here. You will be provided with
+        complete set of prepared data from izulu. But it's recommended
+        to use classic OOP inheritance for ordinary behaviour extension.
+
+        Params:
+          * store: dataclass containing inner error class specifications
+          * kwargs: original kwargs from user
+          * msg: formatted message from the error template
+        """
+
+        return msg
 
 
 For developers
@@ -294,8 +328,7 @@ Versioning
 ----------
 
 We use `SemVer <http://semver.org/>`__ for versioning. For the versions
-available, see the `tags on this
-repository <https://gitlab.com/pyctrl/izulu/-/tags>`__.
+available, see the `tags on this repository <https://gitlab.com/pyctrl/izulu/-/tags>`__.
 
 
 Authors
