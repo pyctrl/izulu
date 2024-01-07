@@ -25,35 +25,35 @@ management (for details see "walkthrough" below).**
         ts: root.factory(datetime.now)
 
 
-* instead of manual error message formatting (and copying it all over
-  the codebase) provide just ``kwargs``:
+#. instead of manual error message formatting (and copying it all over
+   the codebase) provide only ``kwargs``:
 
-  - before: ``raise MyError(f"{smth} has happened at {datetime.now()}")``
-  - after: ``raise MyError(smth=smth)``
+   - before: ``raise MyError(f"{smth} has happened at {datetime.now()}")``
+   - **after:** ``raise MyError(smth=smth)``
 
-  Just provide ``__template__`` class attribute with your error message
-  template string. New style formatting is used:
+   Just provide ``__template__`` class attribute with your error message
+   template string. New style formatting is used:
 
-  - ``str.format()``
-  - https://pyformat.info/
-  - https://docs.python.org/3/library/string.html#formatspec
+   - ``str.format()``
+   - https://pyformat.info/
+   - https://docs.python.org/3/library/string.html#formatspec
 
-* you can attach default values to error types (even dynamic defaults):
-  this is why ``datetime.now()`` was omitted above
+#. you can attach default values to error types (even dynamic defaults):
+   this is why ``datetime.now()`` was omitted above
 
-* out-of-box validation for provided ``kwargs``
-  (individually enable/disable checks with ``__features__`` attribute)
+#. out-of-box validation for provided ``kwargs``
+   (individually enable/disable checks with ``__features__`` attribute)
 
-* Automatic ``kwargs`` conversion into error instance attributes
-  if such kwarg is present in type hints
-  (for example above ``ts`` would be an attribute and ``smth`` won't)
+#. Automatic ``kwargs`` conversion into error instance attributes
+   if such kwarg is present in type hints
+   (for example above ``ts`` would be an attribute and ``smth`` won't)
 
 
 Walkthrough: step by step guide
 -------------------------------
 
 1. imports
-^^^^^^^^^^^^^
+^^^^^^^^^^
 
 ::
 
@@ -78,7 +78,7 @@ Walkthrough: step by step guide
    # TypeError: __init__() takes 1 positional argument but 2 were given
 
 
-* subclass ``Error`` or ``LaxError``
+* subclass ``Error``
 * provide special message template for each of your exceptions
 * use only **kwargs** to instantiate exception
   *(no more message copying around the codebase)*
@@ -202,33 +202,18 @@ alternate syntax without method
   (keyword or positional - doesn't matter)
 
 
-Difference between ``Error`` and ``LaxError``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Additional options
+------------------
 
-``Error`` is a strict - it forbids you to provide undefined *kwargs*.
+Controlling behaviour with ``__features__``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-And ``LaxError`` is tolerant to undefined *kwargs* - it mainly ignores them
-(only stores as kwargs).
+By default ``Error`` does some validations controlled by flag enum ``Features``.
 
-
-::
-
-   class MyQuietError(root.LaxError):
-       __template__ = "Having count={count} for owner={owner}"
-
-
-   class MyLoudError(root.Error):
-       __template__ = "Having count={count} for owner={owner}"
-
-
-   print(MyQuietError(count=10, owner="me", undefined_field="you don't know me"))
-   # MyQuietError: Having count=10 for owner=me
-
-   print(MyLoudError(count=10, owner="me", undefined_field="you don't know me"))
-   # TypeError: Undeclared arguments: undefined_field
-
-
-**Attribute "undefined_field" won't apper**
+* FORBID_MISSING_FIELDS: checks provided ``kwargs`` to contain all fields from template
+  and all type hinted attributes (excluding fields with default values)
+* FORBID_UNDECLARED_FIELDS: forbids undefined arguments in provided ``kwargs``
+  (names not present in template of type hints)
 
 
 String representations
@@ -272,14 +257,11 @@ Other ``Error`` API
 
 ::
 
-   ### flag (differs for Error/LaxError)
-   e.is_strict()
-   # True
-
-   ### getters
-   e.get_message()
+   e.as_str()  # just another pretty human-readable representation
    # 'Having count=42 for owner=somebody'
-   e.get_kwargs()
+   e.as_kwargs()  # original kwargs
+   # {'count': 42, 'owner': 'somebody', 'timestamp': datetime.datetime(2023, 9, 17, 19, 50, 31, 7578)}
+   e.as_dict()  # shallow
    # {'count': 42, 'owner': 'somebody', 'timestamp': datetime.datetime(2023, 9, 17, 19, 50, 31, 7578)}
 
 
