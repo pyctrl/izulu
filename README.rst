@@ -3,6 +3,29 @@ izulu
 
 *"An exceptional library"*
 
+**Bring OOP into exception/error management (for details see "walkthrough" below).**
+
+::
+
+    import datetime
+    from izulu import root
+
+    class MyError(root.Error):
+        __template__ = "{smth} has happened at {ts}"
+        ts: datetime = root.factory(datetime.datetime.now)
+
+
+    e = MyError(smth="Duplicate entity")
+
+    str(e)
+    # 'Duplicate entity has happened at 2024-01-09 01:22:38.540916'
+
+    str(e.ts)
+    # '2024-01-09 01:22:38.540916'
+
+    ### Forget about this!:
+    ###     raise MyError(f"{smth} has happened at {datetime.datetime.now()}")
+
 
 Installing
 ----------
@@ -15,9 +38,6 @@ Installing
 Features
 --------
 
-**The main and global one is to bring more OOP into error and exception
-management (for details see "walkthrough" below).**
-
 ::
 
     class MyError(root.Error):
@@ -25,11 +45,11 @@ management (for details see "walkthrough" below).**
         ts: root.factory(datetime.now)
 
 
-#. instead of manual error message formatting (and copying it all over
+#. Instead of manual error message formatting (and copying it all over
    the codebase) provide only ``kwargs``:
 
    - before: ``raise MyError(f"{smth} has happened at {datetime.now()}")``
-   - **after:** ``raise MyError(smth=smth)``
+   - **after:** ``raise MyError(smth="Duplicate entity")``
 
    Just provide ``__template__`` class attribute with your error message
    template string. New style formatting is used:
@@ -42,14 +62,14 @@ management (for details see "walkthrough" below).**
    if such kwarg is present in type hints
    (for example above ``ts`` would be an attribute and ``smth`` won't)
 
-#. you can attach static and dynamic default values:
+#. You can attach static and dynamic default values:
    this is why ``datetime.now()`` was omitted above
 
-#. out-of-box validation for provided ``kwargs``
+#. Out-of-box validation for provided ``kwargs``
    (individually enable/disable checks with ``__features__`` attribute)
 
 
-Izulu Machinery Rules
+Izulu machinery rules
 ---------------------
 
 * ``__init__()`` accepts only kwargs
@@ -62,7 +82,11 @@ Izulu Machinery Rules
   * ``self=False`` (default): provide callable not accepting arguments
   * ``self=True``: provide callable accepting single argument (error instance)
 
-* ``ClassVar`` type hints and their attributes are ignored by izulu machinery
+* TODO: ``ClassVar`` type hints and their attributes are ignored by izulu machinery
+    # constants:
+    #   - hinted with ClassVar[...]
+    #   - has value
+    #   - forbidden in kwargs (by default - disable with FEATURE)
 
 
 Walkthrough: step by step guide

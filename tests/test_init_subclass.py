@@ -7,7 +7,7 @@ from tests import errors
 
 
 @pytest.mark.parametrize(
-    ("kls", "fields", "hints", "registered", "defaults"),
+    ("kls", "fields", "hints", "registered", "defaults", "consts"),
     (
             (
                     errors.RootError,
@@ -15,6 +15,7 @@ from tests import errors
                     types.MappingProxyType({}),
                     frozenset(),
                     frozenset(),
+                    types.MappingProxyType({}),
             ),
             (
                     errors.TemplateOnlyError,
@@ -22,6 +23,7 @@ from tests import errors
                     types.MappingProxyType({}),
                     frozenset(("name", "age")),
                     frozenset(),
+                    types.MappingProxyType({}),
             ),
             (
                     errors.AttributesOnlyError,
@@ -29,6 +31,7 @@ from tests import errors
                     types.MappingProxyType(dict(name=str, age=int)),
                     frozenset(("name", "age")),
                     frozenset(),
+                    types.MappingProxyType({}),
             ),
             (
                     errors.AttributesWithStaticDefaultsError,
@@ -36,6 +39,7 @@ from tests import errors
                     types.MappingProxyType(dict(name=str, age=int)),
                     frozenset(("name", "age")),
                     frozenset(("age",)),
+                    types.MappingProxyType({}),
             ),
             (
                     errors.AttributesWithDynamicDefaultsError,
@@ -43,6 +47,7 @@ from tests import errors
                     types.MappingProxyType(dict(name=str, age=int)),
                     frozenset(("name", "age")),
                     frozenset(("age",)),
+                    types.MappingProxyType({}),
             ),
             (
                     errors.ClassVarsError,
@@ -50,6 +55,7 @@ from tests import errors
                     types.MappingProxyType({}),
                     frozenset(),
                     frozenset(),
+                    types.MappingProxyType(dict(name="Username", age=42)),
             ),
             (
                     errors.MixedError,
@@ -60,6 +66,7 @@ from tests import errors
                                                 my_type=str)),
                     frozenset(("name", "age", "note", "timestamp", "my_type")),
                     frozenset(("age", "timestamp", "my_type")),
+                    types.MappingProxyType(dict(entity="The Entity")),
             ),
             (
                     errors.DerivedError,
@@ -89,19 +96,22 @@ from tests import errors
                                "location",
                                "updated_at",
                                "full_name")),
+                    types.MappingProxyType(dict(entity="The Entity")),
             ),
     )
 )
-def test_class_stores(kls, fields, hints, registered, defaults):
+def test_class_stores(kls, fields, hints, registered, defaults, consts):
     """validates root.Error.__init_subclass__"""
 
     store = getattr(kls, "_Error__cls_store")
 
     assert type(store.fields) is type(fields)
     assert store.fields == fields
-    assert type(store.hints) is type(hints)
-    assert store.hints == hints
+    assert type(store.inst_hints) is type(hints)
+    assert store.inst_hints == hints
     assert type(store.registered) is type(registered)
     assert store.registered == registered
     assert type(store.defaults) is type(defaults)
     assert store.defaults == defaults
+    assert type(store.consts) is type(consts)
+    assert store.consts == consts

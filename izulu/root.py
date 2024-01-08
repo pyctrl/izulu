@@ -10,10 +10,15 @@ from izulu import _utils
 class Features(enum.Flag):
     FORBID_MISSING_FIELDS = enum.auto()
     FORBID_UNDECLARED_FIELDS = enum.auto()
+    FORBID_KWARG_CONSTS = enum.auto()
     # FORBID_WRONG_TYPES = enum.auto()
 
-    DEFAULT = FORBID_MISSING_FIELDS | FORBID_UNDECLARED_FIELDS
-    ALL = DEFAULT  # | FORBID_WRONG_TYPES
+    DEFAULT = (
+            FORBID_MISSING_FIELDS
+            | FORBID_UNDECLARED_FIELDS
+            | FORBID_KWARG_CONSTS
+    )
+    # ALL = DEFAULT  # | FORBID_WRONG_TYPES
     NONE = 0
 
 
@@ -53,29 +58,33 @@ class Error(Exception):
     __template__: t.ClassVar[str] = "Unspecified error"
     __features__: t.ClassVar[Features] = Features.DEFAULT
 
-    __cls_store: t.ClassVar[_utils.Store] = (
-        _utils.Store(fields=frozenset(),
-                     hints=types.MappingProxyType({}),
-                     registered=frozenset(),
-                     defaults=frozenset())
+    __cls_store: t.ClassVar[_utils.Store] = _utils.Store(
+        fields=frozenset(),
+        # const_hints=types.MappingProxyType(dict()),
+        inst_hints=types.MappingProxyType(dict()),
+        consts=types.MappingProxyType(dict()),
+        defaults=frozenset(),
     )
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         super().__init_subclass__(**kwargs)
         fields = frozenset(_utils.extract_fields(cls.__template__))
-        hints = types.MappingProxyType(dict(_utils.filter_hints(cls)))
-        defaults = frozenset(attr for attr in hints if hasattr(cls, attr))
-        cls.__cls_store = _utils.Store(fields=fields,
-                                       hints=hints,
-                                       registered=fields.union(hints),
-                                       defaults=defaults)
+        const_hints, inst_hints = _utils.split_hints(cls)
+        consts = _utils.get_defaults(cls, const_hints)
+        defaults = _utils.get_defaults(cls, inst_hints)
+        cls.__cls_store = _utils.Store(
+            fields=fields,
+            # const_hints=types.MappingProxyType(const_hints),
+            inst_hints=types.MappingProxyType(inst_hints),
+            consts=types.MappingProxyType(consts),
+            defaults=frozenset(defaults),
+        )
 
     def __init__(self, **kwargs: t.Any) -> None:
         self.__kwargs = kwargs.copy()
         self.__process_features()
         self.__populate_attrs()
-        data = self.as_dict()
-        msg = self.__process_template(data)
+        msg = self.__process_template(self.as_dict())
         msg = self._hook(self.__cls_store, kwargs, msg)
         super().__init__(msg)
 
@@ -86,21 +95,20 @@ class Error(Exception):
         kws = frozenset(self.__kwargs)
 
         if Features.FORBID_MISSING_FIELDS in self.__features__:
-            if missing := (store.registered - store.defaults - kws):
-                msg = f"Missing arguments: {_utils.join(missing)}"
-                raise TypeError(msg)
+            _utils.check_missing_fields(store, kws)
 
         if Features.FORBID_UNDECLARED_FIELDS in self.__features__:
-            if undeclared := (kws - store.registered):
-                msg = f"Undeclared arguments: {_utils.join(undeclared)}"
-                raise TypeError(msg)
+            _utils.check_undeclared_fields(store, kws)
+
+        if Features.FORBID_KWARG_CONSTS in self.__features__:
+            _utils.check_constants_in_kwargs(store, kws)
 
         # if Features.FORBID_WRONG_TYPES in self.__features__:
         #     errors = []
         #     for k, v in self.__kwargs.items():
-        #         if k not in store.hints:
+        #         if k not in store.inst_hints:
         #             continue
-        #         hint = store.hints[k]
+        #         hint = store.inst_hints[k]
         #         if not validate_type(hint, v):
         #             errors.append((k, hint, type(v)))
         #     if errors:
@@ -113,14 +121,15 @@ class Error(Exception):
         """Set hinted kwargs as attributes"""
 
         for k, v in self.__kwargs.items():
-            if k in self.__cls_store.hints:
+            if k in self.__cls_store.inst_hints:
                 setattr(self, k, v)
 
     def __process_template(self, data: dict[str, t.Any]) -> str:
         """Format the error template from provided data (kwargs & defaults)"""
 
         try:
-            return self.__template__.format(**data)
+            # TODO(d.burmistrov): aka `setdefault` ???
+            return self.__template__.format(**data, **self.__cls_store.consts)
         except Exception as e:  # ?
             msg = ("Failed to format template with provided kwargs: "
                    + _utils.join_kwargs(**self.__kwargs))
@@ -198,6 +207,6 @@ def factory(func: t.Callable[..., t.Any],
         otherwise func will be invoced without argument
     """
 
-    target = t.cast(t.Callable[[t.Any], t.Any],
-                    func if self else (lambda obj: func()))
+    target = func if self else (lambda obj: func())
+    target = t.cast(t.Callable[[t.Any], t.Any], target)
     return functools.cached_property(target)

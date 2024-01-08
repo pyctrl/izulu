@@ -1,10 +1,9 @@
 import datetime
+
 import pytest
 
 from izulu import _utils
-from izulu import root
 from tests import errors
-
 
 count = 42
 owner = "somebody"
@@ -58,16 +57,21 @@ def test_extract_fields(tpl, expected):
 
 
 @pytest.mark.parametrize(
-    ("kls", "expected"),
+    ("kls", "attrs", "expected"),
     (
-        (type("Klass1", tuple(), dict()), tuple()),
-        (root.Error, tuple()),
-        (errors.MixedError,
-         (("name", str),
-          ("age", int),
-          ("timestamp", datetime.datetime),
-          ("my_type", str))),
+        (errors.DerivedError, (), dict()),
+        (errors.DerivedError, ("entity",), dict(entity="The Entity")),
+        (errors.DerivedError,
+         ("name", "surname", "age", "timestamp", "my_type", "location",
+          "updated_at", "full_name", "box"),
+         dict(age=0, location=(50.3, 3.608),
+              timestamp=errors.DerivedError.timestamp,
+              updated_at=errors.DerivedError.updated_at,
+              full_name=errors.DerivedError.full_name,
+              my_type=errors.DerivedError.my_type)),
+        (errors.RootError, ("entity",), dict()),
+        (errors.TemplateOnlyError, ("name",), dict()),
     )
 )
-def test_filter_hints(kls, expected):
-    assert tuple(_utils.filter_hints(kls)) == expected
+def test_get_defaults(kls, attrs, expected):
+    assert _utils.get_defaults(kls, attrs) == expected
