@@ -15,7 +15,6 @@ _IZULU_ATTRS = {"__template__", "__features__", "_Error__cls_store"}
 class Store:
 
     fields: frozenset[str]
-    # const_hints: types.MappingProxyType[str, t.Type]
     inst_hints: types.MappingProxyType[str, t.Type]
     consts: types.MappingProxyType[str, t.Any]
     defaults: frozenset[str]

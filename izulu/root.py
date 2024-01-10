@@ -11,14 +11,12 @@ class Features(enum.Flag):
     FORBID_MISSING_FIELDS = enum.auto()
     FORBID_UNDECLARED_FIELDS = enum.auto()
     FORBID_KWARG_CONSTS = enum.auto()
-    # FORBID_WRONG_TYPES = enum.auto()
 
     DEFAULT = (
             FORBID_MISSING_FIELDS
             | FORBID_UNDECLARED_FIELDS
             | FORBID_KWARG_CONSTS
     )
-    # ALL = DEFAULT  # | FORBID_WRONG_TYPES
     NONE = 0
 
 
@@ -60,7 +58,6 @@ class Error(Exception):
 
     __cls_store: t.ClassVar[_utils.Store] = _utils.Store(
         fields=frozenset(),
-        # const_hints=types.MappingProxyType(dict()),
         inst_hints=types.MappingProxyType(dict()),
         consts=types.MappingProxyType(dict()),
         defaults=frozenset(),
@@ -74,7 +71,6 @@ class Error(Exception):
         defaults = _utils.get_defaults(cls, inst_hints)
         cls.__cls_store = _utils.Store(
             fields=fields,
-            # const_hints=types.MappingProxyType(const_hints),
             inst_hints=types.MappingProxyType(inst_hints),
             consts=types.MappingProxyType(consts),
             defaults=frozenset(defaults),
@@ -103,20 +99,6 @@ class Error(Exception):
         if Features.FORBID_KWARG_CONSTS in self.__features__:
             _utils.check_constants_in_kwargs(store, kws)
 
-        # if Features.FORBID_WRONG_TYPES in self.__features__:
-        #     errors = []
-        #     for k, v in self.__kwargs.items():
-        #         if k not in store.inst_hints:
-        #             continue
-        #         hint = store.inst_hints[k]
-        #         if not validate_type(hint, v):
-        #             errors.append((k, hint, type(v)))
-        #     if errors:
-        #         tpl = "field '{}' must be '{}' but is '{}'"
-        #         chunks = (tpl.format(*err) for err in errors)
-        #         msg = "Unexpected types: " + _utils.join(chunks, ";")
-        #         raise TypeError(msg)
-
     def __populate_attrs(self) -> None:
         """Set hinted kwargs as attributes"""
 
@@ -130,7 +112,7 @@ class Error(Exception):
         try:
             # TODO(d.burmistrov): aka `setdefault` ???
             return self.__template__.format(**data, **self.__cls_store.consts)
-        except Exception as e:  # ?
+        except Exception as e:
             msg = ("Failed to format template with provided kwargs: "
                    + _utils.join_kwargs(**self.__kwargs))
             raise ValueError(msg) from e
