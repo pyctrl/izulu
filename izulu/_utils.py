@@ -37,7 +37,7 @@ def check_undeclared_fields(store: Store, kws: frozenset[str]) -> None:
         raise TypeError(f"Undeclared arguments: {join(undeclared)}")
 
 
-def check_constants_in_kwargs(store: Store, kws: frozenset[str]) -> None:
+def check_kwarg_consts(store: Store, kws: frozenset[str]) -> None:
     consts = kws.intersection(store.consts)
     if consts:
         raise TypeError(f"Constants in arguments: {join(consts)}")
@@ -58,7 +58,7 @@ def extract_fields(template: str) -> t.Generator[str, None, None]:
             yield fn
 
 
-def split_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
+def split_cls_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
     const_hints: _T_HINTS = {}
     inst_hints: _T_HINTS = {}
 
@@ -73,7 +73,7 @@ def split_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
     return const_hints, inst_hints
 
 
-def get_defaults(cls: t.Type, attrs: t.Iterable[str]) -> dict[str, t.Any]:
+def get_cls_defaults(cls: t.Type, attrs: t.Iterable[str]) -> dict[str, t.Any]:
     result = {}
     for attr in attrs:
         with contextlib.suppress(AttributeError):

@@ -66,9 +66,9 @@ class Error(Exception):
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         super().__init_subclass__(**kwargs)
         fields = frozenset(_utils.extract_fields(cls.__template__))
-        const_hints, inst_hints = _utils.split_hints(cls)
-        consts = _utils.get_defaults(cls, const_hints)
-        defaults = _utils.get_defaults(cls, inst_hints)
+        const_hints, inst_hints = _utils.split_cls_hints(cls)
+        consts = _utils.get_cls_defaults(cls, const_hints)
+        defaults = _utils.get_cls_defaults(cls, inst_hints)
         cls.__cls_store = _utils.Store(
             fields=fields,
             inst_hints=types.MappingProxyType(inst_hints),
@@ -97,7 +97,7 @@ class Error(Exception):
             _utils.check_undeclared_fields(store, kws)
 
         if Features.FORBID_KWARG_CONSTS in self.__features__:
-            _utils.check_constants_in_kwargs(store, kws)
+            _utils.check_kwarg_consts(store, kws)
 
     def __populate_attrs(self) -> None:
         """Set hinted kwargs as attributes"""

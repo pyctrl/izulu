@@ -74,4 +74,4 @@ def test_extract_fields(tpl, expected):
     )
 )
 def test_get_defaults(kls, attrs, expected):
-    assert _utils.get_defaults(kls, attrs) == expected
+    assert _utils.get_cls_defaults(kls, attrs) == expected
