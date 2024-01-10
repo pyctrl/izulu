@@ -88,6 +88,10 @@ Izulu machinery rules
     #   - has value
     #   - forbidden in kwargs (by default - disable with FEATURE)
 
+* Errors and reasons to expect:
+
+  * TypeError: argument errors
+  * ValueError: template formatting errors
 
 Walkthrough: step by step guide
 -------------------------------

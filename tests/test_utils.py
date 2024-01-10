@@ -1,4 +1,5 @@
 import datetime
+import types
 
 import pytest
 
@@ -8,6 +9,62 @@ from tests import errors
 count = 42
 owner = "somebody"
 dt = datetime.datetime.utcnow()
+
+
+def _make_store_kwargs(fields=None, inst_hints=None,
+                       consts=None, defaults=None):
+    return dict(
+        fields=frozenset(fields or tuple()),
+        inst_hints=types.MappingProxyType(inst_hints or dict()),
+        consts=types.MappingProxyType(consts or dict()),
+        defaults=frozenset(defaults or tuple()),
+    )
+
+
+def _make_store(**kwargs):
+    return _utils.Store(**_make_store_kwargs(**kwargs))
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "expected"),
+    (
+        (_make_store_kwargs(),
+         frozenset()),
+        (_make_store_kwargs(fields=("field_1", "field_2")),
+         frozenset(("field_1", "field_2"))),
+        (_make_store_kwargs(inst_hints=dict(field_2=2, field_3=3)),
+         frozenset(("field_2", "field_3"))),
+        (_make_store_kwargs(fields=("field_1", "field_2"),
+                            inst_hints=dict(field_2=2, field_3=3)),
+         frozenset(("field_1", "field_2", "field_3"))),
+        (_make_store_kwargs(fields=("field_1", "field_2"),
+                            inst_hints=dict(field_1=1, field_2=2)),
+         frozenset(("field_1", "field_2"))),
+    )
+)
+def test_store_post_init(kwargs, expected):
+    assert _utils.Store(**kwargs).registered == expected
+
+
+@pytest.mark.parametrize(
+    ("store", "kws"),
+    (
+        (_make_store(), frozenset()),
+    )
+)
+def test_check_missing_fields_ok(store, kws):
+    _utils.check_missing_fields(store, kws)
+
+
+@pytest.mark.parametrize(
+    ("store", "kws"),
+    (
+        (_make_store(fields=("a", "b")), frozenset()),
+    )
+)
+def test_check_missing_fields_fail(store, kws):
+    with pytest.raises(TypeError):
+        _utils.check_missing_fields(store, kws)
 
 
 @pytest.mark.parametrize(
