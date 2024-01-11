@@ -1,4 +1,5 @@
 import datetime
+import typing as t
 
 import pytest
 
@@ -76,6 +77,37 @@ def test_join_kwargs(data, expected):
 )
 def test_extract_fields(tpl, expected):
     assert tuple(_utils.extract_fields(tpl)) == expected
+
+
+@pytest.mark.parametrize(
+    ("kls", "const_hints", "inst_hints"),
+    (
+        (errors.RootError, dict(), dict()),
+        (errors.TemplateOnlyError, dict(), dict()),
+        (errors.ComplexTemplateOnlyError, dict(), dict()),
+        (errors.AttributesOnlyError, dict(),
+         dict(age=int, name=str)),
+        (errors.AttributesWithStaticDefaultsError, dict(),
+         dict(age=int, name=str)),
+        (errors.AttributesWithDynamicDefaultsError, dict(),
+         dict(age=int, name=str)),
+        (errors.ClassVarsError,
+         dict(name=t.ClassVar[str],
+              age=t.ClassVar[int],
+              blah=t.ClassVar[float]),
+         dict()),
+        (errors.MixedError,
+         dict(entity=t.ClassVar[str]),
+         dict(name=str, age=int, my_type=str, timestamp=datetime.datetime)),
+        (errors.DerivedError,
+         dict(entity=t.ClassVar[str]),
+         dict(name=str, surname=str, full_name=str, age=int, my_type=str,
+              timestamp=datetime.datetime, updated_at=datetime.datetime,
+              box=dict, location=tuple[float, float])),
+    )
+)
+def test_split_cls_hints(kls, const_hints, inst_hints):
+    assert _utils.split_cls_hints(kls) == (const_hints, inst_hints)
 
 
 @pytest.mark.parametrize(

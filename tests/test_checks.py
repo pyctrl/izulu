@@ -51,7 +51,7 @@ def test_check_missing_fields_ok(store, kws):
 @pytest.mark.parametrize(
     ("store", "kws"),
     (
-        (h._make_store(fields=("a", "b")), tuple()),
+        (h._make_store(fields=("name", "age")), tuple()),
         (h._make_store(fields=("name", "age")), ("age",)),
         (h._make_store(fields=("name",), inst_hints=dict(name=str, age=int)),
          ("name",)),
