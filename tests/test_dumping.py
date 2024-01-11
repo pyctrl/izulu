@@ -24,13 +24,20 @@ TS = datetime.datetime.now()
     )
 )
 def test_as_kwargs(err, expected):
-    assert err.as_kwargs() == expected
+    kwargs = err.as_kwargs()
+    assert kwargs == expected
+
+    kwargs["item"] = "SURPRISE"
+    assert kwargs != err._Error__kwargs
 
 
 @pytest.mark.parametrize(
     ("err", "expected"),
     (
             (errors.RootError(), dict()),
+            (errors.ClassVarsError(), dict()),
+            (errors.AttributesWithStaticDefaultsError(name="John"),
+             dict(name="John", age=0)),
             (errors.MixedError(name="John", age=10, note="...", timestamp=TS),
              dict(name="John",
                   age=10,
@@ -56,7 +63,11 @@ def test_as_kwargs(err, expected):
     )
 )
 def test_as_dict(err, expected):
-    assert err.as_dict() == expected
+    data = err.as_dict()
+    assert data == expected
+
+    data["item"] = "SURPRISE"
+    assert "SURPRISE" not in err._Error__kwargs
 
 
 def test_copy():  # shallow
