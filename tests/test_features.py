@@ -66,16 +66,11 @@ def test_feature_presets():
             | root.Features.FORBID_UNDECLARED_FIELDS
             | root.Features.FORBID_KWARG_CONSTS
     )
-    # alls = (root.Features.FORBID_MISSING_FIELDS
-    #         | root.Features.FORBID_UNDECLARED_FIELDS)
-    # #       | root.Features.FORBID_WRONG_TYPES)
 
     assert root.Features.NONE is root.Features(0)
     assert root.Features.NONE == root.Features(0)
     assert root.Features.DEFAULT is default
     assert root.Features.DEFAULT == default
-    # assert root.Features.ALL is alls
-    # assert root.Features.ALL == alls
 
 
 def test_default_features():
