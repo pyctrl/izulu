@@ -119,6 +119,43 @@ def test_check_missing_fields_fail(store, kws):
 
 
 @pytest.mark.parametrize(
+    ("store", "kws"),
+    (
+        (_make_store(), tuple()),
+        (_make_store(fields=("name", "age")), ("name", "age")),
+        (_make_store(inst_hints=dict(name=str, age=int)), ("name", "age")),
+        (_make_store(consts=dict(name="John", age=42)), ("name", "age")),
+        (_make_store(fields=("name", "age", "ENTITY"),
+                     inst_hints=dict(name=str, age=int),
+                     defaults=("age",),
+                     consts=dict(ENTITY="THING")),
+         ("name",)),
+        (_make_store(fields=("name",),
+                     inst_hints=dict(name=str, age=int),
+                     defaults=("name", "age"),
+                     consts=dict(ENTITY="THING")),
+         tuple()),
+    )
+)
+def test_check_undeclared_fields_ok(store, kws):
+    _utils.check_undeclared_fields(store, frozenset(kws))
+
+
+@pytest.mark.parametrize(
+    ("store", "kws"),
+    (
+        (_make_store(), ("entity",)),
+        (_make_store(fields=("name", "age")), ("entity",)),
+        (_make_store(inst_hints=dict(name=str, age=int)), ("entity",)),
+        (_make_store(consts=dict(name="John", age=42)), ("entity",)),
+    )
+)
+def test_check_undeclared_fields_fail(store, kws):
+    with pytest.raises(TypeError):
+        _utils.check_undeclared_fields(store, frozenset(kws))
+
+
+@pytest.mark.parametrize(
     ("args", "expected"),
     (
         ((tuple(),), ""),
