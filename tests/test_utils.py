@@ -21,8 +21,13 @@ def _make_store_kwargs(fields=None, inst_hints=None,
     )
 
 
-def _make_store(**kwargs):
-    return _utils.Store(**_make_store_kwargs(**kwargs))
+def _make_store(fields=None, inst_hints=None, consts=None, defaults=None):
+    return _utils.Store(
+        **_make_store_kwargs(fields=fields,
+                             inst_hints=inst_hints,
+                             consts=consts,
+                             defaults=defaults)
+    )
 
 
 @pytest.mark.parametrize(
@@ -49,22 +54,68 @@ def test_store_post_init(kwargs, expected):
 @pytest.mark.parametrize(
     ("store", "kws"),
     (
-        (_make_store(), frozenset()),
+        (_make_store(), tuple()),
+        (_make_store(fields=("name", "age")), ("name", "age")),
+        (_make_store(fields=("name", "age"),
+                     inst_hints=dict(name=str, age=int)),
+         ("name", "age")),
+        (_make_store(fields=("name", "age"),
+                     inst_hints=dict(name=str, age=int),
+                     defaults=("age",)),
+         ("name",)),
+        (_make_store(fields=("name", "age", "ENTITY"),
+                     inst_hints=dict(name=str, age=int),
+                     defaults=("age",),
+                     consts=dict(ENTITY="THING")),
+         ("name",)),
+        (_make_store(fields=("name", "age"),
+                     inst_hints=dict(name=str, age=int),
+                     defaults=("name", "age"),
+                     consts=dict(ENTITY="THING")),
+         tuple()),
+        (_make_store(fields=("name", "age"),
+                     inst_hints=dict(name=str, age=int),
+                     defaults=("age",),
+                     consts=dict(ENTITY="THING")),
+         ("name",)),
+        (_make_store(fields=("name", "ENTITY"),
+                     inst_hints=dict(name=str),
+                     consts=dict(ENTITY="THING")),
+         ("name",)),
+        (_make_store(fields=("name", "ENTITY"), consts=dict(ENTITY="THING")),
+         ("name",)),
+        (_make_store(inst_hints=dict(name=str, age=int),
+                     defaults=dict(age=42)),
+         ("name",)),
+        (_make_store(defaults=("age",), consts=dict(ENTITY="THING")),
+         ("name",)),
     )
 )
 def test_check_missing_fields_ok(store, kws):
-    _utils.check_missing_fields(store, kws)
+    _utils.check_missing_fields(store, frozenset(kws))
 
 
 @pytest.mark.parametrize(
     ("store", "kws"),
     (
-        (_make_store(fields=("a", "b")), frozenset()),
+        (_make_store(fields=("a", "b")), tuple()),
+        (_make_store(fields=("name", "age")), ("age",)),
+        (_make_store(fields=("name",), inst_hints=dict(name=str, age=int)),
+         ("name",)),
+        (_make_store(fields=("name", "age", "ENTITY"), defaults=("age",)),
+         ("name",)),
+        (_make_store(inst_hints=dict(name=str, age=int)), ("name",)),
+        (_make_store(fields=("name", "ENTITY"),
+                     inst_hints=dict(name=str),
+                     consts=dict(ENTITY="THING")),
+         ("ENTITY",)),
+        (_make_store(fields=("name", "ENTITY"), consts=dict(ENTITY="THING")),
+         ("age",)),
     )
 )
 def test_check_missing_fields_fail(store, kws):
     with pytest.raises(TypeError):
-        _utils.check_missing_fields(store, kws)
+        _utils.check_missing_fields(store, frozenset(kws))
 
 
 @pytest.mark.parametrize(
