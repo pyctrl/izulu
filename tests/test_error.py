@@ -111,3 +111,13 @@ def test_errors(kls, kwargs, msg, attrs, not_attrs):
 def test_failures(kls, kwargs):
     with pytest.raises(TypeError):
         kls(**kwargs)
+
+
+def test_hook():
+    e = errors.RootError()
+    orig_msg = "my message"
+
+    final_msg = e._hook(e._Error__cls_store, dict(), orig_msg)
+
+    assert final_msg == orig_msg
+    assert id(final_msg) == id(orig_msg)

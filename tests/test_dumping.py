@@ -30,6 +30,8 @@ def test_as_kwargs(err, expected):
     kwargs["item"] = "SURPRISE"
     assert kwargs != err._Error__kwargs
 
+    assert id(kwargs) != id(err._Error__kwargs)
+
 
 @pytest.mark.parametrize(
     ("err", "expected"),
@@ -69,6 +71,8 @@ def test_as_dict(err, expected):
     data["item"] = "SURPRISE"
     assert "SURPRISE" not in err._Error__kwargs
 
+    assert id(data) != id(err._Error__kwargs)
+
 
 def test_copy():  # shallow
     ts = datetime.datetime.now()
@@ -83,6 +87,7 @@ def test_copy():  # shallow
     copied = copy.copy(orig)
 
     assert id(copied) != id(orig)
+    assert id(copied._Error__kwargs) != id(orig._Error__kwargs)
     assert copied.as_dict() == orig.as_dict()
     assert copied.box is orig.box
     assert copied.box == orig.box == dict()
@@ -106,6 +111,7 @@ def test_deepcopy():
     copied = copy.deepcopy(orig)
 
     assert id(copied) != id(orig)
+    assert id(copied._Error__kwargs) != id(orig._Error__kwargs)
     assert copied.as_dict() == orig.as_dict()
     assert id(copied.box) != id(orig.box)
     assert copied.box == orig.box == dict()
@@ -132,4 +138,6 @@ def test_pickling(err):
     dumped = pickle.dumps(err)
     resurrected = pickle.loads(dumped)
 
+    assert str(err) == str(resurrected)
+    assert repr(err) == repr(resurrected)
     assert err.as_dict() == resurrected.as_dict()
