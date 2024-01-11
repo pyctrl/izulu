@@ -156,6 +156,30 @@ def test_check_undeclared_fields_fail(store, kws):
 
 
 @pytest.mark.parametrize(
+    ("store", "kws"),
+    (
+        (_make_store(), tuple()),
+        (_make_store(consts=dict(ENTITY="Thing")), tuple()),
+        (_make_store(consts=dict(ENTITY="Thing")), ("name",)),
+    )
+)
+def test_check_kwarg_consts_ok(store, kws):
+    _utils.check_kwarg_consts(store, frozenset(kws))
+
+
+@pytest.mark.parametrize(
+    ("store", "kws"),
+    (
+        (_make_store(consts=dict(ENTITY="Thing")), ("ENTITY",)),
+        (_make_store(consts=dict(ENTITY="Thing")), ("ENTITY", "name")),
+    )
+)
+def test_check_kwarg_consts_fail(store, kws):
+    with pytest.raises(TypeError):
+        _utils.check_kwarg_consts(store, frozenset(kws))
+
+
+@pytest.mark.parametrize(
     ("args", "expected"),
     (
         ((tuple(),), ""),
