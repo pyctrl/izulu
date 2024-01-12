@@ -66,6 +66,42 @@ def test_join_kwargs(data, expected):
 
 
 @pytest.mark.parametrize(
+    ("template", "kwargs", "expected"),
+    (
+        ("Static message template", dict(), "Static message template"),
+        ("Static message template",
+         dict(name="John", age=42, ENTITY="The thing"),
+         "Static message template"),
+        ("The {name} and {ENTITY}",
+         dict(name="John", age=42, ENTITY="The thing"),
+         "The John and The thing"),
+        ("The {name} of {age} and {ENTITY}",
+         dict(name="John", age=42, ENTITY="The thing"),
+         "The John of 42 and The thing"),
+        ("The {name} of {age:f} and {ENTITY}",
+         dict(name="John", age=42, ENTITY="The thing"),
+         "The John of 42.000000 and The thing"),
+    )
+)
+def test_format_template_ok(template, kwargs, expected):
+    assert _utils.format_template(template, kwargs) == expected
+
+
+@pytest.mark.parametrize(
+    ("template", "kwargs"),
+    (
+        ("The {name} of {age} and {ENTITY}",
+         dict(name="John", ENTITY="The thing")),
+        ("The {name} of {age:f} and {ENTITY}",
+         dict(name="John", age="42", ENTITY="The thing")),
+    )
+)
+def test_format_template_fail(template, kwargs):
+    with pytest.raises(ValueError):
+        _utils.format_template(template, kwargs)
+
+
+@pytest.mark.parametrize(
     ("tpl", "expected"),
     (
         ("Having boring message here", tuple()),

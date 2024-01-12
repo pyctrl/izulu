@@ -109,13 +109,9 @@ class Error(Exception):
     def __process_template(self, data: dict[str, t.Any]) -> str:
         """Format the error template from provided data (kwargs & defaults)"""
 
-        try:
-            # TODO(d.burmistrov): aka `setdefault` ???
-            return self.__template__.format(**data, **self.__cls_store.consts)
-        except Exception as e:
-            msg = ("Failed to format template with provided kwargs: "
-                   + _utils.join_kwargs(**self.__kwargs))
-            raise ValueError(msg) from e
+        kwargs = self.__cls_store.consts.copy()
+        kwargs.update(data)
+        return _utils.format_template(self.__template__, kwargs)
 
     def _hook(self,
               store: _utils.Store,

@@ -51,6 +51,14 @@ def join_kwargs(**kwargs: t.Any) -> str:
     return join(f"{k!s}={v!r}" for k, v in kwargs.items())
 
 
+def format_template(template: str, kwargs: dict[str, t.Any]):
+    try:
+        return template.format(**kwargs)
+    except Exception as e:
+        msg_part = "Failed to format template with provided kwargs: "
+        raise ValueError(msg_part + join_kwargs(**kwargs)) from e
+
+
 def extract_fields(template: str) -> t.Generator[str, None, None]:
     parsed = string.Formatter().parse(template)
     for _, fn, _, _ in parsed:
