@@ -14,6 +14,7 @@ _IZULU_ATTRS = {"__template__", "__features__", "_Error__cls_store"}
 class Store:
 
     fields: frozenset[str]
+    const_hints: types.MappingProxyType[str, t.Type]
     inst_hints: types.MappingProxyType[str, t.Type]
     consts: types.MappingProxyType[str, t.Any]
     defaults: frozenset[str]
@@ -37,7 +38,7 @@ def check_undeclared_fields(store: Store, kws: frozenset[str]) -> None:
 
 
 def check_kwarg_consts(store: Store, kws: frozenset[str]) -> None:
-    consts = kws.intersection(store.consts)
+    consts = kws.intersection(store.const_hints)
     if consts:
         raise TypeError(f"Constants in arguments: {join(consts)}")
 

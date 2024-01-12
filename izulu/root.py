@@ -58,6 +58,7 @@ class Error(Exception):
 
     __cls_store: t.ClassVar[_utils.Store] = _utils.Store(
         fields=frozenset(),
+        const_hints=types.MappingProxyType(dict()),
         inst_hints=types.MappingProxyType(dict()),
         consts=types.MappingProxyType(dict()),
         defaults=frozenset(),
@@ -71,6 +72,7 @@ class Error(Exception):
         defaults = _utils.get_cls_defaults(cls, inst_hints)
         cls.__cls_store = _utils.Store(
             fields=fields,
+            const_hints=types.MappingProxyType(const_hints),
             inst_hints=types.MappingProxyType(inst_hints),
             consts=types.MappingProxyType(consts),
             defaults=frozenset(defaults),

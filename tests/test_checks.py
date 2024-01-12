@@ -112,8 +112,8 @@ def test_check_undeclared_fields_fail(store, kws):
     ("store", "kws"),
     (
         (h._make_store(), tuple()),
-        (h._make_store(consts=dict(ENTITY="Thing")), tuple()),
-        (h._make_store(consts=dict(ENTITY="Thing")), ("name",)),
+        (h._make_store(const_hints=dict(ENTITY=str)), tuple()),
+        (h._make_store(const_hints=dict(ENTITY=str)), ("name",)),
     )
 )
 def test_check_kwarg_consts_ok(store, kws):
@@ -123,8 +123,8 @@ def test_check_kwarg_consts_ok(store, kws):
 @pytest.mark.parametrize(
     ("store", "kws"),
     (
-        (h._make_store(consts=dict(ENTITY="Thing")), ("ENTITY",)),
-        (h._make_store(consts=dict(ENTITY="Thing")), ("ENTITY", "name")),
+        (h._make_store(const_hints=dict(ENTITY=str)), ("ENTITY",)),
+        (h._make_store(const_hints=dict(ENTITY=str)), ("ENTITY", "name")),
     )
 )
 def test_check_kwarg_consts_fail(store, kws):
