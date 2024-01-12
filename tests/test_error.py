@@ -113,6 +113,42 @@ def test_failures(kls, kwargs):
         kls(**kwargs)
 
 
+@pytest.mark.parametrize(
+    ("kls", "kwargs", "expected_kwargs"),
+    (
+            (errors.RootError, dict(), dict()),
+            (errors.RootError, dict(name="John"), dict(name="John")),
+            (errors.ClassVarsError, dict(), dict(name="Username", age=42)),
+            (errors.ClassVarsError,
+             dict(name="John"),
+             dict(name="John", age=42)),
+            (errors.MixedError,
+             dict(name="John", surname="Brown", updated_at=TS, timestamp=TS),
+             dict(name="John", surname="Brown", age=0,
+                  my_type="MixedError", entity="The Entity",
+                  updated_at=TS, timestamp=TS)),
+            (errors.MixedError,
+             dict(updated_at=TS, timestamp=TS),
+             dict(age=0, my_type="MixedError", entity="The Entity",
+                  updated_at=TS, timestamp=TS)),
+            (errors.DerivedError,
+             dict(name="John", surname="Brown", updated_at=TS, timestamp=TS),
+             dict(name="John", surname="Brown", full_name="John Brown", age=0,
+                  my_type="DerivedError", entity="The Entity",
+                  location=(50.3, 3.608), updated_at=TS, timestamp=TS)),
+    )
+)
+@mock.patch("izulu._utils.format_template")
+def test_process_template(mock_format, kls, kwargs, expected_kwargs):
+    with mock.patch.object(kls,
+                           "__features__",
+                           new_callable=mock.PropertyMock) as mocked:
+        mocked.return_value = errors.RootError.__features__.NONE
+        kls(**kwargs)
+
+    mock_format.assert_called_with(kls.__template__, expected_kwargs)
+
+
 def test_hook():
     e = errors.RootError()
     orig_msg = "my message"

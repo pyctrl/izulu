@@ -88,7 +88,7 @@ Izulu machinery rules
     #   - has value
     #   - forbidden in kwargs (by default - disable with FEATURE)
 
-* Errors and reasons to expect:
+* Errors and reasons to expect (with default feature set enabled):
 
   * TypeError: argument errors
   * ValueError: template formatting errors
