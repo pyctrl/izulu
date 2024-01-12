@@ -1,8 +1,11 @@
 import datetime
+import types
 from unittest import mock
 
 import pytest
 
+from izulu import _utils
+from izulu import root
 from tests import errors
 
 
@@ -143,7 +146,7 @@ def test_process_template(mock_format, kls, kwargs, expected_kwargs):
     with mock.patch.object(kls,
                            "__features__",
                            new_callable=mock.PropertyMock) as mocked:
-        mocked.return_value = errors.RootError.__features__.NONE
+        mocked.return_value = root.Features.NONE
         kls(**kwargs)
 
     mock_format.assert_called_with(kls.__template__, expected_kwargs)
@@ -157,3 +160,17 @@ def test_hook():
 
     assert final_msg == orig_msg
     assert id(final_msg) == id(orig_msg)
+
+
+def test_constants():
+    e = errors.RootError()
+
+    assert e.__template__ == "Unspecified error"
+    assert e.__features__ == root.Features.DEFAULT
+    assert e._Error__cls_store == _utils.Store(
+        fields=frozenset(),
+        const_hints=types.MappingProxyType(dict()),
+        inst_hints=types.MappingProxyType(dict()),
+        consts=types.MappingProxyType(dict()),
+        defaults=frozenset(),
+    )
