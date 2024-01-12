@@ -1,4 +1,3 @@
-import contextlib
 import dataclasses
 import string
 import types
@@ -82,8 +81,6 @@ def split_cls_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
 
 
 def get_cls_defaults(cls: t.Type, attrs: t.Iterable[str]) -> dict[str, t.Any]:
-    result = {}
-    for attr in attrs:
-        with contextlib.suppress(AttributeError):
-            result[attr] = getattr(cls, attr)
-    return result
+    return {attr: getattr(cls, attr)
+            for attr in attrs
+            if hasattr(cls, attr)}
