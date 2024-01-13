@@ -7,7 +7,8 @@ izulu
 
 ::
 
-   pip install izulu
+    pip install izulu
+    python -m izulu.root -i
 
 
 Bring OOP into exception/error management
@@ -16,7 +17,8 @@ Bring OOP into exception/error management
 *For details see* **"Tutorial"** *and* **"Specification"** *sections below.*
 
 
-*Stop messing around with raw messages, strings and manual formatting.*
+Neat #1: Stop messing with raw strings and manual message formatting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -32,66 +34,75 @@ Bring OOP into exception/error management
     if data["status"] not in {"READY", "IN_PROGRESS}:
         raise ValueError("Data is invalid: unprocessable status")
 
-
-Stop copy-pasting all over codebase.
-
-* error messages: ``raise InsufficientFunds("Not enough funds for purchase")``
-* and inline formatting: ``raise MyError(f"{smth} has happened with {ENTITY} at {datetime.datetime.now()}")``
+Stop manually manage error messages all over the codebase!
 
 ::
 
-    import datetime
-    import typing as t
-    from izulu import root
+    class ValidationError(Error):
+        __template__ = "Data is invalid: {reason}"
 
-    class MyError(root.Error):
-        ENTITY: t.ClassVar[str] = "ENTITY"
-        __template__ = "{smth} has happened with {ENTITY} at {ts}"
-        ts: datetime = root.factory(datetime.datetime.now)
+    class AmountValidationError(ValidationError):
+        __template__ = f"{ValidationError.__template__} ({{amount}})"
 
 
-    e = MyError(smth="Duplicate entity")
+    if not data:
+        raise ValidationError(reason="no data")
+
+    amount = data["amount"]
+    if amount < 0:
+        raise AmountValidationError(reason="amount can't be negative", amount=amount)
+    elif amount > 1000:
+        raise AmountValidationError(reason="amount is too large", amount=amount)
+
+    if data["status"] not in {"READY", "IN_PROGRESS}:
+        raise ValidationError(reason="unprocessable status")
 
 
-    str(e)
-    # 'Duplicate entity has happened with ENTITY at 2024-01-13 17:38:26.608088'
+Provide only variable data for error instantiations. Keep static data within error class.
 
-    str(e.ts)
-    # '2024-01-13 17:38:26.608088'
+Under the hood ``kwargs`` are used to format ``__template__`` into final error message.
 
-Neats
-^^^^^
+
+Neat #2: Attribute errors with useful fields
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
-    class MyError(root.Error):
-        ENTITY: t.ClassVar[str] = "ENTITY"
-        __template__ = "{smth} has happened with {ENTITY} at {ts}"
-        ts: datetime = root.factory(datetime.datetime.now)
+    class AmountValidationError(ValidationError):
+        __template__ = "Data is invalid: {reason} ({amount})"
+        amount: int
 
 
-#. Instead of manual error message formatting (and copying it all over
-   the codebase) provide only ``kwargs``:
+    try:
+        validate(data)
+    except ValidationError as e:
+        if e.amount < 0:
+            raise BadRequestError(fields="amount")
+        raise
 
-   - before: ``raise MyError(f"{smth} has happened at {datetime.now()}")``
-   - **after:** ``raise MyError(smth="Duplicate entity")``
 
-   Just provide ``__template__`` class attribute with your error message
-   template string. New style formatting is used:
+Annotated instance attributes automatically populated from ``kwargs``.
 
-   - ``str.format()``
-   - https://pyformat.info/
-   - https://docs.python.org/3/library/string.html#formatspec
 
-#. Automatic ``kwargs`` conversion into error instance attributes
-   if such ``kwarg`` is present in type hints
-   (for example above ``ts`` would be an attribute and ``smth`` won't)
+Neat #3: Static and dynamic defaults
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. You can attach static and dynamic default values:
-   this is why ``datetime.now()`` was omitted above
 
-#. Out-of-box validation for provided ``kwargs``
-   (individually enable/disable checks with ``__features__`` attribute)
+::
+
+    class AmountValidationError(ValidationError):
+        __template__ = "Data is invalid: {reason} ({amount} MIN={_MIN}) at {ts}"
+        _MAX: ClassVar[int] = 1000
+        amount: int
+        reason: int = "amount is too large"
+        ts: datetime = factory(datetime.datetime.now)
+
+
+    print(AmountValidationError(amount=15000))
+    # Data is invalid: amount is too large (15000 MAX=1000) at 2024-01-13 21:16:22.284280
+
+    print(AmountValidationError(amount=-1, reason="amount can't be negative"))
+    # Data is invalid: amount can't be negative (-1 MAX=1000) at 2024-01-13 21:16:23.550391
 
 
 Tutorial: step by step guide
@@ -291,6 +302,9 @@ The 5 pillars
   * *"fields"* and *"instance attributes"* are populated through ``kwargs`` (shared input for templating attribution)
 
 
+**WARNING**: types from type hints are not validated or enforced
+
+
 Features
 ^^^^^^^^
 
@@ -345,6 +359,18 @@ Rules
 
   * ``TypeError``: constraint and argument issues
   * ``ValueError``: template formatting issue
+
+* types from type hints are not validated or enforced
+* *"defaults"* don't have to be ``__template__`` *"fields"*
+
+  * there can be hints for attributes not present in error message template
+  * and vice versa — there can be *"fields"* not present as instance attributes
+
+* formatting for ``__template__`` works with new style formatting:
+
+   * ``str.format()``
+   * https://pyformat.info/
+   * https://docs.python.org/3/library/string.html#formatspec
 
 
 Additional options
@@ -441,7 +467,7 @@ Running tests
 
 ::
 
-   tox
+    tox
 
 
 Building package
@@ -449,7 +475,7 @@ Building package
 
 ::
 
-   tox -e build
+    tox -e build
 
 
 Contributing
