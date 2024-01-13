@@ -149,7 +149,7 @@ def test_process_template(mock_format, kls, kwargs, expected_kwargs):
         mocked.return_value = root.Features.NONE
         kls(**kwargs)
 
-    mock_format.assert_called_with(kls.__template__, expected_kwargs)
+    mock_format.assert_called_once_with(kls.__template__, expected_kwargs)
 
 
 def test_hook():
