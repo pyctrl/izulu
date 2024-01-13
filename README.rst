@@ -8,6 +8,7 @@ izulu
 ::
 
     pip install izulu
+
     python -m izulu.root -i
 
 
@@ -368,9 +369,9 @@ Rules
 
 * formatting for ``__template__`` works with new style formatting:
 
-   * ``str.format()``
-   * https://pyformat.info/
-   * https://docs.python.org/3/library/string.html#formatspec
+  * ``str.format()``
+  * https://pyformat.info/
+  * https://docs.python.org/3/library/string.html#formatspec
 
 
 Additional options
