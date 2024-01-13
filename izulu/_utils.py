@@ -32,7 +32,7 @@ def check_missing_fields(store: Store, kws: frozenset[str]) -> None:
 
 
 def check_undeclared_fields(store: Store, kws: frozenset[str]) -> None:
-    undeclared = kws.difference(store.registered, store.consts)
+    undeclared = kws.difference(store.registered, store.const_hints)
     if undeclared:
         raise TypeError(f"Undeclared arguments: {join(undeclared)}")
 
