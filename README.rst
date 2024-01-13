@@ -3,46 +3,57 @@ izulu
 
 *"An exceptional library"*
 
-**Bring OOP into exception/error management (for details see "walkthrough" below).**
-
-::
-
-    import datetime
-    from izulu import root
-
-    class MyError(root.Error):
-        __template__ = "{smth} has happened at {ts}"
-        ts: datetime = root.factory(datetime.datetime.now)
-
-
-    e = MyError(smth="Duplicate entity")
-
-    str(e)
-    # 'Duplicate entity has happened at 2024-01-09 01:22:38.540916'
-
-    str(e.ts)
-    # '2024-01-09 01:22:38.540916'
-
-    ### Forget about this!:
-    ###     raise MyError(f"{smth} has happened at {datetime.datetime.now()}")
-
-
-Installing
-----------
+**Installation**
 
 ::
 
    pip install izulu
 
 
-Features
---------
+Bring OOP into exception/error management
+-----------------------------------------
+
+For details see "Specification" and "Walkthrough" sections below.
+
+Stop copy-pasting all over codebase.
+
+* error messages: ``raise InsufficientFunds("Not enough funds for purchase")``
+* and inline formatting: ``raise MyError(f"{smth} has happened with {ENTITY} at {datetime.datetime.now()}")``
+
+::
+
+    import datetime
+    import typing as t
+    from izulu import root
+
+    class MyError(root.Error):
+        ENTITY: t.ClassVar[str] = "ENTITY"
+        __template__ = "{smth} has happened with {ENTITY} at {ts}"
+        ts: datetime = root.factory(datetime.datetime.now)
+
+
+    e = MyError(smth="Duplicate entity")
+
+
+
+
+
+    str(e)
+    # 'Duplicate entity has happened with ENTITY at 2024-01-13 17:38:26.608088'
+
+    str(e.ts)
+    # '2024-01-13 17:38:26.608088'
+
+
+Neats
+-----
 
 ::
 
     class MyError(root.Error):
-        __template__ = "{smth} has happened at {ts}"
-        ts: root.factory(datetime.now)
+        ENTITY: t.ClassVar[str] = "ENTITY"
+        __template__ = "{smth} has happened with {ENTITY} at {ts}"
+        ts: datetime = root.factory(datetime.datetime.now)
 
 
 #. Instead of manual error message formatting (and copying it all over
@@ -59,7 +70,7 @@ Features
    - https://docs.python.org/3/library/string.html#formatspec
 
 #. Automatic ``kwargs`` conversion into error instance attributes
-   if such kwarg is present in type hints
+   if such ``kwarg`` is present in type hints
    (for example above ``ts`` would be an attribute and ``smth`` won't)
 
 #. You can attach static and dynamic default values:
@@ -69,29 +80,104 @@ Features
    (individually enable/disable checks with ``__features__`` attribute)
 
 
-Izulu machinery rules
----------------------
+Specification
+-------------
 
-* ``__init__()`` accepts only kwargs
-* final message is formatted from ``__template__`` with ``kwargs``
-* type hints triggers relevant kwargs to be attached as error object attributes
-* static defaults can be provided regularly with type hints
-* dynamic defaults can be provided with type hints and ``factory`` helper;
-  there are 2 modes depending on the value of the ``self`` flag:
+``izulu`` bases on class definitions to provide handy instance creation.
 
-  * ``self=False`` (default): provide callable not accepting arguments
+
+The 5 pillars
+^^^^^^^^^^^^^
+
+* ``__template__`` class attribute defines the template for target error message
+
+  * template may contain *"fields"* for substitution from ``kwargs`` and *"defaults"*
+
+* ``__features__`` class attribute defines constraints and behaviour (see "Features" section below)
+
+  * by default all constraints are enabled
+
+* *"class hints"* annotated with ``ClassVar`` are noted by ``izulu``
+
+  * annotated class attributes with values may be used within ``__template__``
+    (we name these attributes as *"class defaults"*)
+  * default values can only be static
+  * annotated class attributes without values (just annotations) affects ``FORBID_KWARG_CONSTS`` feature (see below)
+
+* *"instance hints"* regularly annotated (not with ``ClassVar``) are noted by ``izulu``
+
+  * all annotated attributes (*"instance attributes"*) will become instance attributes from ``kwargs`` data (like ``ts`` in example above)
+  * annotated attributes with default values may be used as *"fields"* within ``__template__``
+    (we name these attributes as *"instance defaults"*)
+  * annotated attributes may have **static and dynamic** defaults values
+  * dynamic defaults are callables wrapped with ``factory`` helper;
+    there are 2 modes depending on the value of the ``self`` flag:
+
+    * ``self=False`` (default): provide callable not accepting arguments
+    * ``self=True``: provide callable accepting single argument (error instance)
+
+* ``kwargs`` — the new and main way to form exceptions/error instance
+
+  * forget about creating exception instances from message strings
+  * now ``__init__()`` accepts only ``kwargs``
+  * *"fields"* and *"instance attributes"* are populated through ``kwargs`` (shared input for templating attribution)
+
+
+Features
+^^^^^^^^
+
+The ``izulu`` error class behaviour is controlled by ``__features__`` class attribute.
+
+Features are represented as flag enum ``Features`` with following options:
+
+* ``FORBID_MISSING_FIELDS``: checks provided ``kwargs`` contain data for all template *"fields"*
+  and *"instance attributes"* that have no *"defaults"*
+
+  * always should be enabled (provides consistent and detailed ``TypeError`` exceptions for appropriate arguments)
+  * if disabled raw exceptions from izulu machinery internals could appear
+
+* ``FORBID_UNDECLARED_FIELDS``: forbids undefined arguments in provided ``kwargs``
+  (names not present in template *"fields"* and *"instance/class hints"*)
+
+  * if disabled allows and **completely ignores** unknown data in ``kwargs``
+
+* ``FORBID_KWARG_CONSTS``: checks provided ``kwargs`` not to contain attributes defined as ``ClassVar``
+
+  * if enabled allows data in ``kwargs`` to overlap class attributes during template formatting
+  * overlapping data won't modify class attribute values
+
+
+Rules
+^^^^^
+
+* inherit from ``izulu.root.Error``
+* behavior is defined on class-level
+* **optionally** change the behaviour with ``__features__``
+* ``__init__()`` accepts only ``kwargs``
+* provide template with ``__template__``
+
+  * *"fields"* defined in ``__template__`` require these data in ``kwargs``
+  * *"fields"* may refer class and instance *"defaults"* — you can omit them in ``kwargs`` or not (override defaults)
+
+* final message is formatted from ``__template__`` with
+
+  * ``kwargs`` (overlap any *"default"*)
+  * *"instance defaults"*
+  * *"class defaults"*
+
+* *"class defaults"* can be provided regularly with ``ClassVar`` type hints and static values
+* (annotated with instance type hints) *"instance attributes"* will be populated from relevant ``kwargs``
+* static *"instance defaults"* can be provided regularly with instance type hints and static values
+* dynamic *"instance defaults"* can be provided with type hints and callable value wrapped in ``factory`` helper
+
+  * ``self=False`` (default): callable accepting no arguments
   * ``self=True``: provide callable accepting single argument (error instance)
 
-* TODO: ``ClassVar`` type hints and their attributes are ignored by izulu machinery
-    # constants:
-    #   - hinted with ClassVar[...]
-    #   - has value
-    #   - forbidden in kwargs (by default - disable with FEATURE)
+* exceptions you should expect with default feature set enabled:
 
-* Errors and reasons to expect (with default feature set enabled):
+  * ``TypeError``: constraint and argument issues
+  * ``ValueError``: template formatting issue
 
-  * TypeError: argument errors
-  * ValueError: template formatting errors
 
 Walkthrough: step by step guide
 -------------------------------
@@ -249,16 +335,6 @@ alternate syntax without method
 
 Additional options
 ------------------
-
-Controlling behaviour with ``__features__``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default ``Error`` does some validations controlled by flag enum ``Features``.
-
-* FORBID_MISSING_FIELDS: checks provided ``kwargs`` to contain all fields from template
-  and all type hinted attributes (excluding fields with default values)
-* FORBID_UNDECLARED_FIELDS: forbids undefined arguments in provided ``kwargs``
-  (names not present in template of type hints)
 
 
 String representations
