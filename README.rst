@@ -13,22 +13,24 @@ izulu
 Bring OOP into exception/error management
 -----------------------------------------
 
-For details see **"Tutorial"** and **"Specification"** sections below.
+*For details see* **"Tutorial"** *and* **"Specification"** *sections below.*
 
 
-
-
-*Stop copy-pasting all over codebase.*
+*Stop messing around with raw messages, strings and manual formatting.*
 
 ::
 
-    class ValidationError(Exception): ...
+    if not data:
+        raise ValueError("Data is invalid: no data")
 
-    def validate(data):
-        if not data:
-            raise ValidationError("Data is invalid"
+    amount = data["amount"]
+    if amount < 0:
+        raise ValueError(f"Data is invalid: amount can't be negative ({amount})")
+    elif amount > 1000:
+        raise ValueError(f"Data is invalid: amount is too large ({amount})")
 
-
+    if data["status"] not in {"READY", "IN_PROGRESS}:
+        raise ValueError("Data is invalid: unprocessable status")
 
 
 Stop copy-pasting all over codebase.
