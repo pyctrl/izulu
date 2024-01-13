@@ -397,15 +397,17 @@ String API (representations)
     # Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 23:33:13.847586
 
     print(repr(err))
-    # AmountValidationError(amount=15000, ts=datetime.datetime(2024, 1, 13, 23, 33, 13, 847586), reason='amount is too large')
+    # __main__.AmountValidationError(amount=15000, ts=datetime.datetime(2024, 1, 13, 23, 33, 13, 847586), reason='amount is too large')
 
 
 * ``str`` and ``repr`` output differs
 * ``str`` is for humans and Python (Python dictates the result to be exactly and only the message)
 * ``repr`` allows to reconstruct the same error instance from its output
-  (if data provided into *kwargs* supports ``repr`` the same way)::
+  (if data provided into *kwargs* supports ``repr`` the same way)
 
-    reconstructed = eval(repr(err))
+  **note:** class name is fully qualified name of class (dot-separated module full path with class name) ::
+
+    reconstructed = eval(repr(err).replace("__main__.", "", 1))
 
     print(str(reconstructed))
     # Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 23:33:13.847586

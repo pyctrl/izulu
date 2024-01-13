@@ -1,4 +1,5 @@
 import datetime
+from unittest import mock
 
 import pytest
 
@@ -47,6 +48,17 @@ def test_str(err, expected):
 )
 def test_repr(err, expected):
     assert repr(err) == expected
+
+
+def test_repl_repr():
+    e = errors.TemplateOnlyError(name="John", age=42)
+
+    with mock.patch.object(errors.TemplateOnlyError,
+                           "__module__",
+                           new_callable=mock.PropertyMock) as mocked:
+        mocked.return_value = "__main__"
+
+        assert repr(e) == "__main__.TemplateOnlyError(name='John', age=42)"
 
 
 @pytest.mark.parametrize(
