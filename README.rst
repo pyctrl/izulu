@@ -92,7 +92,7 @@ Neat #3: Static and dynamic defaults
 ::
 
     class AmountValidationError(ValidationError):
-        __template__ = "Data is invalid: {reason} ({amount} MIN={_MIN}) at {ts}"
+        __template__ = "Data is invalid: {reason} ({amount}; MAX={_MAX}) at {ts}"
         _MAX: ClassVar[int] = 1000
         amount: int
         reason: int = "amount is too large"
@@ -100,10 +100,10 @@ Neat #3: Static and dynamic defaults
 
 
     print(AmountValidationError(amount=15000))
-    # Data is invalid: amount is too large (15000 MAX=1000) at 2024-01-13 21:16:22.284280
+    # Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 22:59:25.132699
 
     print(AmountValidationError(amount=-1, reason="amount can't be negative"))
-    # Data is invalid: amount can't be negative (-1 MAX=1000) at 2024-01-13 21:16:23.550391
+    # Data is invalid: amount can't be negative (-1; MAX=1000) at 2024-01-13 22:59:54.482577
 
 
 Tutorial: step by step guide
@@ -114,9 +114,9 @@ Tutorial: step by step guide
 
 ::
 
-   import datetime
+    import datetime
 
-   from izulu import root
+    from izulu import root
 
 
 2. define your first basic exception class
@@ -124,15 +124,15 @@ Tutorial: step by step guide
 
 ::
 
-   class MyError(root.Error):
-       __template__ = "Having count={count} for owner={owner}"
+    class MyError(root.Error):
+        __template__ = "Having count={count} for owner={owner}"
 
 
-   print(MyError(count=10, owner="me"))
-   # MyError: Having count=10 for owner=me
+    print(MyError(count=10, owner="me"))
+    # MyError: Having count=10 for owner=me
 
-   MyError(10, owner="me")
-   # TypeError: __init__() takes 1 positional argument but 2 were given
+    MyError(10, owner="me")
+    # TypeError: __init__() takes 1 positional argument but 2 were given
 
 
 * subclass ``Error``
@@ -146,20 +146,20 @@ Tutorial: step by step guide
 
 ::
 
-   class MyError(root.Error):
-       __template__ = "Having count={count} for owner={owner}"
-       count: int
-       timestamp: datetime.datetime
+    class MyError(root.Error):
+        __template__ = "Having count={count} for owner={owner}"
+        count: int
+        timestamp: datetime.datetime
 
-   e = MyError(count=10, owner="me", timestamp=datetime.datetime.utcnow())
+    e = MyError(count=10, owner="me", timestamp=datetime.datetime.utcnow())
 
-   print(e.count)
-   # 10
-   print(e.timestamp)
-   # 2023-09-27 18:18:22.957925
+    print(e.count)
+    # 10
+    print(e.timestamp)
+    # 2023-09-27 18:18:22.957925
 
-   e.owner
-   # AttributeError: 'MyError' object has no attribute 'owner'
+    e.owner
+    # AttributeError: 'MyError' object has no attribute 'owner'
 
 
 #. define annotations for fields you want to publish as exception instance attributes
@@ -174,20 +174,20 @@ Tutorial: step by step guide
 
 ::
 
-   class MyError(root.Error):
-       __template__ = "Having count={count} for owner={owner}"
-       count: int
-       owner: str = "nobody"
-       timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
+    class MyError(root.Error):
+        __template__ = "Having count={count} for owner={owner}"
+        count: int
+        owner: str = "nobody"
+        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
 
-   e = MyError(count=10)
+    e = MyError(count=10)
 
-   print(e.count)
-   # 10
-   print(e.owner)
-   # nobody
-   print(e.timestamp)
-   # 2023-09-27 18:19:37.252577
+    print(e.count)
+    # 10
+    print(e.owner)
+    # nobody
+    print(e.timestamp)
+    # 2023-09-27 18:19:37.252577
 
 
 * define *default static values* after field annotation just as usual
@@ -201,28 +201,28 @@ Tutorial: step by step guide
 
 ::
 
-   class MyError(root.Error):
-       __template__ = "Having count={count} for owner={owner}"
+    class MyError(root.Error):
+        __template__ = "Having count={count} for owner={owner}"
 
-       def __make_duration(self) -> datetime.timedelta:
-           return self.timestamp - self.begin
+        def __make_duration(self) -> datetime.timedelta:
+            return self.timestamp - self.begin
 
-       count: int
-       begin: datetime.datetime
-       owner: str = "nobody"
-       timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
-       duration: datetime.timedelta = root.factory(__make_duration, self=True)
+        count: int
+        begin: datetime.datetime
+        owner: str = "nobody"
+        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
+        duration: datetime.timedelta = root.factory(__make_duration, self=True)
 
 
-   begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
-   e = MyError(count=10, begin=begin)
+    begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
+    e = MyError(count=10, begin=begin)
 
-   print(e.begin)
-   # 2023-09-27 00:00:00
-   print(e.duration)
-   # 18:45:44.502490
-   print(e.timestamp)
-   # 2023-09-27 18:45:44.502490
+    print(e.begin)
+    # 2023-09-27 00:00:00
+    print(e.duration)
+    # 18:45:44.502490
+    print(e.timestamp)
+    # 2023-09-27 18:45:44.502490
 
 
 alternate syntax without method
@@ -230,28 +230,28 @@ alternate syntax without method
 
 ::
 
-   def _make_duration(self) -> datetime.timedelta:
-       return self.timestamp - self.begin
+    def _make_duration(self) -> datetime.timedelta:
+        return self.timestamp - self.begin
 
-   class MyError(root.Error):
-       __template__ = "Having count={count} for owner={owner}"
+    class MyError(root.Error):
+        __template__ = "Having count={count} for owner={owner}"
 
-       count: int
-       begin: datetime.datetime
-       owner: str = "nobody"
-       timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
-       duration: datetime.timedelta = root.factory(_make_duration, self=True)
+        count: int
+        begin: datetime.datetime
+        owner: str = "nobody"
+        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
+        duration: datetime.timedelta = root.factory(_make_duration, self=True)
 
 
-   begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
-   e = MyError(count=10, begin=begin)
+    begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
+    e = MyError(count=10, begin=begin)
 
-   print(e.begin)
-   # 2023-09-27 00:00:00
-   print(e.duration)
-   # 18:45:44.502490
-   print(e.timestamp)
-   # 2023-09-27 18:45:44.502490
+    print(e.begin)
+    # 2023-09-27 00:00:00
+    print(e.duration)
+    # 18:45:44.502490
+    print(e.timestamp)
+    # 2023-09-27 18:45:44.502490
 
 
 * very similar to dynamic defaults, but callable must accept single
@@ -369,62 +369,71 @@ Rules
 
 * formatting for ``__template__`` works with new style formatting:
 
-  * ``str.format()``
+  * ``help(str.format)``
   * https://pyformat.info/
   * https://docs.python.org/3/library/string.html#formatspec
 
 
-Additional options
-------------------
+Additional API
+--------------
 
 
-String representations
-^^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-   class MyError(root.Error):
-       __template__ = "Having count={count} for owner={owner}"
-       count: int
-       owner: str = "nobody"
-       timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
-
-   e = MyError(count=10, owner="me")
-
-   print(str(e))
-   # Having count=10 for owner=me
-   print(repr(e))
-   # MyError(count=10, owner='me', timestamp=datetime.datetime(2023, 9, 27, 18, 58, 0, 340218))
-   print(e.as_str())  # just another pretty human-readable representation
-   # 'Having count=42 for owner=somebody'
-
-
-* there are different results for ``str`` and ``repr``
-* ``str`` is for humans and nice clear look
-* and ``repr`` could allow you to reconstruct the same exception instance
-  (if data provided into *kwargs* supports ``repr`` the same way)
-
-
-**Reconstruct exception from** ``repr``:
+String API (representations)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
-   e2 = eval(repr(e))
-   print(repr(e))
-   # MyError(count=10, owner='me', timestamp=datetime.datetime(2023, 9, 27, 18, 58, 0, 340218))
-   print(repr(e2))
-   # MyError(count=10, owner='me', timestamp=datetime.datetime(2023, 9, 27, 18, 58, 0, 340218))
+    class AmountValidationError(Error):
+        __template__ = "Data is invalid: {reason} ({amount}; MAX={_MAX}) at {ts}"
+        _MAX: ClassVar[int] = 1000
+        amount: int
+        reason: int = "amount is too large"
+        ts: datetime = factory(datetime.datetime.now)
 
 
-Other ``Error`` API
-^^^^^^^^^^^^^^^^^^^
+    err = AmountValidationError(amount=15000)
 
-::
+    print(str(err))
+    # Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 23:33:13.847586
 
-   e.as_kwargs()  # original kwargs
-   # {'count': 42, 'owner': 'somebody', 'timestamp': datetime.datetime(2023, 9, 17, 19, 50, 31, 7578)}
-   e.as_dict()  # shallow
-   # {'count': 42, 'owner': 'somebody', 'timestamp': datetime.datetime(2023, 9, 17, 19, 50, 31, 7578)}
+    print(repr(err))
+    # AmountValidationError(amount=15000, ts=datetime.datetime(2024, 1, 13, 23, 33, 13, 847586), reason='amount is too large')
+
+
+* ``str`` and ``repr`` output differs
+* ``str`` is for humans and Python (Python dictates the result to be exactly and only the message)
+* ``repr`` allows to reconstruct the same error instance from its output
+  (if data provided into *kwargs* supports ``repr`` the same way)::
+
+    reconstructed = eval(repr(err))
+
+    print(str(reconstructed))
+    # Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 23:33:13.847586
+
+    print(repr(reconstructed))
+    # AmountValidationError(amount=15000, ts=datetime.datetime(2024, 1, 13, 23, 33, 13, 847586), reason='amount is too large')
+
+* in addition to ``str`` there is another human-readable representations provided by ``.as_str()`` method;
+  it prepends message with class name::
+
+    print(err.as_str())
+    # AmountValidationError: Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 23:33:13.847586
+
+
+
+Dump API
+^^^^^^^^
+
+* ``.as_kwargs()`` dumps shallow copy of original kwargs::
+
+    err.as_kwargs()
+    # {'amount': 15000}
+
+* ``.as_dict()`` combines original kwargs and all *"instance attribute"* values into
+  *"full state"* (note: this dumped state is a shallow copy of errors data)::
+
+    err.as_dict()
+    # {'amount': 15000, 'ts': datetime.datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large'}
 
 
 Advanced
