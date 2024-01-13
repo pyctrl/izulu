@@ -472,33 +472,24 @@ But it should not be need in 99,9% cases. Avoid it, please.
 For developers
 --------------
 
-Running tests
-^^^^^^^^^^^^^
-
-::
+* Running tests::
 
     tox
 
-
-Building package
-^^^^^^^^^^^^^^^^
-
-::
+* Building package::
 
     tox -e build
 
-
-Contributing
-------------
-
-Contact me through `Issues <https://gitlab.com/pyctrl/izulu/-/issues>`__.
+* Contributing: contact me through `Issues <https://gitlab.com/pyctrl/izulu/-/issues>`__
 
 
 Versioning
 ----------
 
-We use `SemVer <http://semver.org/>`__ for versioning. For the versions
-available, see the `tags on this repository <https://gitlab.com/pyctrl/izulu/-/tags>`__.
+`SemVer <http://semver.org/>`__ used for versioning.
+For available versions see the repository
+`tags <https://gitlab.com/pyctrl/izulu/-/tags>`__
+and `releases <https://gitlab.com/pyctrl/izulu/-/releases>`__.
 
 
 Authors
@@ -513,5 +504,5 @@ Authors
 License
 -------
 
-This project is licensed under the MIT/X11 License - see the
+This project is licensed under the X11 License (extended MIT) - see the
 `LICENSE <https://gitlab.com/pyctrl/izulu/-/blob/main/LICENSE>`__ file for details
