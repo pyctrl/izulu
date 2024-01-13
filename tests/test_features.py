@@ -42,24 +42,6 @@ def test_forbid_undeclared_fields_triggered(kls, kwargs):
              )(**kwargs)
 
 
-# @pytest.mark.parametrize(
-#     ("kls", "kwargs"),
-#     (
-#             (errors.AttributesOnlyError, dict(name=42)),
-#             (errors.AttributesOnlyError, dict(age=42.503)),
-#             (errors.AttributesOnlyError, dict(name="John", age="42")),
-#             (errors.AttributesWithStaticDefaultsError,
-#              dict(name="John", age="42")),
-#     ),
-# )
-# def test_forbid_wrong_types_triggered(kls, kwargs):
-#     with pytest.raises(TypeError):
-#         type("TestError",
-#              (kls,),
-#              {"__features__": root.Features.FORBID_WRONG_TYPES}
-#              )(**kwargs)
-
-
 def test_feature_presets():
     default = (
             root.Features.FORBID_MISSING_FIELDS
