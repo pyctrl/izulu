@@ -90,7 +90,7 @@ def test_init(fake_proc_ftrs, fake_set_attrs, fake_proc_tpl, fake_hook):
              ("note",)),
     )
 )
-def test_errors(kls, kwargs, msg, attrs, not_attrs):
+def test_instantiate_ok(kls, kwargs, msg, attrs, not_attrs):
     e = kls(**kwargs)
 
     assert str(e) == msg
@@ -111,7 +111,7 @@ def test_errors(kls, kwargs, msg, attrs, not_attrs):
             (errors.ClassVarsError, dict(name="John")),
     )
 )
-def test_failures(kls, kwargs):
+def test_instantiate_fail(kls, kwargs):
     with pytest.raises(TypeError):
         kls(**kwargs)
 
