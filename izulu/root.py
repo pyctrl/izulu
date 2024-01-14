@@ -142,16 +142,16 @@ class Error(Exception):
         kwargs = _utils.join_kwargs(**self.as_dict())
         return f"{self.__module__}.{self.__class__.__qualname__}({kwargs})"
 
-    def __copy__(self) -> t.Self:
+    def __copy__(self):
         return type(self)(**self.as_dict())
 
-    def __deepcopy__(self, memo: dict[int, t.Any]) -> t.Self:
+    def __deepcopy__(self, memo: dict[int, t.Any]):
         _id = id(self)
         if _id not in memo:
             kwargs = {k: copy.deepcopy(v, memo)
                       for k, v in self.as_dict().items()}
             memo[_id] = type(self)(**kwargs)
-        return t.cast(t.Self, memo[_id])
+        return memo[_id]
 
     def __reduce__(self) -> tuple[t.Any, ...]:
         return functools.partial(self.__class__, **self.as_dict()), tuple()
