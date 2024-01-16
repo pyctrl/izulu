@@ -35,7 +35,7 @@ Neat #1: Stop messing with raw strings and manual message formatting
     if data["status"] not in {"READY", "IN_PROGRESS}:
         raise ValueError("Data is invalid: unprocessable status")
 
-Stop manually manage error messages all over the codebase!
+With ``izulu`` you can forget about manual error message management all over the codebase!
 
 ::
 
