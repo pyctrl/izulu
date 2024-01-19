@@ -7,16 +7,10 @@ from tests import errors
 
 
 @pytest.mark.parametrize(
-    ("kls", "kwargs"),
-    (
-            (errors.TemplateOnlyError, dict()),
-            (errors.TemplateOnlyError, dict(name="John")),
-            (errors.TemplateOnlyError, dict(age=42)),
-            (errors.AttributesOnlyError, dict()),
-            (errors.AttributesOnlyError, dict(name="John")),
-            (errors.AttributesOnlyError, dict(age=42)),
-    ),
+    "kls",
+    (errors.TemplateOnlyError, errors.AttributesOnlyError),
 )
+@pytest.mark.parametrize("kwargs", (dict(), dict(name="John"), dict(age=42)))
 def test_forbid_missing_fields_triggered(kls, kwargs):
     with pytest.raises(TypeError):
         type("TestError",
