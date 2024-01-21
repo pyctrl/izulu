@@ -62,14 +62,24 @@ def format_template(template: str, kwargs: dict[str, t.Any]):
 
 
 def extract_fields(template: str) -> t.Generator[str, None, None]:
+    # TODO(d.burmistrov):
+    #   - unit tests
+    #   - README expected exception contract (ValueError here)
+    #   - pretty exception with all field not .isidentifier()
+
     parsed = string.Formatter().parse(template)
+
     for _, fn, _, _ in parsed:
-        if fn:
-            yield fn.split(".", maxsplit=1)[0]
-        elif fn is None:
+        if fn is None:
             continue
-        else:
+        elif not fn:
             raise ValueError("Positional arguments forbidden in template")
+
+        fields = fn.split(".")
+        if not all(map(str.isidentifier, fields)):
+            raise ValueError(f"Fields must be identifiers: {fn}")
+
+        yield fields[0]
 
 
 def split_cls_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
