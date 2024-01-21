@@ -64,8 +64,12 @@ def format_template(template: str, kwargs: dict[str, t.Any]):
 def extract_fields(template: str) -> t.Generator[str, None, None]:
     parsed = string.Formatter().parse(template)
     for _, fn, _, _ in parsed:
-        if fn is not None:
-            yield fn
+        if fn:
+            yield fn.split(".", maxsplit=1)[0]
+        elif fn is None:
+            continue
+        else:
+            raise ValueError("Positional arguments forbidden in template")
 
 
 def split_cls_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
