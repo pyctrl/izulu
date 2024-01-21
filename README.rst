@@ -69,6 +69,8 @@ Neat #2: Attribute errors with useful fields
 
 ::
 
+    from falcon import HTTPBadRequest
+
     class AmountValidationError(ValidationError):
         __template__ = "Data is invalid: {reason} ({amount})"
         amount: int
@@ -76,9 +78,9 @@ Neat #2: Attribute errors with useful fields
 
     try:
         validate(data)
-    except ValidationError as e:
+    except AmountValidationError as e:
         if e.amount < 0:
-            raise BadRequestError(fields="amount")
+            raise HTTPBadRequest(f"Bad amount: {e.amount}")
         raise
 
 
@@ -95,7 +97,7 @@ Neat #3: Static and dynamic defaults
         __template__ = "Data is invalid: {reason} ({amount}; MAX={_MAX}) at {ts}"
         _MAX: ClassVar[int] = 1000
         amount: int
-        reason: int = "amount is too large"
+        reason: str = "amount is too large"
         ts: datetime = factory(datetime.datetime.now)
 
 
@@ -387,7 +389,7 @@ String API (representations)
         __template__ = "Data is invalid: {reason} ({amount}; MAX={_MAX}) at {ts}"
         _MAX: ClassVar[int] = 1000
         amount: int
-        reason: int = "amount is too large"
+        reason: str = "amount is too large"
         ts: datetime = factory(datetime.datetime.now)
 
 
