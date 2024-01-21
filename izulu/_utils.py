@@ -65,6 +65,7 @@ def extract_fields(template: str) -> t.Generator[str, None, None]:
     # TODO(d.burmistrov):
     #   - unit tests
     #   - README expected exception contract (ValueError here)
+    #   - README: note about original exception in `e.__cause__`
     #   - pretty exception with all field not .isidentifier()
 
     parsed = string.Formatter().parse(template)
