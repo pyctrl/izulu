@@ -1,7 +1,8 @@
 izulu
 =====
 
-*"An exceptional library"*
+    *"An exceptional library"*
+
 
 **Installation**
 
@@ -19,10 +20,11 @@ izulu
     ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
 
 
-Bring OOP into exception/error management
------------------------------------------
+Presenting ``izulu``: bring OOP into exception/error management
+---------------------------------------------------------------
 
-*For details see* **"Quickstart"** *and* **"Specifications"** *sections below.*
+You can read docs *from top to bottom* or jump strait into **"Quickstart"** section.
+For details note **"Specifications"** sections below.
 
 
 Neat #1: Stop messing with raw strings and manual message formatting
@@ -96,7 +98,6 @@ Annotated instance attributes automatically populated from ``kwargs``.
 
 Neat #3: Static and dynamic defaults
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 
 ::
 
