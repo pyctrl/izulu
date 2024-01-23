@@ -22,7 +22,7 @@ izulu
 Bring OOP into exception/error management
 -----------------------------------------
 
-*For details see* **"Tutorial"** *and* **"Specifications"** *sections below.*
+*For details see* **"Quickstart"** *and* **"Specifications"** *sections below.*
 
 
 Neat #1: Stop messing with raw strings and manual message formatting
@@ -105,7 +105,7 @@ Neat #3: Static and dynamic defaults
         _MAX: ClassVar[int] = 1000
         amount: int
         reason: str = "amount is too large"
-        ts: datetime = factory(datetime.datetime.now)
+        ts: datetime = factory(datetime.now)
 
 
     print(AmountValidationError(amount=15000))
@@ -115,26 +115,28 @@ Neat #3: Static and dynamic defaults
     # Data is invalid: amount can't be negative (-1; MAX=1000) at 2024-01-13 22:59:54.482577
 
 
-Tutorial: step by step guide
-----------------------------
+Quickstart
+----------
 
-
-Step №1: prepare with imports
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Prepare playground**
 
 ::
 
-    import datetime
+    pip install ipython
 
-    from izulu import root
+    ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
 
 
-Step №2: define your first exception class
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Let's start with defining our initial error class (exception).**
+
+#. subclass ``Error``
+#. provide special message template for each of your exceptions
+#. use **only kwargs** to instantiate exception
+  *(no more message copying across the codebase)*
 
 ::
 
-    class MyError(root.Error):
+    class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
 
 
@@ -145,23 +147,22 @@ Step №2: define your first exception class
     # TypeError: __init__() takes 1 positional argument but 2 were given
 
 
-* subclass ``Error``
-* provide special message template for each of your exceptions
-* use **only kwargs** to instantiate exception
-  *(no more message copying across the codebase)*
+**Move on and improve our class with attributes**
 
-
-Step №3: attribute your exceptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#. define annotations for fields you want to publish as exception instance attributes
+#. you have to define desired template fields in annotations too
+   (see ``AttributeError`` for ``owner``)
+#. you can provide annotation for attributes not included in template (see ``timestamp``)
+#. **type hinting from annotations are not enforced or checked** (see ``timestamp``)
 
 ::
 
-    class MyError(root.Error):
+    class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
         count: int
-        timestamp: datetime.datetime
+        timestamp: datetime
 
-    e = MyError(count=10, owner="me", timestamp=datetime.datetime.utcnow())
+    e = MyError(count=10, owner="me", timestamp=datetime.now())
 
     print(e.count)
     # 10
@@ -172,23 +173,20 @@ Step №3: attribute your exceptions
     # AttributeError: 'MyError' object has no attribute 'owner'
 
 
-#. define annotations for fields you want to publish as exception instance attributes
-#. you have to define desired template fields in annotations too
-   (see ``AttributeError`` for ``owner``)
-#. you can provide annotation for attributes not included in template (see ``timestamp``)
-#. **type hinting from annotations are not enforced or checked** (see ``timestamp``)
+**We can provide defaults for our attributes**
 
-
-Step №4: provide desired defaults
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#. define *default static values* after field annotation just as usual
+#. for *dynamic defaults* use provided ``factory`` tool with your callable - it would be
+   evaluated without arguments during exception instantiation
+#. now fields would receive values from *kwargs* if present - otherwise from *defaults*
 
 ::
 
-    class MyError(root.Error):
+    class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
         count: int
         owner: str = "nobody"
-        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
+        timestamp: datetime = factory(datetime.now)
 
     e = MyError(count=10)
 
@@ -200,28 +198,21 @@ Step №4: provide desired defaults
     # 2023-09-27 18:19:37.252577
 
 
-* define *default static values* after field annotation just as usual
-* for *dynamic defaults* use provided ``factory`` tool with your callable - it would be
-  evaluated without arguments during exception instantiation
-* now fields would receive values from *kwargs* if present - otherwise from *defaults*
-
-
-Step №5: *(we need to go deeper)* define "composite" defaults
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Dynamic defaults also supported**
 
 ::
 
-    class MyError(root.Error):
+    class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
 
         count: int
-        begin: datetime.datetime
+        begin: datetime
         owner: str = "nobody"
-        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
-        duration: datetime.timedelta = root.factory(lambda self: self.timestamp - self.begin, self=True)
+        timestamp: datetime = factory(datetime.now)
+        duration: timedelta = factory(lambda self: self.timestamp - self.begin, self=True)
 
 
-    begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
+    begin = datetime.fromordinal(date.today().toordinal())
     e = MyError(count=10, begin=begin)
 
     print(e.begin)
@@ -311,19 +302,19 @@ Mechanics
 
 ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         pass
 
 * **optionally** behaviour can be adjusted with ``__features__``
 
 ::
 
-    class AmountError(root.Error):
-        __features__ = root.Features.FORBID_MISSING_FIELDS | root.Features.FORBID_KWARG_CONSTS
+    class AmountError(Error):
+        __features__ = Features.FORBID_MISSING_FIELDS | Features.FORBID_KWARG_CONSTS
 
 * you should provide a template for the target error message with ``__template__`` ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         __template__ = "Data is invalid: {reason} (amount={amount})"
 
     print(AmountError(reason="negative amount", amount=-10.52))
@@ -337,10 +328,10 @@ Mechanics
 
   * new style formatting is used::
 
-        class AmountError(root.Error):
+        class AmountError(Error):
             __template__ = "[{ts:%Y-%m-%d %H:%M}] Data is invalid: {reason:_^20} (amount={amount:06.2f})"
 
-        print(AmountError(ts=datetime.datetime.utcnow(), reason="negative amount", amount=-10.52))
+        print(AmountError(ts=datetime.now(), reason="negative amount", amount=-10.52))
         # [2024-01-23 19:16] Data is invalid: __negative amount___ (amount=-10.52)
 
     * ``help(str.format)``
@@ -351,7 +342,7 @@ Mechanics
 
 ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         __template__ = "Data is invalid: {reason} (amount={amount})"
 
     print(AmountError(reason="amount can't be negative", amount=-10))
@@ -369,7 +360,7 @@ Mechanics
 
 ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         LIMIT: ClassVar[int] = 10_000
         __template__ = "Amount is too large: amount={amount} limit={LIMIT}"
         amount: int
@@ -381,7 +372,7 @@ Mechanics
 
 ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         amount: int
 
     print(AmountError(amount=-10).amount)
@@ -391,7 +382,7 @@ Mechanics
 
 ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         amount: int = 500
 
     print(AmountError().amount)
@@ -405,18 +396,18 @@ Mechanics
 
     * ``self=False`` (default): callable accepting no arguments ::
 
-        class AmountError(root.Error):
-            ts: datetime.datetime = root.factory(datetime.datetime.now)
+        class AmountError(Error):
+            ts: datetime = factory(datetime.now)
 
         print(AmountError().ts)
         # 2024-01-23 23:18:22.019963
 
     * ``self=True``: provide callable accepting single argument (error instance) ::
 
-        class AmountError(root.Error):
+        class AmountError(Error):
             LIMIT = 10_000
             amount: int
-            overflow: int = root.factory(lambda self: self.amount - self.LIMIT, self=True)
+            overflow: int = factory(lambda self: self.amount - self.LIMIT, self=True)
 
         print(AmountError(amount=10_500).overflow)
         # 500
@@ -425,10 +416,10 @@ Mechanics
 
 ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         __template__ = "[{ts:%Y-%m-%d %H:%M}] Amount is too large: {amount}"
         amount: int
-        ts: datetime.datetime = root.factory(datetime.datetime.now)
+        ts: datetime = factory(datetime.now)
 
     print(AmountError(amount=10_500))
     # [2024-01-23 23:21] Amount is too large: 10500
@@ -437,12 +428,12 @@ Mechanics
 
 ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         LIMIT: ClassVar[int] = 10_000
         __template__ = "[{ts:%Y-%m-%d %H:%M}] Amount is too large: amount={amount} limit={LIMIT} overflow={overflow}"
         amount: int
-        overflow: int = root.factory(lambda self: self.amount - self.LIMIT, self=True)
-        ts: datetime.datetime = root.factory(datetime.datetime.now)
+        overflow: int = factory(lambda self: self.amount - self.LIMIT, self=True)
+        ts: datetime = factory(datetime.now)
 
     err = AmountError(amount=15_000)
 
@@ -462,17 +453,17 @@ Mechanics
 
 ::
 
-    class AmountError(root.Error):
+    class AmountError(Error):
         LIMIT: ClassVar[int] = 10_000
         __template__ = "[{ts:%Y-%m-%d %H:%M}] Amount is too large: amount={amount} limit={LIMIT} overflow={overflow}"
         amount: int = 15_000
-        overflow: int = root.factory(lambda self: self.amount - self.LIMIT, self=True)
-        ts: datetime.datetime = root.factory(datetime.datetime.now)
+        overflow: int = factory(lambda self: self.amount - self.LIMIT, self=True)
+        ts: datetime = factory(datetime.now)
 
     print(AmountError())
     # [2024-01-23 23:21] Amount is too large: amount=15000 limit=10000 overflow=5000
 
-    print(AmountError(amount=10_333, overflow=42, ts=datetime.datetime(1900, 1, 1)))
+    print(AmountError(amount=10_333, overflow=42, ts=datetime(1900, 1, 1)))
     # [2024-01-23 23:21] Amount is too large: amount=10333 limit=10000 overflow=42
 
 **Special notes**
@@ -559,7 +550,7 @@ Dump API
   *"full state"* (note: this dumped state is a shallow copy of errors data)::
 
     err.as_dict()
-    # {'amount': 15000, 'ts': datetime.datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large'}
+    # {'amount': 15000, 'ts': datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large'}
 
 
 Advanced
@@ -602,20 +593,20 @@ TBD
 
 ::
 
-    class MyError(root.Error):
+    class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
 
-        def __make_duration(self) -> datetime.timedelta:
+        def __make_duration(self) -> timedelta:
             return self.timestamp - self.begin
 
         count: int
-        begin: datetime.datetime
+        begin: datetime
         owner: str = "nobody"
-        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
-        duration: datetime.timedelta = root.factory(__make_duration, self=True)
+        timestamp: datetime = factory(datetime.now)
+        duration: timedelta = factory(__make_duration, self=True)
 
 
-    begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
+    begin = datetime.fromordinal(date.today().toordinal())
     e = MyError(count=10, begin=begin)
 
     print(e.begin)
