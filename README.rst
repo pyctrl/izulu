@@ -9,13 +9,20 @@ izulu
 
     pip install izulu
 
-    python -m izulu.root -i
+
+**Prepare playground**
+
+::
+
+    pip install ipython
+
+    ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
 
 
 Bring OOP into exception/error management
 -----------------------------------------
 
-*For details see* **"Tutorial"** *and* **"Specification"** *sections below.*
+*For details see* **"Tutorial"** *and* **"Specifications"** *sections below.*
 
 
 Neat #1: Stop messing with raw strings and manual message formatting
@@ -111,8 +118,9 @@ Neat #3: Static and dynamic defaults
 Tutorial: step by step guide
 ----------------------------
 
-1. imports
-^^^^^^^^^^
+
+Step №1: prepare with imports
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -121,7 +129,7 @@ Tutorial: step by step guide
     from izulu import root
 
 
-2. define your first basic exception class
+Step №2: define your first exception class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
@@ -143,8 +151,8 @@ Tutorial: step by step guide
   *(no more message copying across the codebase)*
 
 
-3. attribute your exceptions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step №3: attribute your exceptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -171,8 +179,8 @@ Tutorial: step by step guide
 #. **type hinting from annotations are not enforced or checked** (see ``timestamp``)
 
 
-4. provide desired defaults
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step №4: provide desired defaults
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -198,42 +206,10 @@ Tutorial: step by step guide
 * now fields would receive values from *kwargs* if present - otherwise from *defaults*
 
 
-5. *(we need to go deeper)* define "composite" defaults
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step №5: *(we need to go deeper)* define "composite" defaults
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
-
-    class MyError(root.Error):
-        __template__ = "Having count={count} for owner={owner}"
-
-        def __make_duration(self) -> datetime.timedelta:
-            return self.timestamp - self.begin
-
-        count: int
-        begin: datetime.datetime
-        owner: str = "nobody"
-        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
-        duration: datetime.timedelta = root.factory(__make_duration, self=True)
-
-
-    begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
-    e = MyError(count=10, begin=begin)
-
-    print(e.begin)
-    # 2023-09-27 00:00:00
-    print(e.duration)
-    # 18:45:44.502490
-    print(e.timestamp)
-    # 2023-09-27 18:45:44.502490
-
-
-alternate syntax without method
-"""""""""""""""""""""""""""""""
-
-::
-
-    def _make_duration(self) -> datetime.timedelta:
-        return self.timestamp - self.begin
 
     class MyError(root.Error):
         __template__ = "Having count={count} for owner={owner}"
@@ -242,7 +218,7 @@ alternate syntax without method
         begin: datetime.datetime
         owner: str = "nobody"
         timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
-        duration: datetime.timedelta = root.factory(_make_duration, self=True)
+        duration: datetime.timedelta = root.factory(lambda self: self.timestamp - self.begin, self=True)
 
 
     begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
@@ -262,18 +238,20 @@ alternate syntax without method
   (keyword or positional - doesn't matter)
 
 
-Specification
--------------
+Specifications
+--------------
 
 ``izulu`` bases on class definitions to provide handy instance creation.
 
 
-The 5 pillars
-^^^^^^^^^^^^^
+The 6 pillars of ``izulu``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* all behavior is defined on the class-level
 
 * ``__template__`` class attribute defines the template for target error message
 
-  * template may contain *"fields"* for substitution from ``kwargs`` and *"defaults"*
+  * template may contain *"fields"* for substitution from ``kwargs`` and *"defaults"* to produce final error message
 
 * ``__features__`` class attribute defines constraints and behaviour (see "Features" section below)
 
@@ -281,29 +259,23 @@ The 5 pillars
 
 * *"class hints"* annotated with ``ClassVar`` are noted by ``izulu``
 
-  * annotated class attributes with values may be used within ``__template__``
-    (we name these attributes as *"class defaults"*)
-  * default values can only be static
-  * annotated class attributes without values (just annotations) affects ``FORBID_KWARG_CONSTS`` feature (see below)
+  * annotated class attributes normally should have values (treated as *"class defaults"*)
+  * *"class defaults"* can only be static
+  * *"class defaults"* may be referred within ``__template__``
 
 * *"instance hints"* regularly annotated (not with ``ClassVar``) are noted by ``izulu``
 
-  * all annotated attributes (*"instance attributes"*) will become instance attributes from ``kwargs`` data (like ``ts`` in example above)
-  * annotated attributes with default values may be used as *"fields"* within ``__template__``
-    (we name these attributes as *"instance defaults"*)
-  * annotated attributes may have **static and dynamic** defaults values
-  * dynamic defaults are callables wrapped with ``factory`` helper;
-    there are 2 modes depending on the value of the ``self`` flag:
-
-    * ``self=False`` (default): provide callable not accepting arguments
-    * ``self=True``: provide callable accepting single argument (error instance)
+  * all annotated attributes are treated as *"instance attributes"*
+  * each *"instance attribute"* will automatically obtain value from the ``kwarg`` of the same name
+  * *"instance attributes"* with default are also treated as *"instance defaults"*
+  * *"instance defaults"* may be **static and dynamic**
+  * *"instance defaults"* may be referred within ``__template__``
 
 * ``kwargs`` — the new and main way to form exceptions/error instance
 
   * forget about creating exception instances from message strings
-  * now ``__init__()`` accepts only ``kwargs``
-  * *"fields"* and *"instance attributes"* are populated through ``kwargs`` (shared input for templating attribution)
-
+  * ``kwargs`` are the datasource for template *"fields"* and *"instance attributes"*
+    (shared input for templating attribution)
 
 **WARNING**: types from type hints are not validated or enforced
 
@@ -332,31 +304,184 @@ Features are represented as flag enum ``Features`` with following options:
   * overlapping data won't modify class attribute values
 
 
-Rules
-^^^^^
+Mechanics
+^^^^^^^^^
 
-* inherit from ``izulu.root.Error``
-* behavior is defined on class-level
-* **optionally** change the behaviour with ``__features__``
+* inheritance from ``izulu.root.Error`` is required
+
+::
+
+    class AmountError(root.Error):
+        pass
+
+* **optionally** behaviour can be adjusted with ``__features__``
+
+::
+
+    class AmountError(root.Error):
+        __features__ = root.Features.FORBID_MISSING_FIELDS | root.Features.FORBID_KWARG_CONSTS
+
+* you should provide a template for the target error message with ``__template__`` ::
+
+    class AmountError(root.Error):
+        __template__ = "Data is invalid: {reason} (amount={amount})"
+
+    print(AmountError(reason="negative amount", amount=-10.52))
+    # [2024-01-23 19:16] Data is invalid: negative amount (amount=-10.52)
+
+  * sources of formatting arguments:
+
+    * *"class defaults"*
+    * *"instance defaults"*
+    * ``kwargs`` (overlap any *"default"*)
+
+  * new style formatting is used::
+
+        class AmountError(root.Error):
+            __template__ = "[{ts:%Y-%m-%d %H:%M}] Data is invalid: {reason:_^20} (amount={amount:06.2f})"
+
+        print(AmountError(ts=datetime.datetime.utcnow(), reason="negative amount", amount=-10.52))
+        # [2024-01-23 19:16] Data is invalid: __negative amount___ (amount=-10.52)
+
+    * ``help(str.format)``
+    * https://pyformat.info/
+    * https://docs.python.org/3/library/string.html#formatspec
+
 * ``__init__()`` accepts only ``kwargs``
-* provide template with ``__template__``
 
-  * *"fields"* defined in ``__template__`` require these data in ``kwargs``
-  * *"fields"* may refer class and instance *"defaults"* — you can omit them in ``kwargs`` or not (override defaults)
+::
 
-* final message is formatted from ``__template__`` with
+    class AmountError(root.Error):
+        __template__ = "Data is invalid: {reason} (amount={amount})"
 
-  * ``kwargs`` (overlap any *"default"*)
-  * *"instance defaults"*
-  * *"class defaults"*
+    print(AmountError(reason="amount can't be negative", amount=-10))
+    # Data is invalid: amount can't be negative (amount=-10)
 
-* *"class defaults"* can be provided regularly with ``ClassVar`` type hints and static values
-* (annotated with instance type hints) *"instance attributes"* will be populated from relevant ``kwargs``
+    AmountError("amount can't be negative", -10)
+    # TypeError: __init__() takes 1 positional argument but 3 were given
+    AmountError("amount can't be negative", amount=-10)
+    # TypeError: __init__() takes 1 positional argument but 2 were given
+
+* *"class defaults"* can be defined and used
+
+  * *"class defaults"* must be type hinted with ``ClassVar`` annotation and provide static values
+  * template *"fields"* may refer *"class defaults"*
+
+::
+
+    class AmountError(root.Error):
+        LIMIT: ClassVar[int] = 10_000
+        __template__ = "Amount is too large: amount={amount} limit={LIMIT}"
+        amount: int
+
+    print(AmountError(amount=10_500))
+    # Amount is too large: amount=10500 limit=10000
+
+* *"instance attributes"* are populated from relevant ``kwargs``
+
+::
+
+    class AmountError(root.Error):
+        amount: int
+
+    print(AmountError(amount=-10).amount)
+    # -10
+
 * static *"instance defaults"* can be provided regularly with instance type hints and static values
-* dynamic *"instance defaults"* can be provided with type hints and callable value wrapped in ``factory`` helper
 
-  * ``self=False`` (default): callable accepting no arguments
-  * ``self=True``: provide callable accepting single argument (error instance)
+::
+
+    class AmountError(root.Error):
+        amount: int = 500
+
+    print(AmountError().amount)
+    # 500
+
+* dynamic *"instance defaults"* are also supported
+
+  * they must be type hinted and have special value
+  * value must be a callable object wrapped with ``factory`` helper
+  * ``factory`` provides 2 modes depending on value of the ``self`` flag:
+
+    * ``self=False`` (default): callable accepting no arguments ::
+
+        class AmountError(root.Error):
+            ts: datetime.datetime = root.factory(datetime.datetime.now)
+
+        print(AmountError().ts)
+        # 2024-01-23 23:18:22.019963
+
+    * ``self=True``: provide callable accepting single argument (error instance) ::
+
+        class AmountError(root.Error):
+            LIMIT = 10_000
+            amount: int
+            overflow: int = root.factory(lambda self: self.amount - self.LIMIT, self=True)
+
+        print(AmountError(amount=10_500).overflow)
+        # 500
+
+* *"instance defaults"* and *"instance attributes"* may be referred in ``__template__``
+
+::
+
+    class AmountError(root.Error):
+        __template__ = "[{ts:%Y-%m-%d %H:%M}] Amount is too large: {amount}"
+        amount: int
+        ts: datetime.datetime = root.factory(datetime.datetime.now)
+
+    print(AmountError(amount=10_500))
+    # [2024-01-23 23:21] Amount is too large: 10500
+
+* *Pause and sum up: defaults, attributes and template*
+
+::
+
+    class AmountError(root.Error):
+        LIMIT: ClassVar[int] = 10_000
+        __template__ = "[{ts:%Y-%m-%d %H:%M}] Amount is too large: amount={amount} limit={LIMIT} overflow={overflow}"
+        amount: int
+        overflow: int = root.factory(lambda self: self.amount - self.LIMIT, self=True)
+        ts: datetime.datetime = root.factory(datetime.datetime.now)
+
+    err = AmountError(amount=15_000)
+
+    print(err.amount)
+    # 15000
+    print(err.LIMIT)
+    # 10000
+    print(err.overflow)
+    # 5000
+    print(err.ts)
+    # 2024-01-23 23:21:26
+
+    print(err)
+    # [2024-01-23 23:21] Amount is too large: amount=15000 limit=10000 overflow=5000
+
+* ``kwargs`` overlap *"instance defaults"*
+
+::
+
+    class AmountError(root.Error):
+        LIMIT: ClassVar[int] = 10_000
+        __template__ = "[{ts:%Y-%m-%d %H:%M}] Amount is too large: amount={amount} limit={LIMIT} overflow={overflow}"
+        amount: int = 15_000
+        overflow: int = root.factory(lambda self: self.amount - self.LIMIT, self=True)
+        ts: datetime.datetime = root.factory(datetime.datetime.now)
+
+    print(AmountError())
+    # [2024-01-23 23:21] Amount is too large: amount=15000 limit=10000 overflow=5000
+
+    print(AmountError(amount=10_333, overflow=42, ts=datetime.datetime(1900, 1, 1)))
+    # [2024-01-23 23:21] Amount is too large: amount=10333 limit=10000 overflow=42
+
+**Special notes**
+
+* XXX *"fields"* defined in ``__template__`` rules
+
+  * *"fields"* may refer class and instance *"defaults"*
+  * you can omit them in ``kwargs`` or not (override defaults)
+  * *"fields"* defined in ``__template__`` require these data in ``kwargs``
 
 * exceptions you should expect with default feature set enabled:
 
@@ -364,16 +489,13 @@ Rules
   * ``ValueError``: template formatting issue
 
 * types from type hints are not validated or enforced
+
 * *"defaults"* don't have to be ``__template__`` *"fields"*
 
   * there can be hints for attributes not present in error message template
   * and vice versa — there can be *"fields"* not present as instance attributes
 
-* formatting for ``__template__`` works with new style formatting:
-
-  * ``help(str.format)``
-  * https://pyformat.info/
-  * https://docs.python.org/3/library/string.html#formatspec
+* //pillars// annotated class attributes without values (just annotations) affects ``FORBID_KWARG_CONSTS`` feature (see below)
 
 
 Additional API
@@ -471,6 +593,37 @@ But it should not be need in 99,9% cases. Avoid it, please.
         """
 
         return msg
+
+
+Additional examples
+-------------------
+
+TBD
+
+::
+
+    class MyError(root.Error):
+        __template__ = "Having count={count} for owner={owner}"
+
+        def __make_duration(self) -> datetime.timedelta:
+            return self.timestamp - self.begin
+
+        count: int
+        begin: datetime.datetime
+        owner: str = "nobody"
+        timestamp: datetime.datetime = root.factory(datetime.datetime.utcnow)
+        duration: datetime.timedelta = root.factory(__make_duration, self=True)
+
+
+    begin = datetime.datetime.fromordinal(datetime.date.today().toordinal())
+    e = MyError(count=10, begin=begin)
+
+    print(e.begin)
+    # 2023-09-27 00:00:00
+    print(e.duration)
+    # 18:45:44.502490
+    print(e.timestamp)
+    # 2023-09-27 18:45:44.502490
 
 
 For developers
