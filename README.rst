@@ -292,7 +292,7 @@ Features are represented as flag enum ``Features`` with following options:
 
 * ``FORBID_KWARG_CONSTS``: checks provided ``kwargs`` not to contain attributes defined as ``ClassVar``
 
-  * if enabled allows data in ``kwargs`` to overlap class attributes during template formatting
+  * if disabled allows data in ``kwargs`` to overlap class attributes during template formatting
   * overlapping data won't modify class attribute values
 
 
