@@ -73,8 +73,7 @@ def _extract_root_field(data: str) -> str:
             break
 
     if not field.isidentifier():
-        msg = (f"Field is not identifier: {field}"
-               f" (from field expression: {data})")
+        msg = f"Field is not identifier: {field} (field expression: {data})"
         raise ValueError(msg)
 
     return field
