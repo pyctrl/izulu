@@ -9,6 +9,8 @@ import typing as t
 _T_HINTS = dict[str, t.Type]
 
 _IZULU_ATTRS = {"__template__", "__features__", "_Error__cls_store"}
+_FORMATTING_SPECIAL_MARKERS = frozenset(".[!:")
+_FORMATTER = string.Formatter()
 
 
 # TODO(d.burmistrov): dataclass options
@@ -55,10 +57,27 @@ def join_kwargs(**kwargs: t.Any) -> str:
 
 def format_template(template: str, kwargs: dict[str, t.Any]):
     try:
-        return template.format(**kwargs)
+        return template.format_map(kwargs)
     except Exception as e:
         msg_part = "Failed to format template with provided kwargs: "
         raise ValueError(msg_part + join_kwargs(**kwargs)) from e
+
+
+def _extract_root_field(data: str) -> str:
+    # https://docs.python.org/3/library/string.html#formatspec
+
+    field = data
+    for i, char in enumerate(data):
+        if char in _FORMATTING_SPECIAL_MARKERS:
+            field = data[:i]
+            break
+
+    if not field.isidentifier():
+        msg = (f"Field is not identifier: {field}"
+               f" (from field expression: {data})")
+        raise ValueError(msg)
+
+    return field
 
 
 def extract_fields(template: str) -> t.Generator[str, None, None]:
@@ -68,19 +87,13 @@ def extract_fields(template: str) -> t.Generator[str, None, None]:
     #   - README: note about original exception in `e.__cause__`
     #   - pretty exception with all field not .isidentifier()
 
-    parsed = string.Formatter().parse(template)
-
-    for _, fn, _, _ in parsed:
+    for _, fn, _, _ in _FORMATTER.parse(template):
         if fn is None:
             continue
         elif not fn:
             raise ValueError("Positional arguments forbidden in template")
 
-        fields = fn.split(".")
-        if not all(map(str.isidentifier, fields)):
-            raise ValueError(f"Fields must be identifiers: {fn}")
-
-        yield fields[0]
+        yield _extract_root_field(fn)
 
 
 def split_cls_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
