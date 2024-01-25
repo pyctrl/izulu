@@ -299,6 +299,12 @@ Features are represented as flag enum ``Features`` with following options:
 Mechanics
 ^^^^^^^^^
 
+::
+
+    pip install ipython
+
+    ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
+
 * inheritance from ``izulu.root.Error`` is required
 
 ::
