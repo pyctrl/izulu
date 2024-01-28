@@ -168,18 +168,24 @@ class Error(Exception):
 
         return self.__kwargs.copy()
 
-    def as_dict(self) -> dict[str, t.Any]:
-        """Represent error as dict of fields including default values"""
+    def as_dict(self, wide: bool = False) -> dict[str, t.Any]:
+        """Represent error as dict of fields including default values
+
+        By default, only *instance* data and defaults are provided.
+
+        :param bool wide: if `True` class defaults will be included in result
+        """
 
         d = self.__kwargs.copy()
         for field in self.__cls_store.defaults:
             d.setdefault(field, getattr(self, field))
+        if wide:
+            for field, const in self.__cls_store.consts.items():
+                d.setdefault(field, const)
         return d
 
 
-def factory(func: t.Callable[..., t.Any],
-            *,
-            self: bool = False
+def factory(func: t.Callable[..., t.Any], *, self: bool = False
             ) -> functools.cached_property:
     """Attaches factory for dynamic default values
 
