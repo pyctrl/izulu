@@ -496,12 +496,14 @@ Mechanics
 * //pillars// annotated class attributes without values (just annotations) affects ``FORBID_KWARG_CONSTS`` feature (see below)
 
 
-Additional API
---------------
+**Recommended**
 
 
-String API (representations)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Additional APIs
+^^^^^^^^^^^^^^^
+
+Representations
+"""""""""""""""
 
 ::
 
@@ -545,8 +547,10 @@ String API (representations)
 
 
 
-Dump API
-^^^^^^^^
+Dump
+""""
+
+# TODO: wide
 
 * ``.as_kwargs()`` dumps shallow copy of original kwargs::
 
@@ -559,9 +563,14 @@ Dump API
     err.as_dict()
     # {'amount': 15000, 'ts': datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large'}
 
+    err.as_dict(True)
+    # {'amount': 15000, 'ts': datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large'}
 
-Advanced
-^^^^^^^^
+    err_copy = Error(**err.as_dict())  # exact copy
+
+
+(advanced) Wedge
+""""""""""""""""
 
 There is a special method you can override and additionally manage the machinery.
 
@@ -593,10 +602,60 @@ But it should not be need in 99,9% cases. Avoid it, please.
         return msg
 
 
-Additional examples
--------------------
+Tips
+----
 
-TBD
+1. inheritance / root exception
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
+
+    # intermediate class to centrally control the default behaviour
+    class BaseError(Error):  # <-- inherit from this in your code (not directly from ``izulu``)
+        __features__ = Features.None
+
+
+    class MyRealError(BaseError):
+        __template__ = "Having count={count} for owner={owner}"
+
+
+2. factories
+^^^^^^^^^^^^
+
+TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
+
+
+* stdlib factories
+
+::
+
+    from uuid import uuid4
+
+    class MyError(Error):
+        id: datetime = factory(uuid4)
+        timestamp: datetime = factory(datetime.now)
+
+* lambdas
+
+::
+
+    class MyError(Error):
+        timestamp: datetime = factory(lambda: datetime.now().isoformat())
+
+* function
+
+::
+
+    from random import randint
+
+    def flip_coin():
+        return "TAILS" if randint(0, 100) % 2 else "HEADS
+
+    class MyError(Error):
+        coin: str = factory(flip_coin)
+
+
+* method
 
 ::
 
@@ -604,11 +663,9 @@ TBD
         __template__ = "Having count={count} for owner={owner}"
 
         def __make_duration(self) -> timedelta:
-            return self.timestamp - self.begin
+            kwargs = self.as_kwargs()
+            return self.timestamp - kwargs["begin"]
 
-        count: int
-        begin: datetime
-        owner: str = "nobody"
         timestamp: datetime = factory(datetime.now)
         duration: timedelta = factory(__make_duration, self=True)
 
@@ -622,6 +679,25 @@ TBD
     # 18:45:44.502490
     print(e.timestamp)
     # 2023-09-27 18:45:44.502490
+
+
+3. handling errors in presentation layers / APIs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
+
+    err = Error()
+    view = RespModel(error=err.as_dict(wide=True)
+
+
+    class MyRealError(BaseError):
+        __template__ = "Having count={count} for owner={owner}"
+
+
+Additional examples
+-------------------
+
+TBD
 
 
 For developers
