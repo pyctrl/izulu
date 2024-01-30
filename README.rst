@@ -283,7 +283,7 @@ Features are represented as flag enum ``Features`` with following options:
   and *"instance attributes"* that have no *"defaults"*
 
   * always should be enabled (provides consistent and detailed ``TypeError`` exceptions for appropriate arguments)
-  * if disabled raw exceptions from izulu machinery internals could appear
+  * if disabled raw exceptions from ``izulu`` machinery internals could appear
 
 * ``FORBID_UNDECLARED_FIELDS``: forbids undefined arguments in provided ``kwargs``
   (names not present in template *"fields"* and *"instance/class hints"*)
