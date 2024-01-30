@@ -68,7 +68,8 @@ class Error(Exception):
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         super().__init_subclass__(**kwargs)
-        fields = frozenset(_utils.extract_fields(cls.__template__))
+        fields = frozenset(map(_utils.extract_field_name,
+                               _utils.iterate_field_specs(cls.__template__)))
         const_hints, inst_hints = _utils.split_cls_hints(cls)
         consts = _utils.get_cls_defaults(cls, const_hints)
         defaults = _utils.get_cls_defaults(cls, inst_hints)

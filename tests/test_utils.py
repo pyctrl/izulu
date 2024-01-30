@@ -102,17 +102,41 @@ def test_format_template_fail(template, kwargs):
 
 
 @pytest.mark.parametrize(
+    "expr",
+    ("field",
+     "field.attribute",
+     "field[key]",
+     "field[key].attr",
+     "field.attr[key]",
+     "field.attr[key].attr",
+     "field[key][another]",
+     "field.attribute.attr")
+)
+def test_extract_field_name_ok(expr):
+    assert _utils.extract_field_name(expr) == "field"
+
+
+@pytest.mark.parametrize("expr", ("", "0"))
+def test_extract_field_name_fail(expr):
+    with pytest.raises(ValueError):
+        tuple(_utils.extract_field_name(expr))
+
+
+@pytest.mark.parametrize(
     ("tpl", "expected"),
     (
         ("Having boring message here", tuple()),
+        ("Hello {}!", ("",)),
+        ("Hello {0}!", ("0",)),
         ("Hello {you}!", ("you",)),
-        ("Hello {you}! How are you, {you}", ("you", "you")),
-        ("{owner}: Having count={count} for owner={owner}",
-         ("owner", "count", "owner"))
+        ("Hello {you:f}!", ("you",)),
+        ("Hello {you}! How are you, {you!a}", ("you", "you")),
+        ("{owner:f!a}: Having {!a} count={count!a:f} for owner={0:f}",
+         ("owner", "", "count", "0"))
     )
 )
-def test_extract_fields(tpl, expected):
-    assert tuple(_utils.extract_fields(tpl)) == expected
+def test_iterate_field_specs(tpl, expected):
+    assert tuple(_utils.iterate_field_specs(tpl)) == expected
 
 
 @pytest.mark.parametrize(

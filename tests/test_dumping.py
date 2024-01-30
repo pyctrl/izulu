@@ -4,6 +4,7 @@ import pickle
 
 import pytest
 
+from izulu import root
 from tests import errors
 
 
@@ -34,18 +35,33 @@ def test_as_kwargs(err, expected):
 
 
 @pytest.mark.parametrize(
-    ("err", "expected"),
+    ("err", "expected", "wide"),
     (
-            (errors.RootError(), dict()),
-            (errors.ClassVarsError(), dict()),
+            (errors.RootError(), dict(), False),
+            (errors.RootError(), dict(), True),
+            (errors.ClassVarsError(), dict(), False),
+            (errors.ClassVarsError(), dict(age=42, name="Username"), True),
             (errors.AttributesWithStaticDefaultsError(name="John"),
-             dict(name="John", age=0)),
+             dict(name="John", age=0),
+             False),
+            (errors.AttributesWithStaticDefaultsError(name="John"),
+             dict(name="John", age=0),
+             True),
             (errors.MixedError(name="John", age=10, note="...", timestamp=TS),
              dict(name="John",
                   age=10,
                   note="...",
                   my_type="MixedError",
-                  timestamp=TS)),
+                  timestamp=TS),
+             False),
+            (errors.MixedError(name="John", age=10, note="...", timestamp=TS),
+             dict(name="John",
+                  age=10,
+                  note="...",
+                  my_type="MixedError",
+                  timestamp=TS,
+                  entity="The Entity"),
+             True),
             (errors.DerivedError(name="John",
                                  surname="Brown",
                                  note="...",
@@ -61,17 +77,49 @@ def test_as_kwargs(err, expected):
                   location=(50.3, 3.608),
                   my_type="DerivedError",
                   timestamp=TS,
-                  updated_at=TS)),
+                  updated_at=TS),
+             False),
+            (errors.DerivedError(name="John",
+                                 surname="Brown",
+                                 note="...",
+                                 box={},
+                                 timestamp=TS,
+                                 updated_at=TS),
+             dict(name="John",
+                  surname="Brown",
+                  full_name="John Brown",
+                  note="...",
+                  age=0,
+                  box={},
+                  location=(50.3, 3.608),
+                  my_type="DerivedError",
+                  timestamp=TS,
+                  updated_at=TS,
+                  entity="The Entity"),
+             True),
     )
 )
-def test_as_dict(err, expected):
-    data = err.as_dict()
+def test_as_dict(err, expected, wide):
+    data = err.as_dict(wide)
     assert data == expected
 
     data["item"] = "SURPRISE"
-    assert "SURPRISE" not in err._Error__kwargs
+    assert "key" not in err._Error__kwargs
+
+    with pytest.raises(AttributeError):
+        getattr(data, "key")
 
     assert id(data) != id(err._Error__kwargs)
+
+
+def test_as_dict_wide_override_const():
+    kls = type("Err",
+               (errors.ClassVarsError,),
+               {"__features__": root.Features.NONE})
+
+    err = kls(age=500)
+
+    assert err.as_dict(True) == dict(age=500, name="Username")
 
 
 def test_copy():  # shallow
