@@ -179,7 +179,7 @@ Quickstart
 #. define *default static values* after field annotation just as usual
 #. for *dynamic defaults* use provided ``factory`` tool with your callable - it would be
    evaluated without arguments during exception instantiation
-#. now fields would receive values from *kwargs* if present - otherwise from *defaults*
+#. now fields would receive values from ``kwargs`` if present - otherwise from *defaults*
 
 ::
 
@@ -512,7 +512,7 @@ Representations
         _MAX: ClassVar[int] = 1000
         amount: int
         reason: str = "amount is too large"
-        ts: datetime = factory(datetime.datetime.now)
+        ts: datetime = factory(datetime.now)
 
 
     err = AmountValidationError(amount=15000)
@@ -527,7 +527,7 @@ Representations
 * ``str`` and ``repr`` output differs
 * ``str`` is for humans and Python (Python dictates the result to be exactly and only the message)
 * ``repr`` allows to reconstruct the same error instance from its output
-  (if data provided into *kwargs* supports ``repr`` the same way)
+  (if data provided into ``kwargs`` supports ``repr`` the same way)
 
   **note:** class name is fully qualified name of class (dot-separated module full path with class name) ::
 
