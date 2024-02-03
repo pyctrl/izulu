@@ -400,7 +400,7 @@ Mechanics
 
     * ``help(str.format)``
     * https://pyformat.info/
-    * https://docs.python.org/3/library/string.html#formatspec
+    * https://docs.python.org/3/library/string.html#format-string-syntax
 
 * ``__init__()`` accepts only ``kwargs``
 
