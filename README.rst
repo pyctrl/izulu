@@ -442,6 +442,18 @@ Mechanics
     print(AmountError(amount=-10).amount)
     # -10
 
+* instance and class attribute types from **annotations are not validated or enforced**
+  (``izulu`` uses type hints just for attribute discovery and only ``ClassVar`` marker
+  is processed for instance/class segregation)
+
+::
+
+    class AmountError(Error):
+        amount: int
+
+    print(AmountError(amount="lots of money").amount)
+    # lots of money
+
 * static *"instance defaults"* can be provided regularly with instance type hints and static values
 
 ::
@@ -538,19 +550,62 @@ Mechanics
   * you can omit them in ``kwargs`` or not (override defaults)
   * *"fields"* defined in ``__template__`` require these data in ``kwargs``
 
-* exceptions you should expect with default feature set enabled:
-
-  * ``TypeError``: constraint and argument issues
-  * ``ValueError``: template formatting issue
-
-* types from type hints are not validated or enforced
-
 * *"defaults"* don't have to be ``__template__`` *"fields"*
 
   * there can be hints for attributes not present in error message template
   * and vice versa — there can be *"fields"* not present as instance attributes
 
-* //pillars// annotated class attributes without values (just annotations) affects ``FORBID_KWARG_CONSTS`` feature (see below)
+
+
+**Validation and behavior in case of problems**
+
+``izulu`` may trigger native Python exceptions on invalid data during validation process.
+By default you should expect following ones
+
+  * ``TypeError``: constraint and argument issues
+  * ``ValueError``: template and formatting issues
+
+Some exceptions are *raised from* original exception (e.g. templating formatting issues),
+so you can check ``e.__cause__`` and traceback output for details.
+
+
+The validation behavior depends on the set of enabled features.
+Changing feature set may cause different and raw exceptions being raised.
+Read and understand **"Features"** section to predict and experiment with different situations and behaviours.
+
+
+``izulu`` has 2 validation stages:
+
+* class definition stage
+
+  * validation is made during error class definition
+
+::
+
+    # when you import error module
+    from izulu import root
+
+    # when you import error from module
+    from izulu.root import Error
+
+    # when you interactively define new error classes
+    class MyError(Error):
+        pass
+
+  * class attributes ``__template__`` and ``__features__`` are validated
+
+* runtime stage
+
+  * validation is made during error instantiation
+
+::
+
+    root.Error()
+
+  * ``kwargs`` are validated according to enabled features
+
+
+
 
 
 **Recommended**
