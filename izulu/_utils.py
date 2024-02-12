@@ -32,27 +32,27 @@ class Store:
 def check_missing_fields(store: Store, kws: frozenset[str]) -> None:
     missing = store.registered.difference(store.defaults, store.consts, kws)
     if missing:
-        raise TypeError(f"Missing arguments: {join(missing)}")
+        raise TypeError(f"Missing arguments: {join_items(missing)}")
 
 
 def check_undeclared_fields(store: Store, kws: frozenset[str]) -> None:
     undeclared = kws.difference(store.registered, store.const_hints)
     if undeclared:
-        raise TypeError(f"Undeclared arguments: {join(undeclared)}")
+        raise TypeError(f"Undeclared arguments: {join_items(undeclared)}")
 
 
 def check_kwarg_consts(store: Store, kws: frozenset[str]) -> None:
     consts = kws.intersection(store.const_hints)
     if consts:
-        raise TypeError(f"Constants in arguments: {join(consts)}")
+        raise TypeError(f"Constants in arguments: {join_items(consts)}")
 
 
-def join(items: t.Iterable[str], symbol: str = ",") -> str:
-    return f"{symbol} ".join(items)
+def join_items(items: t.Iterable[str]) -> str:
+    return ", ".join(map("'{}'".format, items))
 
 
 def join_kwargs(**kwargs: t.Any) -> str:
-    return join(f"{k!s}={v!r}" for k, v in kwargs.items())
+    return ", ".join(f"{k!s}={v!r}" for k, v in kwargs.items())
 
 
 def format_template(template: str, kwargs: dict[str, t.Any]):
@@ -73,7 +73,7 @@ def extract_field_name(expr: str) -> str:
             break
 
     if not field.isidentifier():
-        msg = f"Field is not identifier: {field} (field expression: {expr})"
+        msg = f"Field is not identifier: '{field}' (expression: '{expr}')"
         raise ValueError(msg)
 
     return field

@@ -37,18 +37,12 @@ def test_store_post_init(kwargs, expected):
     ("args", "expected"),
     (
         ((tuple(),), ""),
-        ((("item_1",),), "item_1"),
-        ((("item_1", "item_2", "item_3"),), "item_1, item_2, item_3"),
-        ((tuple(), ","), ""),
-        ((("item_1",), ","), "item_1"),
-        ((("item_1", "item_2", "item_3"), ","), "item_1, item_2, item_3"),
-        ((tuple(), ";"), ""),
-        ((("item_1",), ";"), "item_1"),
-        ((("item_1", "item_2", "item_3"), ";"), "item_1; item_2; item_3"),
+        ((("item_1",),), "'item_1'"),
+        ((("item_1", "item_2", "item_3"),), "'item_1', 'item_2', 'item_3'"),
     )
 )
-def test_join(args, expected):
-    assert _utils.join(*args) == expected
+def test_join_items(args, expected):
+    assert _utils.join_items(*args) == expected
 
 
 @pytest.mark.parametrize(
