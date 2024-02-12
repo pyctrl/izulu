@@ -122,51 +122,35 @@ def test_as_dict_wide_override_const():
     assert err.as_dict(True) == dict(age=500, name="Username")
 
 
-def test_copy():  # shallow
-    ts = datetime.datetime.now()
-    orig = errors.DerivedError(name="John",
-                               surname="Brown",
-                               note="...",
-                               age=42,
-                               updated_at=ts,
-                               full_name="secret",
-                               box=dict())
+def _assert_copy_mutual(orig, cp):
+    assert cp is not orig
+    assert cp._Error__kwargs is not orig._Error__kwargs
+    assert cp.as_dict() == orig.as_dict()
+    assert cp.box == orig.box == dict()
 
-    copied = copy.copy(orig)
 
-    assert id(copied) != id(orig)
-    assert id(copied._Error__kwargs) != id(orig._Error__kwargs)
-    assert copied.as_dict() == orig.as_dict()
-    assert copied.box is orig.box
-    assert copied.box == orig.box == dict()
+def test_copy_shallow(derived_error):
+    orig = derived_error
+    shallow = copy.copy(orig)
+
+    assert shallow.box is orig.box
+    _assert_copy_mutual(orig, shallow)
 
     orig.box.update(a=11)
 
-    assert copied.box == dict(a=11)
+    assert shallow.box == dict(a=11)
 
 
-def test_deepcopy():
+def test_copy_deep(derived_error):
+    orig = derived_error
+    deep = copy.deepcopy(orig)
 
-    ts = datetime.datetime.now()
-    orig = errors.DerivedError(name="John",
-                               surname="Brown",
-                               note="...",
-                               age=42,
-                               updated_at=ts,
-                               full_name="secret",
-                               box=dict())
-
-    copied = copy.deepcopy(orig)
-
-    assert id(copied) != id(orig)
-    assert id(copied._Error__kwargs) != id(orig._Error__kwargs)
-    assert copied.as_dict() == orig.as_dict()
-    assert id(copied.box) != id(orig.box)
-    assert copied.box == orig.box == dict()
+    assert deep is not orig.box
+    _assert_copy_mutual(orig, deep)
 
     orig.box.update(a=11)
 
-    assert copied.box == dict()
+    assert deep.box == dict()
 
 
 @pytest.mark.parametrize(
