@@ -276,14 +276,23 @@ Features
 
 The ``izulu`` error class behaviour is controlled by ``__features__`` class attribute.
 
+(For details about "runtime" and "class definition" stages
+see **Validation and behavior in case of problems**)
+
 Features are represented as flag enum ``Features`` with following options:
 
 * ``FORBID_MISSING_FIELDS``: checks provided ``kwargs`` contain data for all template *"fields"*
   and *"instance attributes"* that have no *"defaults"*
 
-  * always should be enabled (provides consistent and detailed ``TypeError`` exceptions for appropriate arguments)
+  * always should be enabled (provides consistent and detailed ``TypeError`` exceptions
+    for appropriate arguments)
   * if disabled raw exceptions from ``izulu`` machinery internals could appear
-  * **raises:** ``TypeError``
+
+  =======  =============
+   Stage      Raises
+  =======  =============
+  runtime  ``TypeError``
+  =======  =============
 
 ::
 
@@ -305,9 +314,15 @@ Features are represented as flag enum ``Features`` with following options:
   (names not present in template *"fields"* and *"instance/class hints"*)
 
   * if disabled allows and **completely ignores** unknown data in ``kwargs``
-  * **raises:** ``TypeError``
+
+  =======  =============
+   Stage      Raises
+  =======  =============
+  runtime  ``TypeError``
+  =======  =============
 
 ::
+
     class MyError(Error):
         __template__ = "My error occurred"
 
@@ -330,9 +345,48 @@ Features are represented as flag enum ``Features`` with following options:
 
   * if disabled allows data in ``kwargs`` to overlap class attributes during template formatting
   * overlapping data won't modify class attribute values
-  * **raises:** ``TypeError``
+
+  =======  =============
+   Stage      Raises
+  =======  =============
+  runtime  ``TypeError``
+  =======  =============
 
 ::
+
+    class MyError(Error):
+        __template__ = "My error occurred {_TYPE}"
+        _TYPE: ClassVar[str]
+
+    # I. enabled
+    MyError(_TYPE="SOME_ERROR_TYPE")
+    # TypeError: Constants in arguments: _TYPE
+
+    # II. disabled
+    MyError.__features__ ^= Features.FORBID_KWARG_CONSTS
+    err = MyError(_TYPE="SOME_ERROR_TYPE")
+
+    print(err)
+    # My error occurred SOME_ERROR_TYPE
+    print(repr(err))
+    # __main__.MyError(_TYPE='SOME_ERROR_TYPE')
+    err._TYPE
+    # AttributeError: 'MyError' object has no attribute '_TYPE'
+
+* ``FORBID_NON_NAMED_FIELDS``: forbids empty and digit field names in ``__template__``
+
+  * if disabled validation (runtime issues)
+  * ``izulu`` relies on ``kwargs`` and named fields
+  * by default it's forbidden to provide empty (``{}``) and digit (``{0}``) fields in ``__template__``
+
+  ================  ==============
+   Stage               Raises
+  ================  ==============
+  class definition  ``ValueError``
+  ================  ==============
+
+::
+
     class MyError(Error):
         __template__ = "My error occurred {_TYPE}"
         _TYPE: ClassVar[str]
@@ -401,6 +455,10 @@ Mechanics
     * ``help(str.format)``
     * https://pyformat.info/
     * https://docs.python.org/3/library/string.html#format-string-syntax
+
+  * only named fields are allowed
+
+    * positional (digit) and empty field are forbidden
 
 * ``__init__()`` accepts only ``kwargs``
 
@@ -562,8 +620,8 @@ Mechanics
 ``izulu`` may trigger native Python exceptions on invalid data during validation process.
 By default you should expect following ones
 
-  * ``TypeError``: constraint and argument issues
-  * ``ValueError``: template and formatting issues
+* ``TypeError``: constraint and argument issues
+* ``ValueError``: template and formatting issues
 
 Some exceptions are *raised from* original exception (e.g. templating formatting issues),
 so you can check ``e.__cause__`` and traceback output for details.
@@ -574,33 +632,29 @@ Changing feature set may cause different and raw exceptions being raised.
 Read and understand **"Features"** section to predict and experiment with different situations and behaviours.
 
 
-``izulu`` has 2 validation stages:
+``izulu`` has **2 validation stages:**
 
 * class definition stage
 
-  * validation is made during error class definition
+  * validation is made during error class definition ::
 
-::
+     # when you import error module
+     from izulu import root
 
-    # when you import error module
-    from izulu import root
+     # when you import error from module
+     from izulu.root import Error
 
-    # when you import error from module
-    from izulu.root import Error
-
-    # when you interactively define new error classes
-    class MyError(Error):
-        pass
+     # when you interactively define new error classes
+     class MyError(Error):
+         pass
 
   * class attributes ``__template__`` and ``__features__`` are validated
 
 * runtime stage
 
-  * validation is made during error instantiation
+  * validation is made during error instantiation ::
 
-::
-
-    root.Error()
+      root.Error()
 
   * ``kwargs`` are validated according to enabled features
 
