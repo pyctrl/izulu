@@ -13,11 +13,13 @@ class Features(enum.Flag):
     FORBID_MISSING_FIELDS = enum.auto()
     FORBID_UNDECLARED_FIELDS = enum.auto()
     FORBID_KWARG_CONSTS = enum.auto()
+    FORBID_NON_NAMED_FIELDS = enum.auto()
 
     DEFAULT = (
             FORBID_MISSING_FIELDS
             | FORBID_UNDECLARED_FIELDS
             | FORBID_KWARG_CONSTS
+            | FORBID_NON_NAMED_FIELDS
     )
     NONE = 0
 
@@ -68,8 +70,7 @@ class Error(Exception):
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         super().__init_subclass__(**kwargs)
-        fields = frozenset(map(_utils.extract_field_name,
-                               _utils.iterate_field_specs(cls.__template__)))
+        fields = frozenset(_utils.iter_fields(cls.__template__))
         const_hints, inst_hints = _utils.split_cls_hints(cls)
         consts = _utils.get_cls_defaults(cls, const_hints)
         defaults = _utils.get_cls_defaults(cls, inst_hints)
@@ -80,6 +81,8 @@ class Error(Exception):
             consts=types.MappingProxyType(consts),
             defaults=frozenset(defaults),
         )
+        if Features.FORBID_NON_NAMED_FIELDS in cls.__features__:
+            _utils.check_non_named_fields(cls.__cls_store)
 
     def __init__(self, **kwargs: t.Any) -> None:
         self.__kwargs = kwargs.copy()

@@ -96,41 +96,46 @@ def test_format_template_fail(template, kwargs):
 
 
 @pytest.mark.parametrize(
-    "expr",
-    ("field",
-     "field.attribute",
-     "field[key]",
-     "field[key].attr",
-     "field.attr[key]",
-     "field.attr[key].attr",
-     "field[key][another]",
-     "field.attribute.attr")
-)
-def test_extract_field_name_ok(expr):
-    assert _utils.extract_field_name(expr) == "field"
-
-
-@pytest.mark.parametrize("expr", ("", "0"))
-def test_extract_field_name_fail(expr):
-    with pytest.raises(ValueError):
-        tuple(_utils.extract_field_name(expr))
-
-
-@pytest.mark.parametrize(
     ("tpl", "expected"),
     (
+        ("", tuple()),
+        ("abc def", tuple()),
+        ("{}", ("",)),
+        ("abc {} def", ("",)),
+        ("{-}", ("-",)),
+        ("{_}", ("_",)),
+        ("{'}", ("'",)),
+        ("{01abc}", ("01abc",)),
+        ("{]}", ("]",)),
+        ("{1}", (1,)),
+        ("{field}", ("field",)),
+        ("{field.attribute}", ("field",)),
+        ("{field[key]}", ("field",)),
+        ("{field[key].attr}", ("field",)),
+        ("{field.attr[key]}", ("field",)),
+        ("{field.attr[key].attr}", ("field",)),
+        ("{field[key][another]}", ("field",)),
+        ("{field.attribute.attr}", ("field",)),
+        ("{fi-eld}", ("fi-eld",)),
+        ("{field.-attribute}", ("field",)),
+        ("{field[-key]}", ("field",)),
+        ("{-field[key].attr}", ("-field",)),
+        ("{field-.-attr[-key]}", ("field-",)),
+        ("{fi-eld.at-tr[key].attr}", ("fi-eld",)),
+        ("{field[0key][another]}", ("field",)),
+        ("{fi-eld.0attribute.attr}", ("fi-eld",)),
         ("Having boring message here", tuple()),
         ("Hello {}!", ("",)),
-        ("Hello {0}!", ("0",)),
+        ("Hello {0}!", (0,)),
         ("Hello {you}!", ("you",)),
         ("Hello {you:f}!", ("you",)),
         ("Hello {you}! How are you, {you!a}", ("you", "you")),
         ("{owner:f!a}: Having {!a} count={count!a:f} for owner={0:f}",
-         ("owner", "", "count", "0"))
+         ("owner", "", "count", 0))
     )
 )
 def test_iterate_field_specs(tpl, expected):
-    assert tuple(_utils.iterate_field_specs(tpl)) == expected
+    assert tuple(_utils.iter_fields(tpl)) == expected
 
 
 @pytest.mark.parametrize(
@@ -181,5 +186,5 @@ def test_split_cls_hints(kls, const_hints, inst_hints):
         (errors.TemplateOnlyError, ("name",), dict()),
     )
 )
-def test_get_defaults(kls, attrs, expected):
+def test_get_cls_defaults(kls, attrs, expected):
     assert _utils.get_cls_defaults(kls, attrs) == expected

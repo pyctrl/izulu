@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import _string  # type: ignore
 import dataclasses
 import string
 import types
@@ -9,7 +10,6 @@ import typing as t
 _T_HINTS = dict[str, t.Type]
 
 _IZULU_ATTRS = {"__template__", "__features__", "_Error__cls_store"}
-_FORMATTING_SPECIAL_MARKERS = frozenset(".[")  # Formatter filters out "!:"
 _FORMATTER = string.Formatter()
 
 
@@ -47,6 +47,14 @@ def check_kwarg_consts(store: Store, kws: frozenset[str]) -> None:
         raise TypeError(f"Constants in arguments: {join_items(consts)}")
 
 
+def check_non_named_fields(store: Store) -> None:
+    for field in store.fields:
+        if isinstance(field, int):
+            raise ValueError(f"Field names can't be digits: {field}")
+        elif not field:
+            raise ValueError("Field names can't be empty")
+
+
 def join_items(items: t.Iterable[str]) -> str:
     return ", ".join(map("'{}'".format, items))
 
@@ -63,27 +71,11 @@ def format_template(template: str, kwargs: dict[str, t.Any]):
         raise ValueError(msg_part + join_kwargs(**kwargs)) from e
 
 
-def extract_field_name(expr: str) -> str:
+def iter_fields(template: str) -> t.Generator[str, None, None]:
     # https://docs.python.org/3/library/string.html#format-string-syntax
-
-    field = expr
-    for i, char in enumerate(expr):
-        if char in _FORMATTING_SPECIAL_MARKERS:
-            field = expr[:i]
-            break
-
-    if not field.isidentifier():
-        msg = f"Field is not identifier: '{field}' (expression: '{expr}')"
-        raise ValueError(msg)
-
-    return field
-
-
-def iterate_field_specs(template: str) -> t.Generator[str, None, None]:
     for _, fn, _, _ in _FORMATTER.parse(template):
-        if fn is None:
-            continue
-        yield fn
+        if fn is not None:
+            yield _string.formatter_field_name_split(fn)[0]
 
 
 def split_cls_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:

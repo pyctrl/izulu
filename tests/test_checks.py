@@ -130,3 +130,27 @@ def test_check_kwarg_consts_ok(store, kws):
 def test_check_kwarg_consts_fail(store, kws):
     with pytest.raises(TypeError):
         _utils.check_kwarg_consts(store, frozenset(kws))
+
+
+@pytest.mark.parametrize(
+    "store",
+    (
+        h._make_store(),
+        h._make_store(fields=frozenset(("abc", "-", "01abc"))),
+    )
+)
+def test_check_non_named_fields_ok(store):
+    _utils.check_non_named_fields(store)
+
+
+@pytest.mark.parametrize(
+    "store",
+    (
+        h._make_store(fields=frozenset(("",))),
+        h._make_store(fields=frozenset((1,))),
+        h._make_store(fields=frozenset((0,))),
+    )
+)
+def test_check_non_named_fields_fail(store):
+    with pytest.raises(ValueError):
+        _utils.check_non_named_fields(store)

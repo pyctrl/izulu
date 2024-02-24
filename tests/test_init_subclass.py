@@ -1,8 +1,10 @@
 import datetime
 import types
+from unittest import mock
 
 import pytest
 
+from izulu import root
 from tests import errors
 
 
@@ -100,8 +102,8 @@ from tests import errors
             ),
     )
 )
-def test_class_stores(kls, fields, hints, registered, defaults, consts):
-    """validates root.Error.__init_subclass__"""
+def test_cls_store(kls, fields, hints, registered, defaults, consts):
+    """Validates store management from root.Error.__init_subclass__"""
 
     store = getattr(kls, "_Error__cls_store")
 
@@ -115,3 +117,20 @@ def test_class_stores(kls, fields, hints, registered, defaults, consts):
     assert store.defaults == defaults
     assert type(store.consts) is type(consts)
     assert store.consts == consts
+
+
+@pytest.mark.parametrize(
+    "features",
+    (root.Features.FORBID_NON_NAMED_FIELDS,
+     root.Features.NONE)
+)
+@mock.patch("izulu._utils.check_non_named_fields", return_value=0)
+def test_cls_validation(mocked_check, features):
+    """Validates feature checks from root.Error.__init_subclass__"""
+
+    type("Err", (errors.ClassVarsError,), {"__features__": features})
+
+    if features is root.Features.NONE:
+        mocked_check.assert_not_called()
+    else:
+        mocked_check.assert_called_once()

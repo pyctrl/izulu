@@ -89,6 +89,7 @@ def test_feature_presets():
             root.Features.FORBID_MISSING_FIELDS
             | root.Features.FORBID_UNDECLARED_FIELDS
             | root.Features.FORBID_KWARG_CONSTS
+            | root.Features.FORBID_NON_NAMED_FIELDS
     )
 
     assert root.Features.NONE is root.Features(0)
