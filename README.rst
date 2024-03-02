@@ -1,7 +1,13 @@
 izulu
 =====
 
+.. image:: https://gitlab.com/uploads/-/system/project/avatar/50698236/izulu_logo_512.png?width=128
+
+|
+
     *"An exceptional library"*
+
+|
 
 
 **Installation**
@@ -23,7 +29,7 @@ izulu
 Presenting ``izulu``: bring OOP into exception/error management
 ---------------------------------------------------------------
 
-You can read docs *from top to bottom* or jump strait into **"Quickstart"** section.
+You can read docs *from top to bottom* or jump straight into **"Quickstart"** section.
 For details note **"Specifications"** sections below.
 
 
@@ -279,7 +285,7 @@ The ``izulu`` error class behaviour is controlled by ``__features__`` class attr
 (For details about "runtime" and "class definition" stages
 see **Validation and behavior in case of problems**)
 
-Features are represented as flag enum ``Features`` with following options:
+**Supported features:**
 
 * ``FORBID_MISSING_FIELDS``: checks provided ``kwargs`` contain data for all template *"fields"*
   and *"instance attributes"* that have no *"defaults"*
@@ -407,6 +413,27 @@ Features are represented as flag enum ``Features`` with following options:
     # AttributeError: 'MyError' object has no attribute '_TYPE'
 
 
+Features are represented as *"Flag Enum"*, so you can use regular operations
+to configure desired behaviour.
+Examples:
+
+* Combining wanted features:
+
+::
+
+    class AmountError(Error):
+        __features__ = Features.FORBID_MISSING_FIELDS | Features.FORBID_KWARG_CONSTS
+
+* Discarding unwanted feature from default feature set:
+
+::
+
+    class AmountError(Error):
+        __features__ = Features.DEFAULT ^ Features.FORBID_UNDECLARED_FIELDS
+
+
+TODO: check_forbid_non_named_fields feature / excs
+
 Mechanics
 ^^^^^^^^^
 
@@ -423,12 +450,12 @@ Mechanics
     class AmountError(Error):
         pass
 
-* **optionally** behaviour can be adjusted with ``__features__``
+* **optionally** behaviour can be adjusted with ``__features__`` (not recommended)
 
 ::
 
     class AmountError(Error):
-        __features__ = Features.FORBID_MISSING_FIELDS | Features.FORBID_KWARG_CONSTS
+        __features__ = Features.DEFAULT ^ Features.FORBID_UNDECLARED_FIELDS
 
 * you should provide a template for the target error message with ``__template__`` ::
 
@@ -460,20 +487,33 @@ Mechanics
 
     * positional (digit) and empty field are forbidden
 
-* ``__init__()`` accepts only ``kwargs``
+* error instantiation requires data to format ``__template__``
 
-::
+  * all data for ``__template__`` fields must be provided ::
 
-    class AmountError(Error):
-        __template__ = "Data is invalid: {reason} (amount={amount})"
+      class AmountError(Error):
+          __template__ = "Data is invalid: {reason} (amount={amount})"
 
-    print(AmountError(reason="amount can't be negative", amount=-10))
-    # Data is invalid: amount can't be negative (amount=-10)
+      print(AmountError(reason="amount can't be negative", amount=-10))
+      # Data is invalid: amount can't be negative (amount=-10)
 
-    AmountError("amount can't be negative", -10)
-    # TypeError: __init__() takes 1 positional argument but 3 were given
-    AmountError("amount can't be negative", amount=-10)
-    # TypeError: __init__() takes 1 positional argument but 2 were given
+      AmountError()
+      # TypeError: Missing arguments: 'reason', 'amount'
+      AmountError(amount=-10)
+      # TypeError: Missing arguments: 'reason'
+
+  * only named arguments allowed: ``__init__()`` accepts only ``kwargs`` ::
+
+      class AmountError(Error):
+          __template__ = "Data is invalid: {reason} (amount={amount})"
+
+      print(AmountError(reason="amount can't be negative", amount=-10))
+      # Data is invalid: amount can't be negative (amount=-10)
+
+      AmountError("amount can't be negative", -10)
+      # TypeError: __init__() takes 1 positional argument but 3 were given
+      AmountError("amount can't be negative", amount=-10)
+      # TypeError: __init__() takes 1 positional argument but 2 were given
 
 * *"class defaults"* can be defined and used
 
@@ -600,19 +640,39 @@ Mechanics
     print(AmountError(amount=10_333, overflow=42, ts=datetime(1900, 1, 1)))
     # [2024-01-23 23:21] Amount is too large: amount=10333 limit=10000 overflow=42
 
-**Special notes**
+* ``izulu`` provides flexibility for templates, fields, attributes and defaults
 
-* XXX *"fields"* defined in ``__template__`` rules
+  * *"defaults"* are not required to be ``__template__`` *"fields"* ::
 
-  * *"fields"* may refer class and instance *"defaults"*
-  * you can omit them in ``kwargs`` or not (override defaults)
-  * *"fields"* defined in ``__template__`` require these data in ``kwargs``
+      class AmountError(Error):
+          LIMIT: ClassVar[int] = 10_000
+          __template__ = "Amount is too large"
 
-* *"defaults"* don't have to be ``__template__`` *"fields"*
+      print(AmountError().LIMIT)
+      # 10000
+      print(AmountError())
+      # Amount is too large
 
-  * there can be hints for attributes not present in error message template
-  * and vice versa — there can be *"fields"* not present as instance attributes
+  * there can be hints for attributes not present in error message template ::
 
+      class AmountError(Error):
+          __template__ = "Amount is too large"
+          amount: int
+
+      print(AmountError(amount=500).amount)
+      # 500
+      print(AmountError(amount=500))
+      # Amount is too large
+
+  * *"fields"* don't have to be hinted as instance attributes ::
+
+      class AmountError(Error):
+          __template__ = "Amount is too large: {amount}"
+
+      print(AmountError(amount=500))
+      # Amount is too large: 500
+      print(AmountError(amount=500).amount)
+      # AttributeError: 'AmountError' object has no attribute 'amount'
 
 
 **Validation and behavior in case of problems**

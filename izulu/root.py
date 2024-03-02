@@ -15,13 +15,13 @@ class Features(enum.Flag):
     FORBID_KWARG_CONSTS = enum.auto()
     FORBID_NON_NAMED_FIELDS = enum.auto()
 
+    NONE = 0
     DEFAULT = (
             FORBID_MISSING_FIELDS
             | FORBID_UNDECLARED_FIELDS
             | FORBID_KWARG_CONSTS
             | FORBID_NON_NAMED_FIELDS
     )
-    NONE = 0
 
 
 class Error(Exception):
@@ -93,7 +93,7 @@ class Error(Exception):
         super().__init__(msg)
 
     def __process_features(self) -> None:
-        """Execute logic for enabled features"""
+        """Trigger features"""
 
         store = self.__cls_store
         kws = frozenset(self.__kwargs)
@@ -108,7 +108,7 @@ class Error(Exception):
             _utils.check_kwarg_consts(store, kws)
 
     def __populate_attrs(self) -> None:
-        """Set hinted kwargs as attributes"""
+        """Set hinted kwargs as exception attributes"""
 
         for k, v in self.__kwargs.items():
             if k in self.__cls_store.inst_hints:
@@ -163,7 +163,7 @@ class Error(Exception):
         return functools.partial(self.__class__, **self.as_dict()), tuple()
 
     def as_str(self) -> str:
-        """Represent error as error type with message"""
+        """Represent error as exception type with message"""
 
         return f"{self.__class__.__qualname__}: {self}"
 
@@ -177,7 +177,7 @@ class Error(Exception):
 
         By default, only *instance* data and defaults are provided.
 
-        :param bool wide: if `True` class defaults will be included in result
+        :param bool wide: if `True` *class* defaults will be included in result
         """
 
         d = self.__kwargs.copy()
