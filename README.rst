@@ -17,24 +17,18 @@ izulu
     pip install izulu
 
 
-**Prepare playground**
+Presenting ``izulu``
+********************
 
-::
-
-    pip install ipython
-
-    ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
-
-
-Presenting ``izulu``: bring OOP into exception/error management
-***************************************************************
+Bring OOP into exception/error management
+=========================================
 
 You can read docs *from top to bottom* or jump straight into **"Quickstart"** section.
 For details note **"Specifications"** sections below.
 
 
 Neat #1: Stop messing with raw strings and manual message formatting
-====================================================================
+--------------------------------------------------------------------
 
 ::
 
@@ -80,7 +74,7 @@ Under the hood ``kwargs`` are used to format ``__template__`` into final error m
 
 
 Neat #2: Attribute errors with useful fields
-============================================
+--------------------------------------------
 
 ::
 
@@ -103,7 +97,7 @@ Annotated instance attributes automatically populated from ``kwargs``.
 
 
 Neat #3: Static and dynamic defaults
-====================================
+------------------------------------
 
 ::
 
@@ -123,9 +117,10 @@ Neat #3: Static and dynamic defaults
 
 
 Quickstart
-**********
+==========
 
-**Prepare playground**
+Prepare playground
+------------------
 
 ::
 
@@ -134,7 +129,8 @@ Quickstart
     ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
 
 
-**Let's start with defining our initial error class (exception).**
+Let's start with defining our initial error class (exception)
+-------------------------------------------------------------
 
 #. subclass ``Error``
 #. provide special message template for each of your exceptions
@@ -153,7 +149,8 @@ Quickstart
     # TypeError: __init__() takes 1 positional argument but 2 were given
 
 
-**Move on and improve our class with attributes**
+Move on and improve our class with attributes
+---------------------------------------------
 
 #. define annotations for fields you want to publish as exception instance attributes
 #. you have to define desired template fields in annotations too
@@ -179,7 +176,8 @@ Quickstart
     # AttributeError: 'MyError' object has no attribute 'owner'
 
 
-**We can provide defaults for our attributes**
+We can provide defaults for our attributes
+------------------------------------------
 
 #. define *default static values* after field annotation just as usual
 #. for *dynamic defaults* use provided ``factory`` tool with your callable - it would be
@@ -204,7 +202,8 @@ Quickstart
     # 2023-09-27 18:19:37.252577
 
 
-**Dynamic defaults also supported**
+Dynamic defaults also supported
+-------------------------------
 
 ::
 
