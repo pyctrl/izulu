@@ -30,7 +30,7 @@ For details note **"Specifications"** sections below.
 Neat #1: Stop messing with raw strings and manual message formatting
 --------------------------------------------------------------------
 
-::
+.. code-block:: python
 
     if not data:
         raise ValueError("Data is invalid: no data")
@@ -46,7 +46,7 @@ Neat #1: Stop messing with raw strings and manual message formatting
 
 With ``izulu`` you can forget about manual error message management all over the codebase!
 
-::
+.. code-block:: python
 
     class ValidationError(Error):
         __template__ = "Data is invalid: {reason}"
@@ -76,7 +76,7 @@ Under the hood ``kwargs`` are used to format ``__template__`` into final error m
 Neat #2: Attribute errors with useful fields
 --------------------------------------------
 
-::
+.. code-block:: python
 
     from falcon import HTTPBadRequest
 
@@ -99,7 +99,7 @@ Annotated instance attributes automatically populated from ``kwargs``.
 Neat #3: Static and dynamic defaults
 ------------------------------------
 
-::
+.. code-block:: python
 
     class AmountValidationError(ValidationError):
         __template__ = "Data is invalid: {reason} ({amount}; MAX={_MAX}) at {ts}"
@@ -119,14 +119,15 @@ Neat #3: Static and dynamic defaults
 Quickstart
 ==========
 
-Prepare playground
-------------------
+.. note::
 
-::
+    **Prepare playground**
 
-    pip install ipython
+    ::
 
-    ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
+        pip install ipython izulu
+
+        ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
 
 
 Let's start with defining our initial error class (exception)
@@ -136,7 +137,7 @@ Let's start with defining our initial error class (exception)
 #. provide special message template for each of your exceptions
 #. use **only kwargs** to instantiate exception *(no more message copying across the codebase)*
 
-::
+.. code-block:: python
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
@@ -158,7 +159,7 @@ Move on and improve our class with attributes
 #. you can provide annotation for attributes not included in template (see ``timestamp``)
 #. **type hinting from annotations are not enforced or checked** (see ``timestamp``)
 
-::
+.. code-block:: python
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
@@ -184,7 +185,7 @@ We can provide defaults for our attributes
    evaluated without arguments during exception instantiation
 #. now fields would receive values from ``kwargs`` if present - otherwise from *defaults*
 
-::
+.. code-block:: python
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
@@ -205,7 +206,7 @@ We can provide defaults for our attributes
 Dynamic defaults also supported
 -------------------------------
 
-::
+.. code-block:: python
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
@@ -279,27 +280,34 @@ The 6 pillars of ``izulu``
 Mechanics
 =========
 
-::
+.. note::
 
-    pip install ipython
+    **Prepare playground**
 
-    ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
+    ::
+
+        pip install ipython izulu
+
+        ipython -i -c 'from izulu.root import *; from typing import *; from datetime import *'
+
 
 * inheritance from ``izulu.root.Error`` is required
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         pass
 
 * **optionally** behaviour can be adjusted with ``__features__`` (not recommended)
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         __features__ = Features.DEFAULT ^ Features.FORBID_UNDECLARED_FIELDS
 
-* you should provide a template for the target error message with ``__template__`` ::
+* you should provide a template for the target error message with ``__template__``
+
+  .. code-block:: python
 
     class AmountError(Error):
         __template__ = "Data is invalid: {reason} (amount={amount})"
@@ -313,13 +321,15 @@ Mechanics
     * *"instance defaults"*
     * ``kwargs`` (overlap any *"default"*)
 
-  * new style formatting is used::
+  * new style formatting is used:
 
-        class AmountError(Error):
-            __template__ = "[{ts:%Y-%m-%d %H:%M}] Data is invalid: {reason:_^20} (amount={amount:06.2f})"
+    .. code-block:: python
 
-        print(AmountError(ts=datetime.now(), reason="negative amount", amount=-10.52))
-        # [2024-01-23 19:16] Data is invalid: __negative amount___ (amount=-10.52)
+      class AmountError(Error):
+          __template__ = "[{ts:%Y-%m-%d %H:%M}] Data is invalid: {reason:_^20} (amount={amount:06.2f})"
+
+      print(AmountError(ts=datetime.now(), reason="negative amount", amount=-10.52))
+      # [2024-01-23 19:16] Data is invalid: __negative amount___ (amount=-10.52)
 
     * ``help(str.format)``
     * https://pyformat.info/
@@ -335,7 +345,9 @@ Mechanics
 
 * error instantiation requires data to format ``__template__``
 
-  * all data for ``__template__`` fields must be provided ::
+  * all data for ``__template__`` fields must be provided
+
+    .. code-block:: python
 
       class AmountError(Error):
           __template__ = "Data is invalid: {reason} (amount={amount})"
@@ -348,7 +360,9 @@ Mechanics
       AmountError(amount=-10)
       # TypeError: Missing arguments: 'reason'
 
-  * only named arguments allowed: ``__init__()`` accepts only ``kwargs`` ::
+  * only named arguments allowed: ``__init__()`` accepts only ``kwargs``
+
+    .. code-block:: python
 
       class AmountError(Error):
           __template__ = "Data is invalid: {reason} (amount={amount})"
@@ -366,7 +380,7 @@ Mechanics
   * *"class defaults"* must be type hinted with ``ClassVar`` annotation and provide static values
   * template *"fields"* may refer *"class defaults"*
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         LIMIT: ClassVar[int] = 10_000
@@ -378,7 +392,7 @@ Mechanics
 
 * *"instance attributes"* are populated from relevant ``kwargs``
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         amount: int
@@ -390,7 +404,7 @@ Mechanics
   (``izulu`` uses type hints just for attribute discovery and only ``ClassVar`` marker
   is processed for instance/class segregation)
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         amount: int
@@ -400,7 +414,7 @@ Mechanics
 
 * static *"instance defaults"* can be provided regularly with instance type hints and static values
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         amount: int = 500
@@ -414,7 +428,9 @@ Mechanics
   * value must be a callable object wrapped with ``factory`` helper
   * ``factory`` provides 2 modes depending on value of the ``self`` flag:
 
-    * ``self=False`` (default): callable accepting no arguments ::
+    * ``self=False`` (default): callable accepting no arguments
+
+      .. code-block:: python
 
         class AmountError(Error):
             ts: datetime = factory(datetime.now)
@@ -422,7 +438,9 @@ Mechanics
         print(AmountError().ts)
         # 2024-01-23 23:18:22.019963
 
-    * ``self=True``: provide callable accepting single argument (error instance) ::
+    * ``self=True``: provide callable accepting single argument (error instance)
+
+      .. code-block:: python
 
         class AmountError(Error):
             LIMIT = 10_000
@@ -434,7 +452,7 @@ Mechanics
 
 * *"instance defaults"* and *"instance attributes"* may be referred in ``__template__``
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         __template__ = "[{ts:%Y-%m-%d %H:%M}] Amount is too large: {amount}"
@@ -446,7 +464,7 @@ Mechanics
 
 * *Pause and sum up: defaults, attributes and template*
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         LIMIT: ClassVar[int] = 10_000
@@ -471,7 +489,7 @@ Mechanics
 
 * ``kwargs`` overlap *"instance defaults"*
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         LIMIT: ClassVar[int] = 10_000
@@ -488,7 +506,9 @@ Mechanics
 
 * ``izulu`` provides flexibility for templates, fields, attributes and defaults
 
-  * *"defaults"* are not required to be ``__template__`` *"fields"* ::
+  * *"defaults"* are not required to be ``__template__`` *"fields"*
+
+    .. code-block:: python
 
       class AmountError(Error):
           LIMIT: ClassVar[int] = 10_000
@@ -499,7 +519,9 @@ Mechanics
       print(AmountError())
       # Amount is too large
 
-  * there can be hints for attributes not present in error message template ::
+  * there can be hints for attributes not present in error message template
+
+    .. code-block:: python
 
       class AmountError(Error):
           __template__ = "Amount is too large"
@@ -510,7 +532,9 @@ Mechanics
       print(AmountError(amount=500))
       # Amount is too large
 
-  * *"fields"* don't have to be hinted as instance attributes ::
+  * *"fields"* don't have to be hinted as instance attributes
+
+    .. code-block:: python
 
       class AmountError(Error):
           __template__ = "Amount is too large: {amount}"
@@ -546,7 +570,7 @@ Supported features
   runtime  ``TypeError``
   =======  =============
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         __template__ = "Some {amount} of money for {client_id} client"
@@ -573,7 +597,7 @@ Supported features
   runtime  ``TypeError``
   =======  =============
 
-::
+.. code-block:: python
 
     class MyError(Error):
         __template__ = "My error occurred"
@@ -604,7 +628,7 @@ Supported features
   runtime  ``TypeError``
   =======  =============
 
-::
+.. code-block:: python
 
     class MyError(Error):
         __template__ = "My error occurred {_TYPE}"
@@ -637,7 +661,7 @@ Supported features
   class definition  ``ValueError``
   ================  ==============
 
-::
+.. code-block:: python
 
     class MyError(Error):
         __template__ = "My error occurred {_TYPE}"
@@ -668,28 +692,28 @@ Examples:
 
 * Use single option
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         __features__ = Features.FORBID_MISSING_FIELDS
 
 * Use presets
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         __features__ = Features.NONE
 
 * Combining wanted features:
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         __features__ = Features.FORBID_MISSING_FIELDS | Features.FORBID_KWARG_CONSTS
 
 * Discarding unwanted feature from default feature set:
 
-::
+.. code-block:: python
 
     class AmountError(Error):
         __features__ = Features.DEFAULT ^ Features.FORBID_UNDECLARED_FIELDS
@@ -717,7 +741,9 @@ Read and understand **"Features"** section to predict and experiment with differ
 
 * class definition stage
 
-  * validation is made during error class definition ::
+  * validation is made during error class definition
+
+    .. code-block:: python
 
       # when you import error module
       from izulu import root
@@ -729,7 +755,9 @@ Read and understand **"Features"** section to predict and experiment with differ
       class MyError(Error):
           pass
 
-  * class attributes ``__template__`` and ``__features__`` are validated ::
+  * class attributes ``__template__`` and ``__features__`` are validated
+
+    .. code-block:: python
 
       class MyError(Error):
           __template__ = "Hello {}"
@@ -738,11 +766,15 @@ Read and understand **"Features"** section to predict and experiment with differ
 
 * runtime stage
 
-  * validation is made during error instantiation ::
+  * validation is made during error instantiation
+
+    .. code-block:: python
 
       root.Error()
 
-  * ``kwargs`` are validated according to enabled features ::
+  * ``kwargs`` are validated according to enabled features
+
+    .. code-block:: python
 
       class MyError(Error):
           __template__ = "Hello {name}"
@@ -758,7 +790,7 @@ Additional APIs
 Representations
 ---------------
 
-::
+.. code-block:: python
 
     class AmountValidationError(Error):
         __template__ = "Data is invalid: {reason} ({amount}; MAX={_MAX}) at {ts}"
@@ -782,7 +814,9 @@ Representations
 * ``repr`` allows to reconstruct the same error instance from its output
   (if data provided into ``kwargs`` supports ``repr`` the same way)
 
-  **note:** class name is fully qualified name of class (dot-separated module full path with class name) ::
+  **note:** class name is fully qualified name of class (dot-separated module full path with class name)
+
+  .. code-block:: python
 
     reconstructed = eval(repr(err).replace("__main__.", "", 1))
 
@@ -793,11 +827,12 @@ Representations
     # AmountValidationError(amount=15000, ts=datetime.datetime(2024, 1, 13, 23, 33, 13, 847586), reason='amount is too large')
 
 * in addition to ``str`` there is another human-readable representations provided by ``.as_str()`` method;
-  it prepends message with class name::
+  it prepends message with class name:
+
+  .. code-block:: python
 
     print(err.as_str())
     # AmountValidationError: Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 23:33:13.847586
-
 
 
 Pickling, dumping and loading
@@ -814,21 +849,25 @@ Dumping
 
 * ``.as_kwargs()`` dumps shallow copy of original ``kwargs``
 
-::
+.. code-block:: python
 
     err.as_kwargs()
     # {'amount': 15000}
 
-* ``.as_dict()`` by default, combines original ``kwargs`` and all *"instance attribute"* values into *"full state"* ::
+* ``.as_dict()`` by default, combines original ``kwargs`` and all *"instance attribute"* values into *"full state"*
 
-      err.as_dict()
-      # {'amount': 15000, 'ts': datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large'}
+  .. code-block:: python
+
+    err.as_dict()
+    # {'amount': 15000, 'ts': datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large'}
 
   Additionally, there is the ``wide`` flag for enriching the result with *"class defaults"*
-  (note additional ``_MAX`` data) ::
+  (note additional ``_MAX`` data)
 
-      err.as_dict(True)
-      # {'amount': 15000, 'ts': datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large', '_MAX': 1000}
+  .. code-block:: python
+
+    err.as_dict(True)
+    # {'amount': 15000, 'ts': datetime(2024, 1, 13, 23, 33, 13, 847586), 'reason': 'amount is too large', '_MAX': 1000}
 
   Data combination process follows prioritization — if there are multiple values for same name then high priority data
   will overlap data with lower priority. Here is the prioritized list of data sources:
@@ -845,7 +884,7 @@ Loading
   but pay attention to dynamic factories — ``datetime.now()``, ``uuid()`` and many others would produce new values
   for data missing in ``kwargs`` (note ``ts`` field in the example below)
 
-::
+.. code-block:: python
 
     inaccurate_copy = AmountValidationError(**err.as_kwargs())
 
@@ -858,7 +897,7 @@ Loading
   flag ``wide`` should be ``False`` by default according to ``FORBID_KWARG_CONSTS`` restriction
   (if you disable ``FORBID_KWARG_CONSTS`` then you may need to use ``wide=True`` depending on your situation)
 
-::
+.. code-block:: python
 
     accurate_copy = AmountValidationError(**err.as_dict())
 
@@ -875,7 +914,7 @@ There is a special method you can override and additionally manage the machinery
 
 But it should not be need in 99,9% cases. Avoid it, please.
 
-::
+.. code-block:: python
 
     def _hook(self,
               store: _utils.Store,
@@ -907,7 +946,7 @@ Tips
 1. inheritance / root exception
 ===============================
 
-::
+.. code-block:: python
 
     # intermediate class to centrally control the default behaviour
     class BaseError(Error):  # <-- inherit from this in your code (not directly from ``izulu``)
@@ -926,7 +965,7 @@ TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
 
 * stdlib factories
 
-::
+.. code-block:: python
 
     from uuid import uuid4
 
@@ -936,14 +975,14 @@ TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
 
 * lambdas
 
-::
+.. code-block:: python
 
     class MyError(Error):
         timestamp: datetime = factory(lambda: datetime.now().isoformat())
 
 * function
 
-::
+.. code-block:: python
 
     from random import randint
 
@@ -956,7 +995,7 @@ TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
 
 * method
 
-::
+.. code-block:: python
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
@@ -983,7 +1022,7 @@ TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
 3. handling errors in presentation layers / APIs
 ================================================
 
-::
+.. code-block:: python
 
     err = Error()
     view = RespModel(error=err.as_dict(wide=True)
