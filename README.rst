@@ -41,7 +41,7 @@ Neat #1: Stop messing with raw strings and manual message formatting
     elif amount > 1000:
         raise ValueError(f"Data is invalid: amount is too large ({amount})")
 
-    if data["status"] not in {"READY", "IN_PROGRESS}:
+    if data["status"] not in {"READY", "IN_PROGRESS"}:
         raise ValueError("Data is invalid: unprocessable status")
 
 With ``izulu`` you can forget about manual error message management all over the codebase!
@@ -52,7 +52,7 @@ With ``izulu`` you can forget about manual error message management all over the
         __template__ = "Data is invalid: {reason}"
 
     class AmountValidationError(ValidationError):
-        __template__ = f"{ValidationError.__template__} ({{amount}})"
+        __template__ = "Invalid amount: {amount}"
 
 
     if not data:
@@ -64,7 +64,7 @@ With ``izulu`` you can forget about manual error message management all over the
     elif amount > 1000:
         raise AmountValidationError(reason="amount is too large", amount=amount)
 
-    if data["status"] not in {"READY", "IN_PROGRESS}:
+    if data["status"] not in {"READY", "IN_PROGRESS"}:
         raise ValidationError(reason="unprocessable status")
 
 
