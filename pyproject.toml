@@ -8,7 +8,7 @@ version = "0.5.2"
 authors = [
   { name="Dima Burmistrov", email="pyctrl.dev@gmail.com" },
 ]
-description = "An exceptional library"
+description = "The exceptional library"
 readme = "README.rst"
 license = {file = "LICENSE"}
 

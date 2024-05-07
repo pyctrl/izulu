@@ -5,7 +5,7 @@ izulu
 
 |
 
-    *"An exceptional library"*
+    *"The exceptional library"*
 
 |
 
