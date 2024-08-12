@@ -7,6 +7,7 @@ import types
 import typing as t
 
 from izulu import _utils
+from izulu import causes
 
 
 class Features(enum.Flag):
@@ -67,6 +68,8 @@ class Error(Exception):
         consts=types.MappingProxyType(dict()),
         defaults=frozenset(),
     )
+
+    iter_causes = causes.iterate_causes
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         super().__init_subclass__(**kwargs)
