@@ -1,29 +1,182 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "izulu"
-version = "0.5.2"
-authors = [
-  { name="Dima Burmistrov", email="pyctrl.dev@gmail.com" },
-]
+dynamic = ["version"]  # version = "0.5.3"
+authors = [{ name = "Dima Burmistrov", email = "pyctrl.dev@gmail.com" }]
 description = "The exceptional library"
 readme = "README.rst"
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 
 requires-python = ">=3.6"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Typing :: Typed",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
 ]
 keywords = ["error", "exception", "oop", "izulu"]
 
 [project.urls]
 "Homepage" = "https://gitlab.com/pyctrl/izulu"
 "Bug Tracker" = "https://gitlab.com/pyctrl/izulu/-/issues"
+
+
+[dependency-groups]
+# development
+dev = ["ipython"]
+test = ["pytest", "coverage"]
+pep8 = ["hacking", "pyproject-flake8"]
+rst = ["restructuredtext_lint", "Pygments"]
+mypy = ["mypy"]
+fmt = ["ruff"]
+# release
+build = ["build", "twine"]
+upload = ["twine"]
+# extras
+# aliases
+contributor = [
+  { include-group = "dev" },
+  { include-group = "test" },
+  { include-group = "pep8" },
+  { include-group = "rst" },
+  { include-group = "mypy" },
+  { include-group = "fmt" },
+  { include-group = "build" },
+  { include-group = "upload" },
+]
+# taplo - toml toolbox
+
+[build-system]
+requires = ["setuptools>=61.2", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+
+
+[tool.flake8]
+show-source = true
+
+
+[tool.tox]
+requires = ["tox>4.23"]
+env_list = ["pep8", "rst", "py312", "mypy"]
+use_develop = true
+
+[tool.tox.env_run_base]
+use_develop = true
+dependency_groups = ["test"]
+commands = [
+  [
+    "coverage",
+    "run",
+    "--source={toxinidir}{/}{[project]name}{/}",
+    "-m",
+    "pytest",
+    "{toxinidir}{/}tests{/}",
+    "-v",
+    { replace = "posargs", extend = true },
+  ],
+  [
+    "coverage",
+    "report",
+    "-m",
+  ],
+  [
+    "coverage",
+    "xml",
+  ],
+]
+
+[tool.tox.env.dev]
+use_develop = true
+dependency_groups = ["contributor"]
+
+[tool.tox.env.pep8]
+skip_install = true
+dependency_groups = ["pep8"]
+commands = [
+  [
+    "flake8",
+    { replace = "posargs", default = [
+      "{toxinidir}{/}{[project]name}{/}",
+      "{toxinidir}{/}tests{/}",
+    ], extend = true },
+  ],
+]
+
+[tool.tox.env.rst]
+skip_install = true
+dependency_groups = ["rst"]
+commands = [
+  [
+    "rst-lint",
+    { replace = "posargs", extend = true },
+    "{toxinidir}{/}README.rst",
+  ],
+]
+
+[tool.tox.env.mypy]
+dependency_groups = ["mypy"]
+commands = [
+  [
+    "mypy",
+    { replace = "posargs", default = [
+      "{toxinidir}{/}{[project]name}{/}",
+    ], extend = true },
+  ],
+]
+
+[tool.tox.env.build]
+skip_install = true
+dependency_groups = ["build"]
+commands = [
+  [
+    "python3",
+    "-m",
+    "build",
+    { replace = "posargs", extend = true },
+  ],
+  [
+    "python3",
+    "-m",
+    "twine",
+    "check",
+    { replace = "posargs", extend = true },
+    "dist{/}*",
+  ],
+]
+
+[tool.tox.env.upload_test]
+skip_install = true
+dependency_groups = ["upload"]
+commands = [
+  [
+    "python3",
+    "-m",
+    "twine",
+    "upload",
+    { replace = "posargs", extend = true },
+    "--repository",
+    "{env:PYPI_REPOSITORY:testpypi}",
+    "dist{/}*",
+  ],
+]
+
+[tool.tox.env.upload_prod]
+base = ["tool.tox.env.upload_test"]
+set_env.PYPI_REPOSITORY = "pypi"
+
+[tool.tox.env.clean]
+skip_install = true
+dependency_groups = []
+allowlist_externals = ["rm"]
+commands = [
+  [
+    "rm",
+    "-rf",
+    "{toxinidir}/dist/",
+    "{toxinidir}/{[project]name}.egg-info/",
+  ],
+]

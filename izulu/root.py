@@ -203,5 +203,8 @@ def factory(func: t.Callable[..., t.Any], *, self: bool = False
     """
 
     target = func if self else (lambda obj: func())
-    target = t.cast(t.Callable[[t.Any], t.Any], target)
+    target = t.cast(
+        t.Callable[[t.Any], t.Any],
+        target,
+    )  # type: ignore [assignment]
     return functools.cached_property(target)
