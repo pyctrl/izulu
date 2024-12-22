@@ -6,8 +6,8 @@ import string
 import types
 import typing as t
 
-
-_T_HINTS = dict[str, t.Type]
+if t.TYPE_CHECKING:
+    _T_HINTS = dict[str, t.Type]
 
 _IZULU_ATTRS = {"__template__", "__features__", "_Error__cls_store"}
 _FORMATTER = string.Formatter()
