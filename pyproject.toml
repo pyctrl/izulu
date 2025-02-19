@@ -1,6 +1,6 @@
 [project]
 name = "izulu"
-dynamic = ["version"]  # version = "0.5.3"
+dynamic = ["version"]
 authors = [{ name = "Dima Burmistrov", email = "pyctrl.dev@gmail.com" }]
 description = "The exceptional library"
 readme = "README.rst"
@@ -19,8 +19,8 @@ classifiers = [
 keywords = ["error", "exception", "oop", "izulu"]
 
 [project.urls]
-"Homepage" = "https://gitlab.com/pyctrl/izulu"
-"Bug Tracker" = "https://gitlab.com/pyctrl/izulu/-/issues"
+"Homepage" = "https://github.com/pyctrl/izulu"
+# "Bug Tracker" = "https://gitlab.com/pyctrl/izulu/-/issues"
 
 
 [dependency-groups]
