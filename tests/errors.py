@@ -71,7 +71,7 @@ class DerivedError(MixedError):
     entity: t.ClassVar[str] = "The Entity"
 
     surname: str
-    location: tuple[float, float] = (50.3, 3.608)
+    location: t.Tuple[float, float] = (50.3, 3.608)
     updated_at: datetime.datetime = root.factory(datetime.datetime.now)
     full_name: str = root.factory(lambda self: f"{self.name} {self.surname}",
                                   self=True)
