@@ -1,5 +1,6 @@
 import datetime
 import types
+import typing as t
 from unittest import mock
 
 import pytest
@@ -78,7 +79,7 @@ from tests import errors
                                                 timestamp=datetime.datetime,
                                                 my_type=str,
                                                 surname=str,
-                                                location=tuple[float, float],
+                                                location=t.Tuple[float, float],
                                                 updated_at=datetime.datetime,
                                                 full_name=str,
                                                 box=dict)),

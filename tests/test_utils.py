@@ -162,7 +162,7 @@ def test_iterate_field_specs(tpl, expected):
          dict(entity=t.ClassVar[str]),
          dict(name=str, surname=str, full_name=str, age=int, my_type=str,
               timestamp=datetime.datetime, updated_at=datetime.datetime,
-              box=dict, location=tuple[float, float])),
+              box=dict, location=t.Tuple[float, float])),
     )
 )
 def test_split_cls_hints(kls, const_hints, inst_hints):
