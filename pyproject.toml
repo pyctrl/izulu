@@ -6,7 +6,7 @@ description = "The exceptional library"
 readme = "README.rst"
 license = { file = "LICENSE" }
 
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
@@ -19,8 +19,10 @@ classifiers = [
 keywords = ["error", "exception", "oop", "izulu"]
 
 [project.urls]
-"Homepage" = "https://github.com/pyctrl/izulu"
-# "Bug Tracker" = "https://gitlab.com/pyctrl/izulu/-/issues"
+homepage = "https://github.com/pyctrl/izulu"
+# source = "https://github.com/pyctrl/izulu"
+# documentation = ...
+issues = "https://github.com/pyctrl/izulu/issues"
 
 
 [dependency-groups]
