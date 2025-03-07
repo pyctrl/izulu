@@ -1049,7 +1049,7 @@ For developers
 
     tox -e build
 
-* Contributing: contact me through `Issues <https://gitlab.com/pyctrl/izulu/-/issues>`__
+* Contributing: contact me through `Issues <https://github.com/pyctrl/izulu/issues>`__
 
 
 Versioning
@@ -1057,15 +1057,15 @@ Versioning
 
 `SemVer <http://semver.org/>`__ used for versioning.
 For available versions see the repository
-`tags <https://gitlab.com/pyctrl/izulu/-/tags>`__
-and `releases <https://gitlab.com/pyctrl/izulu/-/releases>`__.
+`tags <https://github.com/pyctrl/izulu/tags>`__
+and `releases <https://github.com/pyctrl/izulu/releases>`__.
 
 
 Authors
 *******
 
 -  **Dima Burmistrov** - *Initial work* -
-   `pyctrl <https://gitlab.com/pyctrl/>`__
+   `pyctrl <https://github.com/pyctrl>`__
 
 *Special thanks to* `Eugene Frolov <https://github.com/phantomii/>`__ *for inspiration.*
 
@@ -1074,4 +1074,4 @@ License
 *******
 
 This project is licensed under the X11 License (extended MIT) - see the
-`LICENSE <https://gitlab.com/pyctrl/izulu/-/blob/main/LICENSE>`__ file for details
+`LICENSE <https://github.com/pyctrl/izulu/blob/main/LICENSE>`__ file for details
