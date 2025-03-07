@@ -3,11 +3,29 @@ import functools
 import typing as t
 
 
+class ReraiseForbiddenError(Exception):
+    pass
+
+
 class FatalMixin:
     pass
 
 
 class ReraisingMixin:
+
+    __reraising__: t.Optional[bool] = None
+    # NOTE(d.burmistrov):
+    #   - None - proxy-pass any exception (do not reraise/rewrap)
+    #   - True - greedy (rewrap any with self)
+    #   - False - forbidden (forbid rewrap operations for current class)
+    #   (always local for current class - inheritance is ignored)
+
+    @classmethod
+    def __get_conf(cls):
+        conf = cls.__dict__.get("__reraising__")
+        if conf or conf is None:
+            return conf
+        raise ReraiseForbiddenError
 
     @classmethod
     @contextlib.contextmanager
@@ -15,8 +33,13 @@ class ReraisingMixin:
             cls,
             kwargs: t.Optional[dict] = None,
     ) -> t.Generator[None, None, None]:
-        kwargs = kwargs or {}
+        conf = cls.__get_conf()
 
+        if not conf:
+            yield
+            return
+
+        kwargs = kwargs or {}
         try:
             yield
         except cls:  # type: ignore[misc]
@@ -34,6 +57,7 @@ class ReraisingMixin:
 
     @classmethod
     def rewrap(cls, kwargs: t.Optional[dict] = None) -> t.Callable:
+        cls.__get_conf()
         _kwargs = kwargs
 
         def decorator(func):
