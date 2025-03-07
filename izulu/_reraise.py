@@ -7,7 +7,7 @@ class FatalMixin:
     pass
 
 
-class ReraisingMixin(Exception):
+class ReraisingMixin:
 
     @classmethod
     @contextlib.contextmanager
@@ -33,7 +33,7 @@ class ReraisingMixin(Exception):
         if isinstance(orig, cls.__bases__) and FatalMixin in cls.__bases__:
             raise
 
-        raise cls(**kwargs) from orig
+        raise cls(**kwargs) from orig  # type: ignore[misc]
 
     @classmethod
     def rewrap(cls, kwargs: t.Optional[dict] = None) -> t.Callable:
