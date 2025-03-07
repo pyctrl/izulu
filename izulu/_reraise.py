@@ -26,9 +26,6 @@ class ReraisingMixin:
         else:
             return
 
-        if isinstance(orig.__class__, cls):
-            raise
-
         # TODO(d.burmistrov): how does it work?
         if isinstance(orig, cls.__bases__) and FatalMixin in cls.__bases__:
             raise
