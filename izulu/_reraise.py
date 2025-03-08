@@ -104,12 +104,12 @@ class ReraisingMixin:
         kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Union[Exception, None]:
         # TODO(d.burmistrov): support Fatal
-        if isinstance(exc, cls):
+        if isinstance(exc, cls) or not cls.__reraising:
             return None
-        # TODO(d.burmistrov): duplicated code
-        if not cls.__reraising:
-            return None
+
         kwargs = kwargs or {}
+
+        # greedy remapping (any occurred exception)
         if cls.__reraising is True:
             kls = t.cast(t.Type[Exception], cls)
             return kls(**kwargs)
@@ -152,12 +152,6 @@ class ReraisingMixin:
         # TODO(d.burmistrov): how does it work?
         if isinstance(orig, cls.__bases__) and FatalMixin in cls.__bases__:
             raise
-
-        kwargs = kwargs or {}
-
-        # greedy remapping (any occurred exception)
-        if cls.__reraising is True:
-            raise t.cast(Exception, cls(**kwargs)) from orig
 
         exc = cls.remap(orig, kwargs)
         if exc is None:
