@@ -4,42 +4,53 @@ import contextlib
 import functools
 import typing as t
 
+_T_KWARGS = dict[str, t.Any]
 _T_FACTORY = t.Callable[
-    [t.Type[Exception], Exception, dict],
+    [t.Type[Exception], Exception, _T_KWARGS],
     t.Optional[Exception],
 ]
 _T_ACTION = t.Union[None, str, t.Type[Exception], _T_FACTORY]
+_T_COMPILED_ACTION = t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]
 
 _MISSING = object()
 
 
+# TODO(d.burmistrov): chains
+
+# TODO(d.burmistrov): support WTF case
 class FatalMixin:
     pass
 
 
 class ReraisingMixin:
 
-    __reraising: t.Tuple[t.Tuple[t.Type[Exception], t.Callable], ...]
-
     __reraising__: t.Union[
         bool,
         t.Tuple[t.Tuple[t.Type[Exception], _T_ACTION], ...],
     ] = False
 
-    @classmethod
-    def __get_reraising(cls):
-        return cls.__dict__.get("__reraising__", False)
+    __reraising: t.Union[
+        bool,
+        t.Tuple[t.Tuple[t.Type[Exception], _T_COMPILED_ACTION], ...],
+    ]
+
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+        super().__init_subclass__(**kwargs)
+        rules = cls.__dict__.get("__reraising__", False)
+        cls.__reraising = rules
+        if isinstance(rules, tuple):
+            cls.__reraising = tuple(
+                (exc_type, cls._compile_action(action))
+                for exc_type, action in rules
+            )
 
     @classmethod
-    def _compile_action(
-            cls,
-            action: _T_ACTION,
-    ) -> t.Callable[[Exception, dict], t.Optional[Exception]]:
+    def _compile_action(cls, action: _T_ACTION) -> _T_COMPILED_ACTION:
         if action is None:
 
             def compiled_action(
                 orig: Exception,
-                kwargs: dict[str, t.Any],
+                kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
                 return None
 
@@ -50,7 +61,7 @@ class ReraisingMixin:
 
             def compiled_action(
                 orig: Exception,
-                kwargs: dict[str, t.Any],
+                kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
                 kls = t.cast(t.Type[Exception], cls)
                 return kls(**kwargs)
@@ -59,7 +70,7 @@ class ReraisingMixin:
 
             def compiled_action(
                 orig: Exception,
-                kwargs: dict[str, t.Any],
+                kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
                 action_ = getattr(cls, t.cast(str, action))
                 return action_(orig, kwargs)
@@ -68,7 +79,7 @@ class ReraisingMixin:
 
             def compiled_action(
                 orig: Exception,
-                kwargs: dict[str, t.Any],
+                kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
                 return t.cast(t.Type[Exception], action)(**kwargs)
 
@@ -76,7 +87,7 @@ class ReraisingMixin:
 
             def compiled_action(
                 orig: Exception,
-                kwargs: dict[str, t.Any],
+                kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
                 kls = t.cast(t.Type[Exception], cls)
                 return t.cast(_T_FACTORY, action)(kls, orig, kwargs)
@@ -90,21 +101,32 @@ class ReraisingMixin:
     def remap(
         cls,
         exc: Exception,
-        kwargs: t.Optional[dict] = None,
+        kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Union[Exception, None]:
         # TODO(d.burmistrov): support Fatal
         if isinstance(exc, cls):
             return None
+        # TODO(d.burmistrov): duplicated code
+        if not cls.__reraising:
+            return None
+        kwargs = kwargs or {}
+        if cls.__reraising is True:
+            kls = t.cast(t.Type[Exception], cls)
+            return kls(**kwargs)
 
-        for match, rule in cls.__reraising:
+        reraising = t.cast(
+            t.Tuple[t.Tuple[t.Type[Exception], _T_COMPILED_ACTION], ...],
+            cls.__reraising
+        )
+        for match, rule in reraising:
             if not isinstance(exc, match):
                 continue
 
-            exc = rule(exc, kwargs or None)
-            if exc is None:
+            e = rule(exc, kwargs)
+            if e is None:
                 return None
 
-            return exc
+            return e
 
         return None
 
@@ -112,10 +134,11 @@ class ReraisingMixin:
     @contextlib.contextmanager
     def reraise(
             cls,
-            kwargs: t.Optional[dict] = None,
+            kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Generator[None, None, None]:
-        kwargs = kwargs or {}
-        reraising = cls.__get_reraising()
+        if not cls.__reraising:
+            yield
+            return
 
         try:
             yield
@@ -130,7 +153,10 @@ class ReraisingMixin:
         if isinstance(orig, cls.__bases__) and FatalMixin in cls.__bases__:
             raise
 
-        if reraising is True:  # greedy remapping (any occurred exception)
+        kwargs = kwargs or {}
+
+        # greedy remapping (any occurred exception)
+        if cls.__reraising is True:
             raise t.cast(Exception, cls(**kwargs)) from orig
 
         exc = cls.remap(orig, kwargs)
@@ -140,7 +166,7 @@ class ReraisingMixin:
         raise exc from orig
 
     @classmethod
-    def rewrap(cls, kwargs: t.Optional[dict] = None) -> t.Callable:
+    def rewrap(cls, kwargs: t.Optional[_T_KWARGS] = None) -> t.Callable:
         _kwargs = kwargs
 
         def decorator(func):
