@@ -10,6 +10,9 @@ from izulu import _utils
 from izulu import causes
 
 
+ReturnType = t.TypeVar("ReturnType")
+
+
 class Features(enum.Flag):
     FORBID_MISSING_FIELDS = enum.auto()
     FORBID_UNDECLARED_FIELDS = enum.auto()
@@ -18,13 +21,50 @@ class Features(enum.Flag):
 
     NONE = 0
     DEFAULT = (
-            FORBID_MISSING_FIELDS
-            | FORBID_UNDECLARED_FIELDS
-            | FORBID_KWARG_CONSTS
-            | FORBID_NON_NAMED_FIELDS
+        FORBID_MISSING_FIELDS
+        | FORBID_UNDECLARED_FIELDS
+        | FORBID_KWARG_CONSTS
+        | FORBID_NON_NAMED_FIELDS
     )
 
 
+@t.overload
+def factory(
+    factory: t.Callable[[], ReturnType],
+    self: t.Literal[False] = False,
+) -> ReturnType: ...
+
+
+@t.overload
+def factory(
+    factory: t.Callable[[t.Any], ReturnType],
+    self: t.Literal[True],
+) -> ReturnType: ...
+
+
+def factory(
+    factory: t.Callable[..., t.Any],
+    self: bool = False,
+) -> t.Any:
+    """Attaches factory for dynamic default values
+
+    :param func: callable factory receiving 0 or 1 argument (see `self` param)
+    :param bool self: controls callable factory argument
+        if `True` func will receive single argument of error instance
+        otherwise func will be invoced without argument
+    """
+
+    target = factory if self else (lambda _: factory())
+    return functools.cached_property(target)
+
+
+@t.dataclass_transform(
+    eq_default=False,
+    order_default=False,
+    kw_only_default=True,
+    frozen_default=False,
+    field_specifiers=(factory,),
+)
 class Error(Exception):
     """Base class for your exception trees
 
@@ -124,10 +164,12 @@ class Error(Exception):
         kwargs.update(data)
         return _utils.format_template(self.__template__, kwargs)
 
-    def _hook(self,
-              store: _utils.Store,
-              kwargs: dict[str, t.Any],
-              msg: str) -> str:
+    def _hook(
+        self,
+        store: _utils.Store,
+        kwargs: dict[str, t.Any],
+        msg: str,
+    ) -> str:
         """Adapter method to wedge user logic into izulu machinery
 
         This is the place to override message/formatting if regular mechanics
@@ -190,21 +232,3 @@ class Error(Exception):
             for field, const in self.__cls_store.consts.items():
                 d.setdefault(field, const)
         return d
-
-
-def factory(func: t.Callable[..., t.Any], *, self: bool = False
-            ) -> functools.cached_property:
-    """Attaches factory for dynamic default values
-
-    :param func: callable factory receiving 0 or 1 argument (see `self` param)
-    :param bool self: controls callable factory argument
-        if `True` func will receive single argument of error instance
-        otherwise func will be invoced without argument
-    """
-
-    target = func if self else (lambda obj: func())
-    target = t.cast(
-        t.Callable[[t.Any], t.Any],
-        target,
-    )  # type: ignore [assignment]
-    return functools.cached_property(target)
