@@ -17,9 +17,11 @@ _MISSING = object()
 
 # TODO(d.burmistrov): chains
 
-# TODO(d.burmistrov): support WTF case
 class FatalMixin:
-    pass
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+        if FatalMixin not in cls.__bases__:
+            raise TypeError("Fatal can't be indirectly inherited")
+        super().__init_subclass__(**kwargs)
 
 
 class ReraisingMixin:
@@ -103,8 +105,11 @@ class ReraisingMixin:
         exc: Exception,
         kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Union[Exception, None]:
-        # TODO(d.burmistrov): support Fatal
-        if isinstance(exc, cls) or not cls.__reraising:
+        if (
+            isinstance(exc, cls)
+            or not cls.__reraising
+            or FatalMixin in exc.__class__.__bases__
+        ):
             return None
 
         kwargs = kwargs or {}
@@ -148,10 +153,6 @@ class ReraisingMixin:
             orig = e
         else:
             return
-
-        # TODO(d.burmistrov): how does it work?
-        if isinstance(orig, cls.__bases__) and FatalMixin in cls.__bases__:
-            raise
 
         exc = cls.remap(orig, kwargs)
         if exc is None:
