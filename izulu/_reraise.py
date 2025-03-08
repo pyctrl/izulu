@@ -4,6 +4,8 @@ import contextlib
 import functools
 import typing as t
 
+from izulu import _utils
+
 _T_KWARGS = dict[str, t.Any]
 _T_FACTORY = t.Callable[
     [t.Type[Exception], Exception, _T_KWARGS],
@@ -14,8 +16,6 @@ _T_COMPILED_ACTION = t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]
 
 _MISSING = object()
 
-
-# TODO(d.burmistrov): chains
 
 class FatalMixin:
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
@@ -172,3 +172,38 @@ class ReraisingMixin:
             return wrapped
 
         return decorator
+
+
+class chain:
+    def __init__(self, kls: ReraisingMixin, *klasses: ReraisingMixin) -> None:
+        self._klasses = (kls, *klasses)
+
+    def __call__(
+        self,
+        actor: t.Type[Exception],
+        exc: Exception,
+        kwargs: _T_KWARGS,
+    ) -> t.Optional[Exception]:
+        for kls in self._klasses:
+            remapped = kls.remap(exc, kwargs)
+            if remapped is not None:
+                return remapped
+        return None
+
+    @classmethod
+    def from_subtree(cls, klass: ReraisingMixin) -> "chain":
+        return cls(*_utils.traverse_tree(klass))
+
+    @classmethod
+    def from_names(cls, name: str, *names: str) -> "chain":
+        objects = globals()
+        err_klasses = []
+        for name in (name, *names):
+            kls = objects.get(name, _MISSING)
+            if kls is _MISSING:
+                msg = f"module '{__name__}' has no attribute '{name}'"
+                raise AttributeError(msg)
+
+            err_klasses.append(kls)
+
+        return cls(*err_klasses)

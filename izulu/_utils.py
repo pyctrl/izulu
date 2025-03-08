@@ -9,7 +9,13 @@ import typing as t
 if t.TYPE_CHECKING:
     _T_HINTS = dict[str, t.Type]
 
-_IZULU_ATTRS = {"__template__", "__features__", "_Error__cls_store"}
+_IZULU_ATTRS = {
+    "__template__",
+    "__features__",
+    "_Error__cls_store",
+    "__reraising__",
+    "_ReraisingMixin__reraising",
+}
 _FORMATTER = string.Formatter()
 
 
@@ -97,3 +103,13 @@ def get_cls_defaults(cls: t.Type, attrs: t.Iterable[str]) -> dict[str, t.Any]:
     return {attr: getattr(cls, attr)
             for attr in attrs
             if hasattr(cls, attr)}
+
+
+def traverse_tree(cls):
+    workload = cls.__subclasses__()
+    discovered = []
+    while workload:
+        item = workload.pop()
+        discovered.append(item)
+        workload.extend(item.__subclasses__())
+    yield from discovered
