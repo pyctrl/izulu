@@ -10,13 +10,32 @@ class FatalMixin:
 class ReraisingMixin:
 
     __reraising__: bool = False
+    __reraising = []  # type: ignore[var-annotated] # TODO(d.burmistrov): rules
 
     @classmethod
     def __get_reraising(cls):
         return cls.__dict__.get("__reraising__", False)
 
     @classmethod
-    def remap(cls, e: Exception):
+    def remap(
+        cls,
+        exc: Exception,
+        kwargs: t.Optional[dict] = None,
+    ) -> t.Union[Exception, None]:
+        # TODO(d.burmistrov): support Fatal
+        if isinstance(exc, cls):
+            return None
+
+        for match, rule in cls.__reraising:
+            if not isinstance(exc, match):
+                continue
+
+            exc = rule(exc, kwargs or None)
+            if exc is None:
+                return None
+
+            return exc
+
         return None
 
     @classmethod
@@ -41,10 +60,14 @@ class ReraisingMixin:
         if isinstance(orig, cls.__bases__) and FatalMixin in cls.__bases__:
             raise
 
-        if reraising is True:  # greedy remapping: remap all
+        if reraising is True:  # greedy remapping (any occurred exception)
             raise t.cast(Exception, cls(**kwargs)) from orig
 
-        raise
+        exc = cls.remap(orig, kwargs)
+        if exc is None:
+            raise
+
+        raise exc from orig
 
     @classmethod
     def rewrap(cls, kwargs: t.Optional[dict] = None) -> t.Callable:
