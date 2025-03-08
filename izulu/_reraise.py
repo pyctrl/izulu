@@ -3,29 +3,21 @@ import functools
 import typing as t
 
 
-class ReraiseForbiddenError(Exception):
-    pass
-
-
 class FatalMixin:
     pass
 
 
 class ReraisingMixin:
 
-    __reraising__: t.Optional[bool] = None
-    # NOTE(d.burmistrov):
-    #   - None - proxy-pass any exception (do not reraise/rewrap)
-    #   - True - greedy (rewrap any with self)
-    #   - False - forbidden (forbid rewrap operations for current class)
-    #   (always local for current class - inheritance is ignored)
+    __reraising__: bool = False
 
     @classmethod
-    def __get_conf(cls):
-        conf = cls.__dict__.get("__reraising__")
-        if conf or conf is None:
-            return conf
-        raise ReraiseForbiddenError
+    def __get_reraising(cls):
+        return cls.__dict__.get("__reraising__", False)
+
+    @classmethod
+    def remap(cls, e: Exception):
+        return None
 
     @classmethod
     @contextlib.contextmanager
@@ -33,13 +25,9 @@ class ReraisingMixin:
             cls,
             kwargs: t.Optional[dict] = None,
     ) -> t.Generator[None, None, None]:
-        conf = cls.__get_conf()
-
-        if not conf:
-            yield
-            return
-
         kwargs = kwargs or {}
+        reraising = cls.__get_reraising()
+
         try:
             yield
         except cls:  # type: ignore[misc]
@@ -53,11 +41,13 @@ class ReraisingMixin:
         if isinstance(orig, cls.__bases__) and FatalMixin in cls.__bases__:
             raise
 
-        raise cls(**kwargs) from orig  # type: ignore[misc]
+        if reraising is True:  # greedy remapping: remap all
+            raise t.cast(Exception, cls(**kwargs)) from orig
+
+        raise
 
     @classmethod
     def rewrap(cls, kwargs: t.Optional[dict] = None) -> t.Callable:
-        cls.__get_conf()
         _kwargs = kwargs
 
         def decorator(func):
