@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import enum
 import functools
+import sys
 import types
 import typing as t
 
@@ -192,8 +193,26 @@ class Error(Exception):
         return d
 
 
-def factory(func: t.Callable[..., t.Any], *, self: bool = False
-            ) -> functools.cached_property:
+FactoryReturnType = t.TypeVar("FactoryReturnType")
+
+
+@t.overload
+def factory(
+    func: t.Callable[[], FactoryReturnType],
+    *,
+    self: t.Literal[False] = False,
+) -> FactoryReturnType: ...
+
+
+@t.overload
+def factory(
+    func: t.Callable[[Error], FactoryReturnType],
+    *,
+    self: t.Literal[True],
+) -> FactoryReturnType: ...
+
+
+def factory(func: t.Callable, *, self: bool = False):
     """Attaches factory for dynamic default values
 
     :param func: callable factory receiving 0 or 1 argument (see `self` param)
@@ -208,3 +227,15 @@ def factory(func: t.Callable[..., t.Any], *, self: bool = False
         target,
     )  # type: ignore [assignment]
     return functools.cached_property(target)
+
+
+if sys.version_info >= (3, 11):
+    @t.dataclass_transform(
+        eq_default=False,
+        order_default=False,
+        kw_only_default=True,
+        frozen_default=False,
+        field_specifiers=(factory,),
+    )
+    class DataclassHintedError(Error):
+        pass
