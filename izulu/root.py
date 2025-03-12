@@ -10,6 +10,26 @@ import typing as t
 from izulu import _utils
 from izulu import causes
 
+_IMPORT_ERROR_TEXTS = (
+    "",
+    "You have early version of Python.",
+    "  Extra compatibility dependency required.",
+    "  Please add 'izulu[compatibility]' to your project dependencies.",
+    "",
+    "Pip: `pip install izulu[compatibility]",
+)
+
+
+if hasattr(t, "dataclass_transform"):
+    t_ext = t
+else:
+    try:
+        import typing_extensions as t_ext  # type: ignore [no-redef]
+    except ImportError:
+        for message in _IMPORT_ERROR_TEXTS:
+            logging.error(message)
+        raise
+
 FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 _HOOK_RENAMED_MSG = (
@@ -236,3 +256,14 @@ class Error(Exception):
             for field, const in self.__cls_store.consts.items():
                 d.setdefault(field, const)
         return d
+
+
+@t_ext.dataclass_transform(
+    eq_default=False,
+    order_default=False,
+    kw_only_default=True,
+    frozen_default=False,
+    field_specifiers=(factory,),
+)
+class DataclassHintedError(Error):
+    pass

@@ -28,10 +28,10 @@ issues = "https://github.com/pyctrl/izulu/issues"
 [dependency-groups]
 # development
 dev = ["ipython"]
-test = ["pytest", "coverage"]
+test = ["pytest", "coverage", "typing-extensions"]
 pep8 = ["hacking", "pyproject-flake8"]
 rst = ["restructuredtext_lint", "Pygments"]
-mypy = ["mypy"]
+mypy = ["mypy", "typing-extensions"]
 fmt = ["ruff"]
 # release
 build = ["build", "twine"]
@@ -49,6 +49,9 @@ contributor = [
   { include-group = "upload" },
 ]
 # taplo - toml toolbox
+
+[project.optional-dependencies]
+compatibility = ["typing-extensions>=4.5.0"]
 
 [build-system]
 requires = ["setuptools>=61.2", "setuptools-scm", "wheel"]
