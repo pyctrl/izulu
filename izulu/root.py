@@ -3,11 +3,16 @@ from __future__ import annotations
 import copy
 import enum
 import functools
+import logging
 import types
 import typing as t
 
 from izulu import _utils
 from izulu import causes
+
+_HOOK_RENAMED_MSG = (
+    "<_hook> method name is deprecated - use <_override_message>"
+)
 
 
 class Features(enum.Flag):
@@ -92,7 +97,7 @@ class Error(Exception):
         self.__process_features()
         self.__populate_attrs()
         msg = self.__process_template(self.as_dict())
-        msg = self._hook(self.__cls_store, kwargs, msg)
+        msg = self._override_message(self.__cls_store, kwargs, msg)
         super().__init__(msg)
 
     def __process_features(self) -> None:
@@ -124,10 +129,12 @@ class Error(Exception):
         kwargs.update(data)
         return _utils.format_template(self.__template__, kwargs)
 
-    def _hook(self,
-              store: _utils.Store,
-              kwargs: dict[str, t.Any],
-              msg: str) -> str:
+    def _override_message(
+        self,
+        store: _utils.Store,
+        kwargs: dict[str, t.Any],
+        msg: str,
+    ) -> str:
         """Adapter method to wedge user logic into izulu machinery
 
         This is the place to override message/formatting if regular mechanics
@@ -146,6 +153,10 @@ class Error(Exception):
         """
 
         return msg
+
+    def _hook(self, *args, **kwargs):
+        logging.warning(_HOOK_RENAMED_MSG)
+        return self._override_message(*args, **kwargs)
 
     def __repr__(self) -> str:
         kwargs = _utils.join_kwargs(**self.as_dict())

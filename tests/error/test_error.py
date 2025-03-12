@@ -12,27 +12,32 @@ from tests import errors
 TS = datetime.datetime.now()
 
 
-@mock.patch("izulu.root.Error._hook")
+@mock.patch("izulu.root.Error._override_message")
 @mock.patch("izulu.root.Error._Error__process_template")
 @mock.patch("izulu.root.Error._Error__populate_attrs")
 @mock.patch("izulu.root.Error._Error__process_features")
-def test_init(fake_proc_ftrs, fake_set_attrs, fake_proc_tpl, fake_hook):
+def test_init(
+    fake_proc_ftrs,
+    fake_set_attrs,
+    fake_proc_tpl,
+    fake_override_message,
+):
     fake_proc_tpl.return_value = errors.RootError.__template__
     overriden_message = "overriden message"
-    fake_hook.return_value = overriden_message
+    fake_override_message.return_value = overriden_message
     store = getattr(errors.RootError, "_Error__cls_store")
     manager = mock.Mock()
     manager.attach_mock(fake_proc_ftrs, "fake_proc_ftrs")
     manager.attach_mock(fake_set_attrs, "fake_set_attrs")
     manager.attach_mock(fake_proc_tpl, "fake_proc_tpl")
-    manager.attach_mock(fake_hook, "fake_hook")
-    fake_hook_call = mock.call.fake_hook(store,
-                                         {},
-                                         errors.RootError.__template__)
+    manager.attach_mock(fake_override_message, "fake_override_message")
+    fake_override_message_call = mock.call.fake_override_message(
+        store, {}, errors.RootError.__template__,
+    )
     expected_calls = [mock.call.fake_proc_ftrs(),
                       mock.call.fake_set_attrs(),
                       mock.call.fake_proc_tpl({}),
-                      fake_hook_call]
+                      fake_override_message_call]
 
     e = errors.RootError()
 
@@ -152,11 +157,11 @@ def test_process_template(mock_format, kls, kwargs, expected_kwargs):
     mock_format.assert_called_once_with(kls.__template__, expected_kwargs)
 
 
-def test_hook():
+def test_override_message():
     e = errors.RootError()
     orig_msg = "my message"
 
-    final_msg = e._hook(e._Error__cls_store, dict(), orig_msg)
+    final_msg = e._override_message(e._Error__cls_store, dict(), orig_msg)
 
     assert final_msg == orig_msg
     assert id(final_msg) == id(orig_msg)
