@@ -6,7 +6,7 @@ import typing as t
 
 from izulu import _utils
 
-_T_KWARGS = dict[str, t.Any]
+_T_KWARGS = t.Dict[str, t.Any]
 _T_EXC_CLASS_OR_TUPLE = t.Union[
     t.Type[Exception],
     t.Tuple[t.Type[Exception], ...],
