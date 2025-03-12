@@ -3,12 +3,12 @@ from __future__ import annotations
 import copy
 import enum
 import functools
-import sys
 import types
 import typing as t
 
-from izulu import _utils
-from izulu import causes
+import typing_extensions as t_ext
+
+from izulu import _utils, causes
 
 
 class Features(enum.Flag):
@@ -19,13 +19,60 @@ class Features(enum.Flag):
 
     NONE = 0
     DEFAULT = (
-            FORBID_MISSING_FIELDS
-            | FORBID_UNDECLARED_FIELDS
-            | FORBID_KWARG_CONSTS
-            | FORBID_NON_NAMED_FIELDS
+        FORBID_MISSING_FIELDS
+        | FORBID_UNDECLARED_FIELDS
+        | FORBID_KWARG_CONSTS
+        | FORBID_NON_NAMED_FIELDS
     )
 
 
+FactoryReturnType = t.TypeVar("FactoryReturnType")
+
+
+@t.overload
+def factory(
+    func: t.Callable[[], FactoryReturnType],
+    *,
+    self: t.Literal[False] = False,
+) -> FactoryReturnType: ...
+
+
+@t.overload
+def factory(
+    func: t.Callable[[Error], FactoryReturnType],
+    *,
+    self: t.Literal[True],
+) -> FactoryReturnType: ...
+
+
+def factory(
+    func: t.Callable,
+    *,
+    self: bool = False,
+):
+    """Attaches factory for dynamic default values
+
+    :param func: callable factory receiving 0 or 1 argument (see `self` param)
+    :param bool self: controls callable factory argument
+        if `True` func will receive single argument of error instance
+        otherwise func will be invoced without argument
+    """
+
+    target = func if self else (lambda obj: func())
+    target = t.cast(
+        t.Callable[[t.Any], t.Any],
+        target,
+    )  # type: ignore [assignment]
+    return functools.cached_property(target)
+
+
+@t_ext.dataclass_transform(
+    eq_default=False,
+    order_default=False,
+    kw_only_default=True,
+    frozen_default=False,
+    field_specifiers=(factory,),
+)
 class Error(Exception):
     """Base class for your exception trees
 
@@ -191,51 +238,3 @@ class Error(Exception):
             for field, const in self.__cls_store.consts.items():
                 d.setdefault(field, const)
         return d
-
-
-FactoryReturnType = t.TypeVar("FactoryReturnType")
-
-
-@t.overload
-def factory(
-    func: t.Callable[[], FactoryReturnType],
-    *,
-    self: t.Literal[False] = False,
-) -> FactoryReturnType: ...
-
-
-@t.overload
-def factory(
-    func: t.Callable[[Error], FactoryReturnType],
-    *,
-    self: t.Literal[True],
-) -> FactoryReturnType: ...
-
-
-def factory(func: t.Callable, *, self: bool = False):
-    """Attaches factory for dynamic default values
-
-    :param func: callable factory receiving 0 or 1 argument (see `self` param)
-    :param bool self: controls callable factory argument
-        if `True` func will receive single argument of error instance
-        otherwise func will be invoced without argument
-    """
-
-    target = func if self else (lambda obj: func())
-    target = t.cast(
-        t.Callable[[t.Any], t.Any],
-        target,
-    )  # type: ignore [assignment]
-    return functools.cached_property(target)
-
-
-if sys.version_info >= (3, 11):
-    @t.dataclass_transform(
-        eq_default=False,
-        order_default=False,
-        kw_only_default=True,
-        frozen_default=False,
-        field_specifiers=(factory,),
-    )
-    class DataclassHintedError(Error):
-        pass
