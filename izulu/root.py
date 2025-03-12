@@ -10,6 +10,8 @@ import typing as t
 from izulu import _utils
 from izulu import causes
 
+FactoryReturnType = t.TypeVar("FactoryReturnType")
+
 _HOOK_RENAMED_MSG = (
     "<_hook> method name is deprecated - use <_override_message>"
 )
@@ -203,8 +205,23 @@ class Error(Exception):
         return d
 
 
-def factory(func: t.Callable[..., t.Any], *, self: bool = False
-            ) -> functools.cached_property:
+@t.overload
+def factory(
+    func: t.Callable[[], FactoryReturnType],
+    *,
+    self: t.Literal[False] = False,
+) -> FactoryReturnType: ...
+
+
+@t.overload
+def factory(
+    func: t.Callable[[Error], FactoryReturnType],
+    *,
+    self: t.Literal[True],
+) -> FactoryReturnType: ...
+
+
+def factory(func: t.Callable, *, self: bool = False):
     """Attaches factory for dynamic default values
 
     :param func: callable factory receiving 0 or 1 argument (see `self` param)
