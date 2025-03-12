@@ -31,5 +31,6 @@ coverage.xml
 venv
 
 # Packaging
+build/
 dist/
 *.egg-info/
