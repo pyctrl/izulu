@@ -17,6 +17,39 @@ _HOOK_RENAMED_MSG = (
 )
 
 
+@t.overload
+def factory(
+    func: t.Callable[[], FactoryReturnType],
+    *,
+    self: t.Literal[False] = False,
+) -> FactoryReturnType: ...
+
+
+@t.overload
+def factory(
+    func: t.Callable[[Error], FactoryReturnType],
+    *,
+    self: t.Literal[True],
+) -> FactoryReturnType: ...
+
+
+def factory(func: t.Callable, *, self: bool = False):
+    """Attaches factory for dynamic default values
+
+    :param func: callable factory receiving 0 or 1 argument (see `self` param)
+    :param bool self: controls callable factory argument
+        if `True` func will receive single argument of error instance
+        otherwise func will be invoced without argument
+    """
+
+    target = func if self else (lambda obj: func())
+    target = t.cast(
+        t.Callable[[t.Any], t.Any],
+        target,
+    )  # type: ignore [assignment]
+    return functools.cached_property(target)
+
+
 class Features(enum.Flag):
     FORBID_MISSING_FIELDS = enum.auto()
     FORBID_UNDECLARED_FIELDS = enum.auto()
@@ -203,36 +236,3 @@ class Error(Exception):
             for field, const in self.__cls_store.consts.items():
                 d.setdefault(field, const)
         return d
-
-
-@t.overload
-def factory(
-    func: t.Callable[[], FactoryReturnType],
-    *,
-    self: t.Literal[False] = False,
-) -> FactoryReturnType: ...
-
-
-@t.overload
-def factory(
-    func: t.Callable[[Error], FactoryReturnType],
-    *,
-    self: t.Literal[True],
-) -> FactoryReturnType: ...
-
-
-def factory(func: t.Callable, *, self: bool = False):
-    """Attaches factory for dynamic default values
-
-    :param func: callable factory receiving 0 or 1 argument (see `self` param)
-    :param bool self: controls callable factory argument
-        if `True` func will receive single argument of error instance
-        otherwise func will be invoced without argument
-    """
-
-    target = func if self else (lambda obj: func())
-    target = t.cast(
-        t.Callable[[t.Any], t.Any],
-        target,
-    )  # type: ignore [assignment]
-    return functools.cached_property(target)
