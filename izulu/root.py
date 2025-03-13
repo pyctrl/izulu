@@ -209,24 +209,29 @@ class Error(Exception):
 
         return msg
 
-    def _hook(self, *args, **kwargs):
+    def _hook(
+        self,
+        store: _utils.Store,
+        kwargs: t.Dict[str, t.Any],
+        msg: str,
+    ) -> str:
         logging.warning(_HOOK_RENAMED_MSG)
-        return self._override_message(*args, **kwargs)
+        return self._override_message(store=store, kwargs=kwargs, msg=msg)
 
     def __repr__(self) -> str:
         kwargs = _utils.join_kwargs(**self.as_dict())
         return f"{self.__module__}.{self.__class__.__qualname__}({kwargs})"
 
-    def __copy__(self):
+    def __copy__(self) -> "Error":
         return type(self)(**self.as_dict())
 
-    def __deepcopy__(self, memo: t.Dict[int, t.Any]):
+    def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> "Error":
         _id = id(self)
         if _id not in memo:
             kwargs = {k: copy.deepcopy(v, memo)
                       for k, v in self.as_dict().items()}
             memo[_id] = type(self)(**kwargs)
-        return memo[_id]
+        return t.cast("Error", memo[_id])
 
     def __reduce__(self) -> t.Tuple[t.Any, ...]:
         return functools.partial(self.__class__, **self.as_dict()), tuple()

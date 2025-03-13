@@ -6,9 +6,6 @@ import string
 import types
 import typing as t
 
-if t.TYPE_CHECKING:
-    _T_HINTS = t.Dict[str, t.Type]
-
 _IZULU_ATTRS = {
     "__template__",
     "__features__",
@@ -31,7 +28,7 @@ class Store:
 
     registered: t.FrozenSet[str] = dataclasses.field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.registered = self.fields.union(self.inst_hints)
 
 
@@ -69,7 +66,7 @@ def join_kwargs(**kwargs: t.Any) -> str:
     return ", ".join(f"{k!s}={v!r}" for k, v in kwargs.items())
 
 
-def format_template(template: str, kwargs: t.Dict[str, t.Any]):
+def format_template(template: str, kwargs: t.Dict[str, t.Any]) -> str:
     try:
         return template.format_map(kwargs)
     except Exception as e:
@@ -84,9 +81,11 @@ def iter_fields(template: str) -> t.Generator[str, None, None]:
             yield _string.formatter_field_name_split(fn)[0]
 
 
-def split_cls_hints(cls: t.Type) -> t.Tuple[_T_HINTS, _T_HINTS]:
-    const_hints: _T_HINTS = {}
-    inst_hints: _T_HINTS = {}
+def split_cls_hints(
+    cls: t.Type,
+) -> t.Tuple[t.Dict[str, t.Type], t.Dict[str, t.Type]]:
+    const_hints: t.Dict[str, t.Type] = {}
+    inst_hints: t.Dict[str, t.Type] = {}
 
     for k, v in t.get_type_hints(cls).items():
         if k in _IZULU_ATTRS:
