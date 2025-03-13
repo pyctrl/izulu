@@ -6,6 +6,26 @@ import typing as t
 
 from izulu import _utils
 
+_IMPORT_ERROR_TEXTS = (
+    "",
+    "You have early version of Python.",
+    "  Extra compatibility dependency required.",
+    "  Please add 'izulu[compatibility]' to your project dependencies.",
+    "",
+    "Pip: `pip install izulu[compatibility]",
+)
+
+
+if hasattr(t, "dataclass_transform"):
+    t_ext = t
+else:
+    try:
+        import typing_extensions as t_ext  # type: ignore [no-redef]
+    except ImportError:
+        for message in _IMPORT_ERROR_TEXTS:
+            logging.error(message)
+        raise
+
 _T_KWARGS = t.Dict[str, t.Any]
 _T_EXC_CLASS_OR_TUPLE = t.Union[
     t.Type[Exception],
@@ -20,7 +40,7 @@ _T_COMPILED_ACTION = t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]
 
 _MISSING = object()
 
-DecParam = t.ParamSpec("DecParam")
+DecParam = t_ext.ParamSpec("DecParam")
 DecReturnType = t.TypeVar("DecReturnType")
 
 
