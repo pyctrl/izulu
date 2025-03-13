@@ -177,7 +177,7 @@ class Error(Exception):
             if k in self.__cls_store.inst_hints:
                 setattr(self, k, v)
 
-    def __process_template(self, data: dict[str, t.Any]) -> str:
+    def __process_template(self, data: t.Dict[str, t.Any]) -> str:
         """Format the error template from provided data (kwargs & defaults)"""
 
         kwargs = self.__cls_store.consts.copy()
@@ -187,7 +187,7 @@ class Error(Exception):
     def _override_message(
         self,
         store: _utils.Store,
-        kwargs: dict[str, t.Any],
+        kwargs: t.Dict[str, t.Any],
         msg: str,
     ) -> str:
         """Adapter method to wedge user logic into izulu machinery
@@ -220,7 +220,7 @@ class Error(Exception):
     def __copy__(self):
         return type(self)(**self.as_dict())
 
-    def __deepcopy__(self, memo: dict[int, t.Any]):
+    def __deepcopy__(self, memo: t.Dict[int, t.Any]):
         _id = id(self)
         if _id not in memo:
             kwargs = {k: copy.deepcopy(v, memo)
@@ -228,7 +228,7 @@ class Error(Exception):
             memo[_id] = type(self)(**kwargs)
         return memo[_id]
 
-    def __reduce__(self) -> tuple[t.Any, ...]:
+    def __reduce__(self) -> t.Tuple[t.Any, ...]:
         return functools.partial(self.__class__, **self.as_dict()), tuple()
 
     def as_str(self) -> str:
@@ -236,12 +236,12 @@ class Error(Exception):
 
         return f"{self.__class__.__qualname__}: {self}"
 
-    def as_kwargs(self) -> dict[str, t.Any]:
+    def as_kwargs(self) -> t.Dict[str, t.Any]:
         """Return the copy of original kwargs used to initialize the error"""
 
         return self.__kwargs.copy()
 
-    def as_dict(self, wide: bool = False) -> dict[str, t.Any]:
+    def as_dict(self, wide: bool = False) -> t.Dict[str, t.Any]:
         """Represent error as dict of fields including default values
 
         By default, only *instance* data and defaults are provided.

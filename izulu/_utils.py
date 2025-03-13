@@ -7,7 +7,7 @@ import types
 import typing as t
 
 if t.TYPE_CHECKING:
-    _T_HINTS = dict[str, t.Type]
+    _T_HINTS = t.Dict[str, t.Type]
 
 _IZULU_ATTRS = {
     "__template__",
@@ -23,31 +23,31 @@ _FORMATTER = string.Formatter()
 @dataclasses.dataclass
 class Store:
 
-    fields: frozenset[str]
+    fields: t.FrozenSet[str]
     const_hints: types.MappingProxyType[str, t.Type]
     inst_hints: types.MappingProxyType[str, t.Type]
     consts: types.MappingProxyType[str, t.Any]
-    defaults: frozenset[str]
+    defaults: t.FrozenSet[str]
 
-    registered: frozenset[str] = dataclasses.field(init=False)
+    registered: t.FrozenSet[str] = dataclasses.field(init=False)
 
     def __post_init__(self):
         self.registered = self.fields.union(self.inst_hints)
 
 
-def check_missing_fields(store: Store, kws: frozenset[str]) -> None:
+def check_missing_fields(store: Store, kws: t.FrozenSet[str]) -> None:
     missing = store.registered.difference(store.defaults, store.consts, kws)
     if missing:
         raise TypeError(f"Missing arguments: {join_items(missing)}")
 
 
-def check_undeclared_fields(store: Store, kws: frozenset[str]) -> None:
+def check_undeclared_fields(store: Store, kws: t.FrozenSet[str]) -> None:
     undeclared = kws.difference(store.registered, store.const_hints)
     if undeclared:
         raise TypeError(f"Undeclared arguments: {join_items(undeclared)}")
 
 
-def check_kwarg_consts(store: Store, kws: frozenset[str]) -> None:
+def check_kwarg_consts(store: Store, kws: t.FrozenSet[str]) -> None:
     consts = kws.intersection(store.const_hints)
     if consts:
         raise TypeError(f"Constants in arguments: {join_items(consts)}")
@@ -69,7 +69,7 @@ def join_kwargs(**kwargs: t.Any) -> str:
     return ", ".join(f"{k!s}={v!r}" for k, v in kwargs.items())
 
 
-def format_template(template: str, kwargs: dict[str, t.Any]):
+def format_template(template: str, kwargs: t.Dict[str, t.Any]):
     try:
         return template.format_map(kwargs)
     except Exception as e:
@@ -84,7 +84,7 @@ def iter_fields(template: str) -> t.Generator[str, None, None]:
             yield _string.formatter_field_name_split(fn)[0]
 
 
-def split_cls_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
+def split_cls_hints(cls: t.Type) -> t.Tuple[_T_HINTS, _T_HINTS]:
     const_hints: _T_HINTS = {}
     inst_hints: _T_HINTS = {}
 
@@ -99,7 +99,10 @@ def split_cls_hints(cls: t.Type) -> tuple[_T_HINTS, _T_HINTS]:
     return const_hints, inst_hints
 
 
-def get_cls_defaults(cls: t.Type, attrs: t.Iterable[str]) -> dict[str, t.Any]:
+def get_cls_defaults(
+    cls: t.Type,
+    attrs: t.Iterable[str],
+) -> t.Dict[str, t.Any]:
     return {attr: getattr(cls, attr)
             for attr in attrs
             if hasattr(cls, attr)}
