@@ -1,0 +1,5 @@
+exclude = ["**/.venv/**/*.toml"]
+
+[formatting]
+array_auto_collapse = false
+column_width = 120

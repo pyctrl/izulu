@@ -1,0 +1,10 @@
+[general]
+verbosity = 3
+ignore=B6
+
+### Configuring rules ###
+[title-max-length]
+line-length=120
+
+[title-min-length]
+min-length=5
