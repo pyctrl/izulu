@@ -60,11 +60,108 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 
 
+[tool.ruff]
+target-version = "py312"
+line-length = 79  # 88
+extend-exclude = [".git", ".venv"]
+
+[tool.ruff.lint]
+preview = true
+extend-select = ["ALL"]
+extend-ignore = [
+  "D10",     # missing documentation
+  "D203",    # 1 of conflicting code-styles
+  "D212",    # 1 of conflicting code-styles
+  "C408",    # allow `dict()` instead of literal
+  "TD003",   # don't require issue link
+  # Completely disable
+  "FIX",
+  "CPY",
+  # formatter conflict rules
+  "W191",
+  "E111",
+  "E114",
+  "E117",
+  "D206",
+  "D300",
+  "Q000",
+  "Q001",
+  "Q002",
+  "Q003",
+  "COM812",
+  "COM819",
+  "ISC001",
+  "ISC002",
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"**/tests/*" = [
+  "S101",   # allow assert
+  "SLF001", # allow private member access
+  "ANN",    # annotations not required in tests
+]
+
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
+"constants" = "c"
+"exceptions" = "excs"
+"typing" = "t"
+
+[tool.ruff.lint.flake8-import-conventions]
+banned-from = [
+  "constants",
+  "exceptions",
+  "typing",
+]
+
+# [tool.ruff.lint.isort]
+# force-single-line = true
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = ["id"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+include_namespace_packages = true
+# Regexes for lines to exclude from consideration
+omit = ["*/.venv/*"]
+exclude_also = [
+  # Don't complain about missing debug-only code:
+  "def __repr__",
+
+  # Don't complain if tests don't hit defensive assertion code:
+  "raise NotImplementedError",
+
+  # Don't complain if non-runnable code isn't run:
+  "if __name__ == .__main__.:",
+
+  # Don't complain about abstract methods, they aren't run:
+  "@(abc\\.)?abstractmethod",
+
+  "if TYPE_CHECKING:",
+]
+
+[tool.mypy]
+strict = true
+exclude = ["tests", ".venv"]
+
+
 [tool.flake8]
 show-source = true
 
 
 [tool.tox]
+# requires = ["tox>4.23", "tox-uv>=1.13"]
+# runner = "uv-venv-lock-runner"
 requires = ["tox>4.23"]
 env_list = ["pep8", "rst", "py312", "mypy"]
 use_develop = true

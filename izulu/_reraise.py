@@ -20,6 +20,9 @@ _T_COMPILED_ACTION = t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]
 
 _MISSING = object()
 
+DecParam = t.ParamSpec("DecParam")
+DecReturnType = t.TypeVar("DecReturnType")
+
 
 class FatalMixin:
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
@@ -171,11 +174,19 @@ class ReraisingMixin:
     def rewrap(
         cls,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
-    ) -> t.Callable[..., t.Any]:
+    ) -> t.Callable[
+        [t.Callable[DecParam, DecReturnType]],
+        t.Callable[DecParam, DecReturnType],
+    ]:
 
-        def decorator(func):
+        def decorator(
+            func: t.Callable[DecParam, DecReturnType],
+        ) -> t.Callable[DecParam, DecReturnType]:
             @functools.wraps(func)
-            def wrapped(*args, **kwargs):
+            def wrapped(
+                *args: DecParam.args,
+                **kwargs: DecParam.kwargs,
+            ) -> DecReturnType:
                 with cls.reraise(remap_kwargs=remap_kwargs):
                     return func(*args, **kwargs)
             return wrapped
@@ -200,8 +211,12 @@ class chain:
         return None
 
     @classmethod
-    def from_subtree(cls, klass: ReraisingMixin) -> "chain":
-        return cls(*_utils.traverse_tree(klass))
+    def from_subtree(cls, klass: t.Type[ReraisingMixin]) -> "chain":
+        it = (
+            t.cast(ReraisingMixin, kls)
+            for kls in _utils.traverse_tree(klass)
+        )
+        return cls(*it)
 
     @classmethod
     def from_names(cls, name: str, *names: str) -> "chain":
