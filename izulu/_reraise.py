@@ -78,7 +78,10 @@ class ReraisingMixin:
                 orig: Exception,
                 kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
-                action_ = getattr(cls, t.cast(str, action))
+                action_ = t.cast(
+                    t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]],
+                    getattr(cls, action)
+                )
                 return action_(orig, kwargs)
 
         elif isinstance(action, type) and issubclass(action, Exception):
@@ -87,7 +90,7 @@ class ReraisingMixin:
                 orig: Exception,
                 kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
-                return t.cast(t.Type[Exception], action)(**kwargs)
+                return action(**kwargs)
 
         elif callable(action):
 
@@ -165,7 +168,10 @@ class ReraisingMixin:
         raise exc from orig
 
     @classmethod
-    def rewrap(cls, remap_kwargs: t.Optional[_T_KWARGS] = None) -> t.Callable:
+    def rewrap(
+        cls,
+        remap_kwargs: t.Optional[_T_KWARGS] = None,
+    ) -> t.Callable[..., t.Any]:
 
         def decorator(func):
             @functools.wraps(func)

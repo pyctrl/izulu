@@ -21,8 +21,8 @@ _FORMATTER = string.Formatter()
 class Store:
 
     fields: t.FrozenSet[str]
-    const_hints: types.MappingProxyType[str, t.Type]
-    inst_hints: types.MappingProxyType[str, t.Type]
+    const_hints: types.MappingProxyType[str, type]
+    inst_hints: types.MappingProxyType[str, type]
     consts: types.MappingProxyType[str, t.Any]
     defaults: t.FrozenSet[str]
 
@@ -82,10 +82,10 @@ def iter_fields(template: str) -> t.Generator[str, None, None]:
 
 
 def split_cls_hints(
-    cls: t.Type,
-) -> t.Tuple[t.Dict[str, t.Type], t.Dict[str, t.Type]]:
-    const_hints: t.Dict[str, t.Type] = {}
-    inst_hints: t.Dict[str, t.Type] = {}
+        cls: type,
+) -> t.Tuple[t.Dict[str, type], t.Dict[str, type]]:
+    const_hints: t.Dict[str, type] = {}
+    inst_hints: t.Dict[str, type] = {}
 
     for k, v in t.get_type_hints(cls).items():
         if k in _IZULU_ATTRS:
@@ -99,7 +99,7 @@ def split_cls_hints(
 
 
 def get_cls_defaults(
-    cls: t.Type,
+    cls: type,
     attrs: t.Iterable[str],
 ) -> t.Dict[str, t.Any]:
     return {attr: getattr(cls, attr)
@@ -107,7 +107,7 @@ def get_cls_defaults(
             if hasattr(cls, attr)}
 
 
-def traverse_tree(cls):
+def traverse_tree(cls: type) -> t.Generator[type, None, None]:
     workload = cls.__subclasses__()
     discovered = []
     while workload:

@@ -30,11 +30,11 @@ else:
             logging.error(message)
         raise
 
-FactoryReturnType = t.TypeVar("FactoryReturnType")
-
 _HOOK_RENAMED_MSG = (
     "<_hook> method name is deprecated - use <_override_message>"
 )
+
+FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 
 @t.overload
@@ -53,7 +53,11 @@ def factory(
 ) -> FactoryReturnType: ...
 
 
-def factory(func: t.Callable, *, self: bool = False):
+def factory(
+    func: t.Callable[..., t.Any],
+    *,
+    self: bool = False,
+) -> t.Any:
     """Attaches factory for dynamic default values
 
     :param func: callable factory receiving 0 or 1 argument (see `self` param)
