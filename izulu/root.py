@@ -27,7 +27,7 @@ else:
         import typing_extensions as t_ext  # type: ignore [no-redef]
     except ImportError:
         for message in _IMPORT_ERROR_TEXTS:
-            logging.error(message)
+            logging.error(message)  # noqa: LOG015,TRY400
         raise
 
 _HOOK_RENAMED_MSG = (
@@ -38,7 +38,7 @@ FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 
 @t.overload
-def factory(
+def factory(  # noqa: UP047
     default_factory: t.Callable[[], FactoryReturnType],
     *,
     self: t.Literal[False] = False,
@@ -46,7 +46,7 @@ def factory(
 
 
 @t.overload
-def factory(
+def factory(  # noqa: UP047
     default_factory: t.Callable[[Error], FactoryReturnType],
     *,
     self: t.Literal[True],
@@ -139,7 +139,7 @@ class Error(Exception):
 
     iter_causes = causes.iterate_causes
 
-    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
         fields = frozenset(_utils.iter_fields(cls.__template__))
         const_hints, inst_hints = _utils.split_cls_hints(cls)
@@ -155,7 +155,7 @@ class Error(Exception):
         if Features.FORBID_NON_NAMED_FIELDS in cls.__features__:
             _utils.check_non_named_fields(cls.__cls_store)
 
-    def __init__(self, **kwargs: t.Any) -> None:
+    def __init__(self, **kwargs: t.Any) -> None:  # noqa: ANN401
         self.__kwargs = kwargs.copy()
         self.__process_features()
         self.__populate_attrs()
@@ -189,10 +189,10 @@ class Error(Exception):
         kwargs.update(data)
         return _utils.format_template(self.__template__, kwargs)
 
-    def _override_message(
+    def _override_message(  # noqa: PLR6301
         self,
-        store: _utils.Store,
-        kwargs: t.Dict[str, t.Any],
+        store: _utils.Store,  # noqa: ARG002
+        kwargs: t.Dict[str, t.Any],  # noqa: ARG002
         msg: str,
     ) -> str:
         """
@@ -220,7 +220,7 @@ class Error(Exception):
         kwargs: t.Dict[str, t.Any],
         msg: str,
     ) -> str:
-        logging.warning(_HOOK_RENAMED_MSG)
+        logging.warning(_HOOK_RENAMED_MSG)  # noqa: LOG015
         return self._override_message(store=store, kwargs=kwargs, msg=msg)
 
     def __repr__(self) -> str:
@@ -231,13 +231,13 @@ class Error(Exception):
         return type(self)(**self.as_dict())
 
     def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> "Error":
-        _id = id(self)
-        if _id not in memo:
+        id_ = id(self)
+        if id_ not in memo:
             kwargs = {
                 k: copy.deepcopy(v, memo) for k, v in self.as_dict().items()
             }
-            memo[_id] = type(self)(**kwargs)
-        return t.cast("Error", memo[_id])
+            memo[id_] = type(self)(**kwargs)
+        return t.cast("Error", memo[id_])
 
     def __reduce__(self) -> t.Tuple[t.Any, ...]:
         return functools.partial(self.__class__, **self.as_dict()), tuple()
@@ -248,10 +248,9 @@ class Error(Exception):
 
     def as_kwargs(self) -> t.Dict[str, t.Any]:
         """Return the copy of original kwargs used to initialize the error."""
-
         return self.__kwargs.copy()
 
-    def as_dict(self, wide: bool = False) -> t.Dict[str, t.Any]:
+    def as_dict(self, *, wide: bool = False) -> t.Dict[str, t.Any]:
         """
         Represent error as dict of fields including default values.
 

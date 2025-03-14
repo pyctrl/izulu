@@ -24,7 +24,7 @@ else:
         import typing_extensions as t_ext  # type: ignore [no-redef]
     except ImportError:
         for message in _IMPORT_ERROR_TEXTS:
-            logging.error(message)
+            logging.error(message)  # noqa: LOG015,TRY400
         raise
 
 _T_KWARGS = t.Dict[str, t.Any]
@@ -36,7 +36,7 @@ _T_FACTORY = t.Callable[
     [t.Type[Exception], Exception, _T_KWARGS],
     t.Optional[Exception],
 ]
-_T_ACTION = t.Union[None, str, t.Type[Exception], _T_FACTORY]
+_T_ACTION = t.Union[str, t.Type[Exception], _T_FACTORY, None]
 _T_COMPILED_ACTION = t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]
 
 _MISSING = object()
@@ -46,7 +46,7 @@ DecReturnType = t.TypeVar("DecReturnType")
 
 
 class FatalMixin:
-    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         if FatalMixin not in cls.__bases__:
             raise TypeError("Fatal can't be indirectly inherited")
         super().__init_subclass__(**kwargs)
@@ -63,7 +63,7 @@ class ReraisingMixin:
         t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_COMPILED_ACTION], ...],
     ]
 
-    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
         rules = cls.__dict__.get("__reraising__", False)
         cls.__reraising = rules
@@ -74,12 +74,15 @@ class ReraisingMixin:
             )
 
     @classmethod
-    def _compile_action(cls, action: _T_ACTION) -> _T_COMPILED_ACTION:
+    def _compile_action(  # noqa: C901
+        cls,
+        action: _T_ACTION,
+    ) -> _T_COMPILED_ACTION:
         if action is None:
 
             def compiled_action(
-                orig: Exception,
-                kwargs: _T_KWARGS,
+                orig: Exception,  # noqa: ARG001
+                kwargs: _T_KWARGS,  # noqa: ARG001
             ) -> t.Optional[Exception]:
                 return None
 
@@ -89,7 +92,7 @@ class ReraisingMixin:
         ):
 
             def compiled_action(
-                orig: Exception,
+                orig: Exception,  # noqa: ARG001
                 kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
                 kls = t.cast(t.Type[Exception], cls)
@@ -110,7 +113,7 @@ class ReraisingMixin:
         elif isinstance(action, type) and issubclass(action, Exception):
 
             def compiled_action(
-                orig: Exception,
+                orig: Exception,  # noqa: ARG001
                 kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
                 return action(**kwargs)
@@ -214,13 +217,13 @@ class ReraisingMixin:
         return decorator
 
 
-class chain:
+class chain:  # noqa: N801
     def __init__(self, kls: ReraisingMixin, *klasses: ReraisingMixin) -> None:
         self._klasses = (kls, *klasses)
 
     def __call__(
         self,
-        actor: t.Type[Exception],
+        actor: t.Type[Exception],  # noqa: ARG002
         exc: Exception,
         remap_kwargs: _T_KWARGS,
     ) -> t.Optional[Exception]:
@@ -241,7 +244,7 @@ class chain:
     def from_names(cls, name: str, *names: str) -> "chain":
         objects = globals()
         err_klasses = []
-        for name in (name, *names):
+        for name in (name, *names):  # noqa: B020,PLR1704
             kls = objects.get(name, _MISSING)
             if kls is _MISSING:
                 msg = f"module '{__name__}' has no attribute '{name}'"

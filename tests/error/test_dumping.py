@@ -126,7 +126,7 @@ def test_as_kwargs(err, expected):
     ],
 )
 def test_as_dict(err, expected, wide):
-    data = err.as_dict(wide)
+    data = err.as_dict(wide=wide)
     assert data == expected
 
     data["item"] = "SURPRISE"

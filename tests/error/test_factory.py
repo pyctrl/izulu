@@ -1,5 +1,5 @@
-from unittest import mock
 import uuid
+from unittest import mock  # noqa
 
 import pytest
 
