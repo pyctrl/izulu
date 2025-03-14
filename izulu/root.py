@@ -39,7 +39,7 @@ FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 @t.overload
 def factory(
-    factory: t.Callable[[], FactoryReturnType],
+    default_factory: t.Callable[[], FactoryReturnType],
     *,
     self: t.Literal[False] = False,
 ) -> FactoryReturnType: ...
@@ -47,14 +47,14 @@ def factory(
 
 @t.overload
 def factory(
-    factory: t.Callable[[Error], FactoryReturnType],
+    default_factory: t.Callable[[Error], FactoryReturnType],
     *,
     self: t.Literal[True],
 ) -> FactoryReturnType: ...
 
 
 def factory(
-    factory: t.Callable[..., t.Any],
+    default_factory: t.Callable[..., t.Any],
     *,
     self: bool = False,
 ) -> t.Any:
@@ -66,7 +66,7 @@ def factory(
         otherwise func will be invoced without argument
     """
 
-    target = factory if self else (lambda _: factory())
+    target = factory if self else (lambda _: default_factory())
     return functools.cached_property(target)
 
 
