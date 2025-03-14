@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import _string
+import _string  # type: ignore[import-not-found]
 import dataclasses
 import string
 import types

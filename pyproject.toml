@@ -157,6 +157,7 @@ exclude = ["tests", ".venv"]
 
 [tool.flake8]
 show-source = true
+ignore = ["H404", "H405"]
 
 
 [tool.tox]
@@ -201,6 +202,7 @@ dependency_groups = ["pep8"]
 commands = [
   [
     "flake8",
+    "--extend-ignore=H404,H405",
     { replace = "posargs", default = [
       "{toxinidir}{/}{[project]name}{/}",
       "{toxinidir}{/}tests{/}",
