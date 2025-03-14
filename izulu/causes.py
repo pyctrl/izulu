@@ -2,14 +2,14 @@ import typing as t
 
 
 def iterate_causes(
-        e: BaseException,
-        *,
-        self: bool = False
+    exc: BaseException,
+    *,
+    self: bool = False,
 ) -> t.Generator[BaseException, None, None]:
     if self:
-        yield e
-    cause = e.__cause__
+        yield exc
+    cause = exc.__cause__
     while cause is not None:
         yield cause
-        e = cause
-        cause = e.__cause__
+        exc = cause
+        cause = exc.__cause__

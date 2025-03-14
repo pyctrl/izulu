@@ -53,7 +53,6 @@ class FatalMixin:
 
 
 class ReraisingMixin:
-
     __reraising__: t.Union[
         bool,
         t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_ACTION], ...],  # tup, chain?
@@ -104,7 +103,7 @@ class ReraisingMixin:
             ) -> t.Optional[Exception]:
                 action_ = t.cast(
                     t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]],
-                    getattr(cls, action)
+                    getattr(cls, action),
                 )
                 return action_(orig, kwargs)
 
@@ -152,7 +151,7 @@ class ReraisingMixin:
 
         reraising = t.cast(
             t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_COMPILED_ACTION], ...],
-            cls.__reraising
+            cls.__reraising,
         )
         for match, rule in reraising:
             if not isinstance(exc, match):
@@ -169,8 +168,8 @@ class ReraisingMixin:
     @classmethod
     @contextlib.contextmanager
     def reraise(
-            cls,
-            remap_kwargs: t.Optional[_T_KWARGS] = None,
+        cls,
+        remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Generator[None, None, None]:
         if not cls.__reraising:
             yield
@@ -199,7 +198,6 @@ class ReraisingMixin:
         [t.Callable[DecParam, DecReturnType]],
         t.Callable[DecParam, DecReturnType],
     ]:
-
         def decorator(
             func: t.Callable[DecParam, DecReturnType],
         ) -> t.Callable[DecParam, DecReturnType]:
@@ -210,6 +208,7 @@ class ReraisingMixin:
             ) -> DecReturnType:
                 with cls.reraise(remap_kwargs=remap_kwargs):
                     return func(*args, **kwargs)
+
             return wrapped
 
         return decorator
@@ -234,8 +233,7 @@ class chain:
     @classmethod
     def from_subtree(cls, klass: t.Type[ReraisingMixin]) -> "chain":
         it = (
-            t.cast(ReraisingMixin, kls)
-            for kls in _utils.traverse_tree(klass)
+            t.cast(ReraisingMixin, kls) for kls in _utils.traverse_tree(klass)
         )
         return cls(*it)
 

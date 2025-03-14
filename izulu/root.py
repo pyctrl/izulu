@@ -58,7 +58,8 @@ def factory(
     *,
     self: bool = False,
 ) -> t.Any:
-    """Attaches factory for dynamic default values
+    """
+    Attaches factory for dynamic default values.
 
     :param func: callable factory receiving 0 or 1 argument (see `self` param)
     :param bool self: controls callable factory argument
@@ -78,10 +79,10 @@ class Features(enum.Flag):
 
     NONE = 0
     DEFAULT = (
-            FORBID_MISSING_FIELDS
-            | FORBID_UNDECLARED_FIELDS
-            | FORBID_KWARG_CONSTS
-            | FORBID_NON_NAMED_FIELDS
+        FORBID_MISSING_FIELDS
+        | FORBID_UNDECLARED_FIELDS
+        | FORBID_KWARG_CONSTS
+        | FORBID_NON_NAMED_FIELDS
     )
 
 
@@ -93,10 +94,10 @@ class Features(enum.Flag):
     field_specifiers=(factory,),
 )
 class Error(Exception):
-    """Base class for your exception trees
+    """
+    Base class for your exception trees.
 
     Example:
-
         class MyError(root.Error):
             __template__ = "{smth} has happened at {ts}"
             ts: root.factory(datetime.now)
@@ -163,8 +164,7 @@ class Error(Exception):
         super().__init__(msg)
 
     def __process_features(self) -> None:
-        """Trigger features"""
-
+        """Trigger features."""
         store = self.__cls_store
         kws = frozenset(self.__kwargs)
 
@@ -178,14 +178,13 @@ class Error(Exception):
             _utils.check_kwarg_consts(store, kws)
 
     def __populate_attrs(self) -> None:
-        """Set hinted kwargs as exception attributes"""
-
+        """Set hinted kwargs as exception attributes."""
         for k, v in self.__kwargs.items():
             if k in self.__cls_store.inst_hints:
                 setattr(self, k, v)
 
     def __process_template(self, data: t.Dict[str, t.Any]) -> str:
-        """Format the error template from provided data (kwargs & defaults)"""
+        """Format the error template from provided data (kwargs & defaults)."""
 
         kwargs = self.__cls_store.consts.copy()
         kwargs.update(data)
@@ -197,7 +196,8 @@ class Error(Exception):
         kwargs: t.Dict[str, t.Any],
         msg: str,
     ) -> str:
-        """Adapter method to wedge user logic into izulu machinery
+        """
+        Adapter method to wedge user logic into izulu machinery.
 
         This is the place to override message/formatting if regular mechanics
         don't work for you. It has to return original or your flavored message.
@@ -213,7 +213,6 @@ class Error(Exception):
           * kwargs: original kwargs from user
           * msg: formatted message from the error template
         """
-
         return msg
 
     def _hook(
@@ -235,8 +234,9 @@ class Error(Exception):
     def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> "Error":
         _id = id(self)
         if _id not in memo:
-            kwargs = {k: copy.deepcopy(v, memo)
-                      for k, v in self.as_dict().items()}
+            kwargs = {
+                k: copy.deepcopy(v, memo) for k, v in self.as_dict().items()
+            }
             memo[_id] = type(self)(**kwargs)
         return t.cast("Error", memo[_id])
 
@@ -244,23 +244,22 @@ class Error(Exception):
         return functools.partial(self.__class__, **self.as_dict()), tuple()
 
     def as_str(self) -> str:
-        """Represent error as exception type with message"""
-
+        """Represent error as exception type with message."""
         return f"{self.__class__.__qualname__}: {self}"
 
     def as_kwargs(self) -> t.Dict[str, t.Any]:
-        """Return the copy of original kwargs used to initialize the error"""
+        """Return the copy of original kwargs used to initialize the error."""
 
         return self.__kwargs.copy()
 
     def as_dict(self, wide: bool = False) -> t.Dict[str, t.Any]:
-        """Represent error as dict of fields including default values
+        """
+        Represent error as dict of fields including default values.
 
         By default, only *instance* data and defaults are provided.
 
         :param bool wide: if `True` *class* defaults will be included in result
         """
-
         d = self.__kwargs.copy()
         for field in self.__cls_store.defaults:
             d.setdefault(field, getattr(self, field))

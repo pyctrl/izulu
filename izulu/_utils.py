@@ -19,7 +19,6 @@ _FORMATTER = string.Formatter()
 # TODO(d.burmistrov): dataclass options
 @dataclasses.dataclass
 class Store:
-
     fields: t.FrozenSet[str]
     const_hints: types.MappingProxyType[str, type]
     inst_hints: types.MappingProxyType[str, type]
@@ -54,7 +53,7 @@ def check_non_named_fields(store: Store) -> None:
     for field in store.fields:
         if isinstance(field, int):
             raise ValueError(f"Field names can't be digits: {field}")
-        elif not field:
+        if not field:
             raise ValueError("Field names can't be empty")
 
 
@@ -82,7 +81,7 @@ def iter_fields(template: str) -> t.Generator[str, None, None]:
 
 
 def split_cls_hints(
-        cls: type,
+    cls: type,
 ) -> t.Tuple[t.Dict[str, type], t.Dict[str, type]]:
     const_hints: t.Dict[str, type] = {}
     inst_hints: t.Dict[str, type] = {}
@@ -90,7 +89,7 @@ def split_cls_hints(
     for k, v in t.get_type_hints(cls).items():
         if k in _IZULU_ATTRS:
             continue
-        elif t.get_origin(v) is t.ClassVar:
+        if t.get_origin(v) is t.ClassVar:
             const_hints[k] = v
         else:
             inst_hints[k] = v
@@ -102,9 +101,7 @@ def get_cls_defaults(
     cls: type,
     attrs: t.Iterable[str],
 ) -> t.Dict[str, t.Any]:
-    return {attr: getattr(cls, attr)
-            for attr in attrs
-            if hasattr(cls, attr)}
+    return {attr: getattr(cls, attr) for attr in attrs if hasattr(cls, attr)}
 
 
 def traverse_tree(cls: type) -> t.Generator[type, None, None]:
