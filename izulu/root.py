@@ -66,7 +66,7 @@ def factory(
         otherwise func will be invoced without argument
     """
 
-    target = factory if self else (lambda _: default_factory())
+    target = default_factory if self else (lambda _: default_factory())
     return functools.cached_property(target)
 
 
