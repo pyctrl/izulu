@@ -39,7 +39,7 @@ FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 @t.overload
 def factory(
-    func: t.Callable[[], FactoryReturnType],
+    default_factory: t.Callable[[], FactoryReturnType],
     *,
     self: t.Literal[False] = False,
 ) -> FactoryReturnType: ...
@@ -47,14 +47,14 @@ def factory(
 
 @t.overload
 def factory(
-    func: t.Callable[[Error], FactoryReturnType],
+    default_factory: t.Callable[[Error], FactoryReturnType],
     *,
     self: t.Literal[True],
 ) -> FactoryReturnType: ...
 
 
 def factory(
-    func: t.Callable[..., t.Any],
+    default_factory: t.Callable[..., t.Any],
     *,
     self: bool = False,
 ) -> t.Any:
@@ -66,11 +66,7 @@ def factory(
         otherwise func will be invoced without argument
     """
 
-    target = func if self else (lambda obj: func())
-    target = t.cast(
-        t.Callable[[t.Any], t.Any],
-        target,
-    )  # type: ignore [assignment]
+    target = default_factory if self else (lambda _: default_factory())
     return functools.cached_property(target)
 
 
@@ -89,6 +85,13 @@ class Features(enum.Flag):
     )
 
 
+@t_ext.dataclass_transform(
+    eq_default=False,
+    order_default=False,
+    kw_only_default=True,
+    frozen_default=False,
+    field_specifiers=(factory,),
+)
 class Error(Exception):
     """Base class for your exception trees
 
@@ -265,14 +268,3 @@ class Error(Exception):
             for field, const in self.__cls_store.consts.items():
                 d.setdefault(field, const)
         return d
-
-
-@t_ext.dataclass_transform(
-    eq_default=False,
-    order_default=False,
-    kw_only_default=True,
-    frozen_default=False,
-    field_specifiers=(factory,),
-)
-class DataclassHintedError(Error):
-    pass
