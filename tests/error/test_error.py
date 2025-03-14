@@ -8,7 +8,7 @@ from izulu import _utils
 from izulu import root
 from tests import errors
 
-TS = datetime.datetime.now(datetime.UTC)
+TS = datetime.datetime.now(datetime.timezone.utc)
 
 
 @mock.patch("izulu.root.Error._override_message")
