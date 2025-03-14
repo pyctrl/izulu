@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import _string  # type: ignore
+import _string
 import dataclasses
 import string
 import types
@@ -52,7 +52,8 @@ def check_kwarg_consts(store: Store, kws: t.FrozenSet[str]) -> None:
 def check_non_named_fields(store: Store) -> None:
     for field in store.fields:
         if isinstance(field, int):
-            raise ValueError(f"Field names can't be digits: {field}")
+            msg = f"Field names can't be digits: {field}"
+            raise ValueError(msg)  # noqa: TRY004
         if not field:
             raise ValueError("Field names can't be empty")
 
@@ -61,7 +62,7 @@ def join_items(items: t.Iterable[str]) -> str:
     return ", ".join(map("'{}'".format, items))
 
 
-def join_kwargs(**kwargs: t.Any) -> str:
+def join_kwargs(**kwargs: t.Any) -> str:  # noqa: ANN401
     return ", ".join(f"{k!s}={v!r}" for k, v in kwargs.items())
 
 

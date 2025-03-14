@@ -66,7 +66,6 @@ def factory(
         if `True` func will receive single argument of error instance
         otherwise func will be invoced without argument
     """
-
     target = default_factory if self else (lambda _: default_factory())
     return functools.cached_property(target)
 
@@ -124,6 +123,7 @@ class Error(Exception):
 
       * out-of-box validation for provided `kwargs`
         (individually enable/disable checks with `__features__` attribute)
+
     """
 
     __template__: t.ClassVar[str] = "Unspecified error"
@@ -185,7 +185,6 @@ class Error(Exception):
 
     def __process_template(self, data: t.Dict[str, t.Any]) -> str:
         """Format the error template from provided data (kwargs & defaults)."""
-
         kwargs = self.__cls_store.consts.copy()
         kwargs.update(data)
         return _utils.format_template(self.__template__, kwargs)

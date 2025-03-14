@@ -1,6 +1,6 @@
-from izulu import _reraise
-
 import pytest
+
+from izulu import _reraise
 
 
 def test_fatal_direct_inheritance():

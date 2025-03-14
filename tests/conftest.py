@@ -5,13 +5,15 @@ import pytest
 from tests import errors
 
 
-@pytest.fixture()
+@pytest.fixture
 def derived_error():
-    ts = datetime.datetime.now()
-    return errors.DerivedError(name="John",
-                               surname="Brown",
-                               note="...",
-                               age=42,
-                               updated_at=ts,
-                               full_name="secret",
-                               box=dict())
+    ts = datetime.datetime.now(datetime.UTC)
+    return errors.DerivedError(
+        name="John",
+        surname="Brown",
+        note="...",
+        age=42,
+        updated_at=ts,
+        full_name="secret",
+        box=dict(),
+    )

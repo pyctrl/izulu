@@ -3,23 +3,19 @@ import typing as t
 
 from izulu import root
 
-
 RootError = root.Error
 
 
 class TemplateOnlyError(root.Error):
-
     __template__ = "The {name} is {age} years old"
 
 
 class ComplexTemplateOnlyError(root.Error):
-
     __template__ = "{name:*^20} {age: f} {age:#b} {ts:%Y-%m-%d %H:%M:%S}"
     __features__ = root.Features.NONE
 
 
 class AttributesOnlyError(root.Error):
-
     __template__ = "Static message template"
 
     name: str
@@ -27,7 +23,6 @@ class AttributesOnlyError(root.Error):
 
 
 class AttributesWithStaticDefaultsError(root.Error):
-
     __template__ = "Static message template"
 
     name: str
@@ -35,7 +30,6 @@ class AttributesWithStaticDefaultsError(root.Error):
 
 
 class AttributesWithDynamicDefaultsError(root.Error):
-
     __template__ = "Static message template"
 
     name: str
@@ -43,7 +37,6 @@ class AttributesWithDynamicDefaultsError(root.Error):
 
 
 class ClassVarsError(root.Error):
-
     __template__ = "Static message template"
 
     name: t.ClassVar[str] = "Username"
@@ -52,7 +45,6 @@ class ClassVarsError(root.Error):
 
 
 class MixedError(root.Error):
-
     __template__ = "The {name} is {age} years old with {note}"
 
     entity: t.ClassVar[str] = "The Entity"
@@ -60,12 +52,13 @@ class MixedError(root.Error):
     name: str
     age: int = 0
     timestamp: datetime.datetime = root.factory(datetime.datetime.now)
-    my_type: str = root.factory(lambda self: self.__class__.__name__,
-                                self=True)
+    my_type: str = root.factory(
+        lambda self: self.__class__.__name__,
+        self=True,
+    )
 
 
 class DerivedError(MixedError):
-
     __template__ = "The {name} {surname} is {age} years old with {note}"
 
     entity: t.ClassVar[str] = "The Entity"
@@ -73,13 +66,14 @@ class DerivedError(MixedError):
     surname: str
     location: t.Tuple[float, float] = (50.3, 3.608)
     updated_at: datetime.datetime = root.factory(datetime.datetime.now)
-    full_name: str = root.factory(lambda self: f"{self.name} {self.surname}",
-                                  self=True)
+    full_name: str = root.factory(
+        lambda self: f"{self.name} {self.surname}",
+        self=True,
+    )
     box: dict
 
 
 class MyError(root.Error):
-
     __template__ = "The {name} is {age} years old with {ENTITY} {note}"
 
     DEFAULT = "default"
@@ -89,5 +83,7 @@ class MyError(root.Error):
     name: str
     age: int = 0
     timestamp: datetime.datetime = root.factory(datetime.datetime.now)
-    my_type: str = root.factory(lambda self: self.__class__.__name__,
-                                self=True)
+    my_type: str = root.factory(
+        lambda self: self.__class__.__name__,
+        self=True,
+    )

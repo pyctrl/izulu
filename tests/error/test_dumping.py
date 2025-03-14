@@ -7,22 +7,24 @@ import pytest
 from izulu import root
 from tests import errors
 
-
-TS = datetime.datetime.now()
+TS = datetime.datetime.now(datetime.UTC)
 
 
 @pytest.mark.parametrize(
     ("err", "expected"),
-    (
-            (errors.RootError(), dict()),
-            (errors.MixedError(name="John", age=10, note="..."),
-             dict(name="John", age=10, note="...")),
-            (errors.DerivedError(name="John",
-                                 surname="Brown",
-                                 note="...",
-                                 box={}),
-             dict(name="John", surname="Brown", note="...", box={})),
-    )
+    [
+        (errors.RootError(), dict()),
+        (
+            errors.MixedError(name="John", age=10, note="..."),
+            dict(name="John", age=10, note="..."),
+        ),
+        (
+            errors.DerivedError(
+                name="John", surname="Brown", note="...", box={}
+            ),
+            dict(name="John", surname="Brown", note="...", box={}),
+        ),
+    ],
 )
 def test_as_kwargs(err, expected):
     kwargs = err.as_kwargs()
@@ -36,68 +38,92 @@ def test_as_kwargs(err, expected):
 
 @pytest.mark.parametrize(
     ("err", "expected", "wide"),
-    (
-            (errors.RootError(), dict(), False),
-            (errors.RootError(), dict(), True),
-            (errors.ClassVarsError(), dict(), False),
-            (errors.ClassVarsError(), dict(age=42, name="Username"), True),
-            (errors.AttributesWithStaticDefaultsError(name="John"),
-             dict(name="John", age=0),
-             False),
-            (errors.AttributesWithStaticDefaultsError(name="John"),
-             dict(name="John", age=0),
-             True),
-            (errors.MixedError(name="John", age=10, note="...", timestamp=TS),
-             dict(name="John",
-                  age=10,
-                  note="...",
-                  my_type="MixedError",
-                  timestamp=TS),
-             False),
-            (errors.MixedError(name="John", age=10, note="...", timestamp=TS),
-             dict(name="John",
-                  age=10,
-                  note="...",
-                  my_type="MixedError",
-                  timestamp=TS,
-                  entity="The Entity"),
-             True),
-            (errors.DerivedError(name="John",
-                                 surname="Brown",
-                                 note="...",
-                                 box={},
-                                 timestamp=TS,
-                                 updated_at=TS),
-             dict(name="John",
-                  surname="Brown",
-                  full_name="John Brown",
-                  note="...",
-                  age=0,
-                  box={},
-                  location=(50.3, 3.608),
-                  my_type="DerivedError",
-                  timestamp=TS,
-                  updated_at=TS),
-             False),
-            (errors.DerivedError(name="John",
-                                 surname="Brown",
-                                 note="...",
-                                 box={},
-                                 timestamp=TS,
-                                 updated_at=TS),
-             dict(name="John",
-                  surname="Brown",
-                  full_name="John Brown",
-                  note="...",
-                  age=0,
-                  box={},
-                  location=(50.3, 3.608),
-                  my_type="DerivedError",
-                  timestamp=TS,
-                  updated_at=TS,
-                  entity="The Entity"),
-             True),
-    )
+    [
+        (errors.RootError(), dict(), False),
+        (errors.RootError(), dict(), True),
+        (errors.ClassVarsError(), dict(), False),
+        (errors.ClassVarsError(), dict(age=42, name="Username"), True),
+        (
+            errors.AttributesWithStaticDefaultsError(name="John"),
+            dict(name="John", age=0),
+            False,
+        ),
+        (
+            errors.AttributesWithStaticDefaultsError(name="John"),
+            dict(name="John", age=0),
+            True,
+        ),
+        (
+            errors.MixedError(name="John", age=10, note="...", timestamp=TS),
+            dict(
+                name="John",
+                age=10,
+                note="...",
+                my_type="MixedError",
+                timestamp=TS,
+            ),
+            False,
+        ),
+        (
+            errors.MixedError(name="John", age=10, note="...", timestamp=TS),
+            dict(
+                name="John",
+                age=10,
+                note="...",
+                my_type="MixedError",
+                timestamp=TS,
+                entity="The Entity",
+            ),
+            True,
+        ),
+        (
+            errors.DerivedError(
+                name="John",
+                surname="Brown",
+                note="...",
+                box={},
+                timestamp=TS,
+                updated_at=TS,
+            ),
+            dict(
+                name="John",
+                surname="Brown",
+                full_name="John Brown",
+                note="...",
+                age=0,
+                box={},
+                location=(50.3, 3.608),
+                my_type="DerivedError",
+                timestamp=TS,
+                updated_at=TS,
+            ),
+            False,
+        ),
+        (
+            errors.DerivedError(
+                name="John",
+                surname="Brown",
+                note="...",
+                box={},
+                timestamp=TS,
+                updated_at=TS,
+            ),
+            dict(
+                name="John",
+                surname="Brown",
+                full_name="John Brown",
+                note="...",
+                age=0,
+                box={},
+                location=(50.3, 3.608),
+                my_type="DerivedError",
+                timestamp=TS,
+                updated_at=TS,
+                entity="The Entity",
+            ),
+            True,
+        ),
+    ],
 )
 def test_as_dict(err, expected, wide):
     data = err.as_dict(wide)
@@ -107,19 +133,18 @@ def test_as_dict(err, expected, wide):
     assert "key" not in err._Error__kwargs
 
     with pytest.raises(AttributeError):
-        getattr(data, "key")
+        _ = data.key
 
     assert id(data) != id(err._Error__kwargs)
 
 
 def test_as_dict_wide_override_const():
-    kls = type("Err",
-               (errors.ClassVarsError,),
-               {"__features__": root.Features.NONE})
+    features = {"__features__": root.Features.NONE}
+    kls = type("Err", (errors.ClassVarsError,), features)
 
     err = kls(age=500)
 
-    assert err.as_dict(True) == dict(age=500, name="Username")
+    assert err.as_dict(wide=True) == dict(age=500, name="Username")
 
 
 def _assert_copy_mutual(orig, cp):
@@ -155,16 +180,13 @@ def test_copy_deep(derived_error):
 
 @pytest.mark.parametrize(
     "err",
-    (
-            errors.RootError(),
-            errors.TemplateOnlyError(name="John", age=42),
-            errors.AttributesOnlyError(name="John", age=42),
-            errors.MixedError(name="John", note="..."),
-            errors.DerivedError(name="John",
-                                surname="Brown",
-                                note="...",
-                                box={}),
-    ),
+    [
+        errors.RootError(),
+        errors.TemplateOnlyError(name="John", age=42),
+        errors.AttributesOnlyError(name="John", age=42),
+        errors.MixedError(name="John", note="..."),
+        errors.DerivedError(name="John", surname="Brown", note="...", box={}),
+    ],
 )
 def test_pickling(err):
     dumped = pickle.dumps(err)
