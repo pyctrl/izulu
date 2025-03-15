@@ -31,6 +31,7 @@ dev = ["ipython"]
 test = ["pytest", "coverage", "typing-extensions"]
 pep8 = ["hacking", "pyproject-flake8"]
 rst = ["restructuredtext_lint", "Pygments"]
+# readme: rst + docutils = `docutils README.rst README.html`
 mypy = ["mypy", "typing-extensions"]
 fmt = ["ruff"]
 doc = ["sphinx", "pydata-sphinx-theme", "sphinx-autobuild"]

@@ -12,13 +12,8 @@ izulu
 
 **Installation**
 
-For Python versions prior to 3.11 also install ``izulu[compatibility]``.
-
-::
-
-    pip install izulu  # py311 and higher
-
-    pip install izulu izulu[compatibility]  # py38-py310
+.. include:: docs/source/user/install.rst
+   :start-line: 5
 
 
 Presenting ``izulu``

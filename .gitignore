@@ -159,3 +159,5 @@ flycheck_*.el
 
 # MacOS
 .DS_Store
+
+*.html
