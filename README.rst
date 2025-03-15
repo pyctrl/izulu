@@ -939,8 +939,8 @@ But it should not be need in 99,9% cases. Avoid it, please.
 
         return msg
 
-Tips
-****
+Recipes & Tips
+**************
 
 1. inheritance / root exception
 ===============================
@@ -1035,7 +1035,6 @@ Additional examples
 -------------------
 
 TBD
-
 
 For developers
 **************
