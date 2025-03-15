@@ -31,12 +31,15 @@ dev = ["ipython"]
 test = ["pytest", "coverage", "typing-extensions"]
 pep8 = ["hacking", "pyproject-flake8"]
 rst = ["restructuredtext_lint", "Pygments"]
-# readme: rst + docutils = `docutils README.rst README.html`
+# readme:
+#   rst
+#   rst-include = `rst_include include <in> <out>`
+#   docutils = `docutils README.rst README.html`
 mypy = ["mypy", "typing-extensions"]
 fmt = ["ruff"]
 doc = ["sphinx", "pydata-sphinx-theme", "sphinx-autobuild"]
 # release
-build = ["build", "twine"]
+build = ["rst-include", "build", "twine"]
 upload = ["twine"]
 # extras
 # aliases
@@ -239,6 +242,12 @@ commands = [
 skip_install = true
 dependency_groups = ["build"]
 commands = [
+  [
+    "rst_include",
+    "include",
+    "README.tpl.rst",
+    "README.rst",
+  ],
   [
     "python3",
     "-m",
