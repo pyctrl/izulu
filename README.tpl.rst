@@ -1,7 +1,7 @@
 izulu
 #####
 
-.. image:: https://repository-images.githubusercontent.com/766241795/85494614-5974-4b26-bfec-03b8e393c7f0?width=128
+.. image:: https://repository-images.githubusercontent.com/766241795/85494614-5974-4b26-bfec-03b8e393c7f0
    :width: 128px
 
 |
