@@ -58,6 +58,13 @@ def check_non_named_fields(store: Store) -> None:
             raise ValueError("Field names can't be empty")
 
 
+def check_unannotated_fields(store: Store) -> None:
+    unannotated = store.fields - set(store.const_hints) - set(store.inst_hints)
+    if unannotated:
+        msg = f"Fields must be annotated: {join_items(unannotated)}"
+        raise ValueError(msg)
+
+
 def join_items(items: t.Iterable[str]) -> str:
     return ", ".join(map("'{}'".format, items))
 

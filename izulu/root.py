@@ -75,6 +75,7 @@ class Features(enum.Flag):
     FORBID_UNDECLARED_FIELDS = enum.auto()
     FORBID_KWARG_CONSTS = enum.auto()
     FORBID_NON_NAMED_FIELDS = enum.auto()
+    FORBID_UNANNOTATED_FIELDS = enum.auto()
 
     NONE = 0
     DEFAULT = (
@@ -82,6 +83,7 @@ class Features(enum.Flag):
         | FORBID_UNDECLARED_FIELDS
         | FORBID_KWARG_CONSTS
         | FORBID_NON_NAMED_FIELDS
+        # | FORBID_UNANNOTATED_FIELDS  # TODO(d.burmistrov): enable by default
     )
 
 
@@ -154,6 +156,8 @@ class Error(Exception):
         )
         if Features.FORBID_NON_NAMED_FIELDS in cls.__features__:
             _utils.check_non_named_fields(cls.__cls_store)
+        if Features.FORBID_UNANNOTATED_FIELDS in cls.__features__:
+            _utils.check_unannotated_fields(cls.__cls_store)
 
     def __init__(self, **kwargs: t.Any) -> None:  # noqa: ANN401
         self.__kwargs = kwargs.copy()

@@ -1,5 +1,5 @@
 import uuid
-from unittest import mock  # noqa
+from unittest import mock  # noqa: RUF100,H306
 
 import pytest
 
