@@ -50,17 +50,16 @@ Representations
     # AmountValidationError: Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 23:33:13.847586
 
 
-Pickling, dumping and loading
------------------------------
-
 Pickling
-""""""""
+--------
 
 ``izulu``-based errors **support pickling** by default.
 
 
-Dumping
-"""""""
+Dumping and loading
+-------------------
+
+**Dumping**
 
 * ``.as_kwargs()`` dumps shallow copy of original ``kwargs``
 
@@ -92,8 +91,7 @@ Dumping
   #. *"class defaults"*
 
 
-Loading
-"""""""
+**Loading**
 
 * ``.as_kwargs()`` result can be used to create **inaccurate** copy of original error,
   but pay attention to dynamic factories — ``datetime.now()``, ``uuid()`` and many others would produce new values
