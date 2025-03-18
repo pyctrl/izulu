@@ -2,3 +2,4 @@ sphinx
 pydata-sphinx-theme
 sphinx-autobuild
 setuptools-scm
+-e .
