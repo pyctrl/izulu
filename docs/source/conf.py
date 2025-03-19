@@ -84,3 +84,14 @@ html_context = {
     "github_version": "main",
     "doc_path": "docs/source/",
 }
+
+favicons = [
+   {
+      "sizes": "16x16",
+      "href": "https://github.com/pyctrl/pyctrl/blob/main/logo/izulu/izulu_logo_512.png?raw=true",
+   },
+   {
+      "sizes": "32x32",
+      "href": "https://github.com/pyctrl/pyctrl/blob/main/logo/izulu/izulu_logo_512.png?raw=true",
+   },
+]
