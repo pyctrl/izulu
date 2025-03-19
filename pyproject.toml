@@ -20,7 +20,7 @@ keywords = ["error", "exception", "oop", "izulu"]
 
 [project.urls]
 homepage = "https://github.com/pyctrl/izulu"
-source = "https://github.com/pyctrl/izulu"
+# source = "https://github.com/pyctrl/izulu"
 documentation = "https://izulu.readthedocs.io/en/latest/"
 issues = "https://github.com/pyctrl/izulu/issues"
 
