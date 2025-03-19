@@ -17,7 +17,7 @@ izulu
    :start-line: 5
 
 .. include:: docs/source/user/intro.rst
-   :start-line: 3
+
 
 Quickstart
 ==========

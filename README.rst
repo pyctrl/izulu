@@ -1,7 +1,7 @@
 izulu
 #####
 
-.. image:: https://repository-images.githubusercontent.com/766241795/85494614-5974-4b26-bfec-03b8e393c7f0?width=128
+.. image:: https://repository-images.githubusercontent.com/766241795/85494614-5974-4b26-bfec-03b8e393c7f0
    :width: 128px
 
 |
@@ -23,8 +23,8 @@ For Python versions prior to 3.11 also install ``izulu[compatibility]``.
     # py38-py310
     pip install izulu izulu[compatibility]
 
-Presenting ``izulu``
-********************
+Presenting "izulu"
+******************
 
 Bring OOP into exception/error management
 =========================================
@@ -120,7 +120,6 @@ Neat #3: Static and dynamic defaults
 
     print(AmountValidationError(amount=-1, reason="amount can't be negative"))
     # Data is invalid: amount can't be negative (-1; MAX=1000) at 2024-01-13 22:59:54.482577
-
 
 Quickstart
 ==========
@@ -239,7 +238,6 @@ Dynamic defaults also supported
   argument - your exception fresh instance
 * **don't forget** to provide second ``True`` argument for ``factory`` tool
   (keyword or positional - doesn't matter)
-
 
 Specifications
 **************
@@ -835,17 +833,16 @@ Representations
     # AmountValidationError: Data is invalid: amount is too large (15000; MAX=1000) at 2024-01-13 23:33:13.847586
 
 
-Pickling, dumping and loading
------------------------------
-
 Pickling
-""""""""
+--------
 
 ``izulu``-based errors **support pickling** by default.
 
 
-Dumping
-"""""""
+Dumping and loading
+-------------------
+
+**Dumping**
 
 * ``.as_kwargs()`` dumps shallow copy of original ``kwargs``
 
@@ -877,8 +874,7 @@ Dumping
   #. *"class defaults"*
 
 
-Loading
-"""""""
+**Loading**
 
 * ``.as_kwargs()`` result can be used to create **inaccurate** copy of original error,
   but pay attention to dynamic factories — ``datetime.now()``, ``uuid()`` and many others would produce new values
@@ -1039,6 +1035,8 @@ TBD
 For developers
 **************
 
+* Use regular virtualenv or any other (no pre-defined preparations provided)
+
 * Running tests::
 
     tox
@@ -1057,7 +1055,6 @@ Versioning
 For available versions see the repository
 `tags <https://github.com/pyctrl/izulu/tags>`__
 and `releases <https://github.com/pyctrl/izulu/releases>`__.
-
 
 Authors
 *******
