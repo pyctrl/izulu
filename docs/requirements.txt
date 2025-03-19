@@ -1,5 +1,16 @@
+# base
 sphinx
-pydata-sphinx-theme
 sphinx-autobuild
+
+# theme
+pydata-sphinx-theme
+
+# extensions
+sphinx-copybutton
+sphinx-design
+sphinx-favicon
+sphinx-togglebutton
+
+# project
 setuptools-scm
 -e .

@@ -22,12 +22,12 @@ izulu documentation
        | **Author:** Dima Burmistrov (`pyctrl <https://github.com/pyctrl>`__)
        | *Special thanks to* `Eugene Frolov <https://github.com/phantomii/>`__ *for inspiration.*
        |
+
        This project is `licensed <https://github.com/pyctrl/izulu/blob/main/LICENSE>`__ under the X11 License (extended MIT).
 
 
      - .. toctree::
           :maxdepth: 2
-          :caption: Contents:
 
           user/index
           specs/index
