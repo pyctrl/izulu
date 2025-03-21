@@ -37,7 +37,20 @@ _T_FACTORY = t.Callable[
     t.Optional[Exception],
 ]
 _T_ACTION = t.Union[str, t.Type[Exception], _T_FACTORY, None]
+_T_RULES = t.Union[
+    bool,
+    t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_ACTION], ...],  # tup, chain?
+]
+_T_RERAISING = t.Union[
+    None,
+    bool,
+    t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_ACTION], ...],  # tup, chain?
+]
 _T_COMPILED_ACTION = t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]
+_T_COMPILED_RULES = t.Union[
+    bool,
+    t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_COMPILED_ACTION], ...],
+]
 
 _MISSING = object()
 
@@ -53,28 +66,27 @@ class FatalMixin:
 
 
 class ReraisingMixin:
-    __reraising__: t.Union[
-        bool,
-        t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_ACTION], ...],  # tup, chain?
-    ] = False
+    __reraising__: _T_RULES = False
 
-    __reraising: t.Union[
-        bool,
-        t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_COMPILED_ACTION], ...],
-    ]
+    __reraising: _T_COMPILED_RULES
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
         rules = cls.__dict__.get("__reraising__", False)
-        cls.__reraising = rules
-        if isinstance(rules, tuple):
-            cls.__reraising = tuple(
-                (exc_type, cls._compile_action(action))
-                for exc_type, action in rules
-            )
+        cls.__reraising = cls.__compile_rules(rules)
 
     @classmethod
-    def _compile_action(  # noqa: C901
+    def __compile_rules(cls, rules: _T_RULES) -> _T_COMPILED_RULES:
+        if isinstance(rules, bool):
+            return rules
+
+        return tuple(
+            (exc_type, cls.__compile_action(action))
+            for exc_type, action in rules
+        )
+
+    @classmethod
+    def __compile_action(  # noqa: C901
         cls,
         action: _T_ACTION,
     ) -> _T_COMPILED_ACTION:
@@ -136,11 +148,17 @@ class ReraisingMixin:
     def remap(
         cls,
         exc: Exception,
+        reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Union[Exception, None]:
+        if reraising is None:
+            reraising_ = cls.__reraising
+        else:
+            reraising_ = cls.__compile_rules(reraising)
+
         if (
             isinstance(exc, cls)
-            or not cls.__reraising
+            or not reraising_
             or FatalMixin in exc.__class__.__bases__
         ):
             return None
@@ -148,15 +166,16 @@ class ReraisingMixin:
         remap_kwargs = remap_kwargs or {}
 
         # greedy remapping (any occurred exception)
-        if cls.__reraising is True:
+        if reraising_ is True:
             kls = t.cast(t.Type[Exception], cls)
             return kls(**remap_kwargs)
 
-        reraising = t.cast(
+        reraising__ = t.cast(
             t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_COMPILED_ACTION], ...],
-            cls.__reraising,
+            reraising_,
         )
-        for match, rule in reraising:
+
+        for match, rule in reraising__:
             if not isinstance(exc, match):
                 continue
 
@@ -172,22 +191,21 @@ class ReraisingMixin:
     @contextlib.contextmanager
     def reraise(
         cls,
+        reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Generator[None, None, None]:
-        if not cls.__reraising:
-            yield
-            return
-
         try:
             yield
-        except cls:  # type: ignore[misc]
-            raise
         except Exception as e:
             orig = e
         else:
             return
 
-        exc = cls.remap(orig, remap_kwargs)
+        exc = cls.remap(
+            exc=orig,
+            reraising=reraising,
+            remap_kwargs=remap_kwargs,
+        )
         if exc is None:
             raise
 
@@ -196,6 +214,7 @@ class ReraisingMixin:
     @classmethod
     def rewrap(
         cls,
+        reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Callable[
         [t.Callable[DecParam, DecReturnType]],
@@ -209,7 +228,10 @@ class ReraisingMixin:
                 *args: DecParam.args,
                 **kwargs: DecParam.kwargs,
             ) -> DecReturnType:
-                with cls.reraise(remap_kwargs=remap_kwargs):
+                with cls.reraise(
+                    reraising=reraising,
+                    remap_kwargs=remap_kwargs,
+                ):
                     return func(*args, **kwargs)
 
             return wrapped
@@ -225,10 +247,11 @@ class chain:  # noqa: N801
         self,
         actor: t.Type[Exception],  # noqa: ARG002
         exc: Exception,
-        remap_kwargs: _T_KWARGS,
+        reraising: _T_RERAISING = None,
+        remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Optional[Exception]:
         for kls in self._klasses:
-            remapped = kls.remap(exc, remap_kwargs)
+            remapped = kls.remap(exc=exc, remap_kwargs=remap_kwargs)
             if remapped is not None:
                 return remapped
         return None
