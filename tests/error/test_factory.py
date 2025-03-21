@@ -10,7 +10,7 @@ from izulu import root
 def test_factory(flag):
     expected = uuid.uuid4()
     m = mock.Mock(return_value=expected)
-    attr = root.factory(m, self=flag)
+    attr = root.factory(default_factory=m, self=flag)
     k = type("Klass", tuple(), {"attr_with_self": attr})()
     call_args = (k,)
 
