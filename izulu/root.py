@@ -39,23 +39,23 @@ FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 @t.overload
 def factory(  # noqa: UP047
-    default_factory: t.Callable[[], FactoryReturnType],
     *,
+    default_factory: t.Callable[[], FactoryReturnType],
     self: t.Literal[False] = False,
 ) -> FactoryReturnType: ...
 
 
 @t.overload
 def factory(  # noqa: UP047
-    default_factory: t.Callable[[Error], FactoryReturnType],
     *,
+    default_factory: t.Callable[[Error], FactoryReturnType],
     self: t.Literal[True],
 ) -> FactoryReturnType: ...
 
 
 def factory(
-    default_factory: t.Callable[..., t.Any],
     *,
+    default_factory: t.Callable[..., t.Any],
     self: bool = False,
 ) -> t.Any:
     """

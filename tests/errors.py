@@ -1,4 +1,4 @@
-import datetime
+import datetime as dtm
 import typing as t
 
 from izulu import root
@@ -33,7 +33,7 @@ class AttributesWithDynamicDefaultsError(root.Error):
     __template__ = "Static message template"
 
     name: str
-    age: int = root.factory(int)
+    age: int = root.factory(default_factory=int)
 
 
 class ClassVarsError(root.Error):
@@ -51,9 +51,9 @@ class MixedError(root.Error):
 
     name: str
     age: int = 0
-    timestamp: datetime.datetime = root.factory(datetime.datetime.now)
+    timestamp: dtm.datetime = root.factory(default_factory=dtm.datetime.now)
     my_type: str = root.factory(
-        lambda self: self.__class__.__name__,
+        default_factory=lambda self: self.__class__.__name__,
         self=True,
     )
 
@@ -65,9 +65,9 @@ class DerivedError(MixedError):
 
     surname: str
     location: t.Tuple[float, float] = (50.3, 3.608)
-    updated_at: datetime.datetime = root.factory(datetime.datetime.now)
+    updated_at: dtm.datetime = root.factory(default_factory=dtm.datetime.now)
     full_name: str = root.factory(
-        lambda self: f"{self.name} {self.surname}",
+        default_factory=lambda self: f"{self.name} {self.surname}",
         self=True,
     )
     box: dict
@@ -82,8 +82,8 @@ class MyError(root.Error):
 
     name: str
     age: int = 0
-    timestamp: datetime.datetime = root.factory(datetime.datetime.now)
+    timestamp: dtm.datetime = root.factory(default_factory=dtm.datetime.now)
     my_type: str = root.factory(
-        lambda self: self.__class__.__name__,
+        default_factory=lambda self: self.__class__.__name__,
         self=True,
     )
