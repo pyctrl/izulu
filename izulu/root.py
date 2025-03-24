@@ -57,10 +57,11 @@ def factory(
     """
     Attaches factory for dynamic default values.
 
-    :param func: callable factory receiving 0 or 1 argument (see `self` param)
+    :param default_factory: callable factory receiving 0 or 1 argument
+        (see `self` param)
     :param bool self: controls callable factory argument
-        if `True` func will receive single argument of error instance
-        otherwise func will be invoced without argument
+        if `True` factory will receive single argument of error instance
+        otherwise factory will be invoked without argument
     """
     target = default_factory if self else (lambda _: default_factory())
     return functools.cached_property(target)

@@ -129,10 +129,12 @@ But it should not be need in 99,9% cases. Avoid it, please.
 
 .. code-block:: python
 
-    def _hook(self,
-              store: _utils.Store,
-              kwargs: dict[str, t.Any],
-              msg: str) -> str:
+    def _override_message(
+        self,
+        store: _utils.Store,  # noqa: ARG002
+        kwargs: t.Dict[str, t.Any],  # noqa: ARG002
+        msg: str,
+    ) -> str:
         """Adapter method to wedge user logic into izulu machinery
 
         This is the place to override message/formatting if regular mechanics
