@@ -30,10 +30,6 @@ else:
             logging.error(message)  # noqa: LOG015,TRY400
         raise
 
-_HOOK_RENAMED_MSG = (
-    "<_hook> method name is deprecated - use <_override_message>"
-)
-
 FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 
@@ -217,15 +213,6 @@ class Error(Exception):
           * msg: formatted message from the error template
         """
         return msg
-
-    def _hook(
-        self,
-        store: _utils.Store,
-        kwargs: t.Dict[str, t.Any],
-        msg: str,
-    ) -> str:
-        logging.warning(_HOOK_RENAMED_MSG)  # noqa: LOG015
-        return self._override_message(store=store, kwargs=kwargs, msg=msg)
 
     def __repr__(self) -> str:
         kwargs = _utils.join_kwargs(**self.as_dict())
