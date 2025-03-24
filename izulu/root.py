@@ -67,7 +67,7 @@ def factory(
     return functools.cached_property(target)
 
 
-class Features(enum.Flag):
+class Toggles(enum.Flag):
     FORBID_MISSING_FIELDS = enum.auto()
     FORBID_UNDECLARED_FIELDS = enum.auto()
     FORBID_KWARG_CONSTS = enum.auto()
@@ -80,7 +80,7 @@ class Features(enum.Flag):
         | FORBID_UNDECLARED_FIELDS
         | FORBID_KWARG_CONSTS
         | FORBID_NON_NAMED_FIELDS
-        # | FORBID_UNANNOTATED_FIELDS  # TODO(d.burmistrov): enable by default
+        | FORBID_UNANNOTATED_FIELDS
     )
 
 
@@ -121,12 +121,12 @@ class Error(Exception):
         this is why `datetime.now()` was omitted above
 
       * out-of-box validation for provided `kwargs`
-        (individually enable/disable checks with `__features__` attribute)
+        (individually enable/disable checks with `__toggles__` attribute)
 
     """
 
     __template__: t.ClassVar[str] = "Unspecified error"
-    __features__: t.ClassVar[Features] = Features.DEFAULT
+    __toggles__: t.ClassVar[Toggles] = Toggles.DEFAULT
 
     __cls_store: t.ClassVar[_utils.Store] = _utils.Store(
         fields=frozenset(),
@@ -151,31 +151,31 @@ class Error(Exception):
             consts=types.MappingProxyType(consts),
             defaults=frozenset(defaults),
         )
-        if Features.FORBID_NON_NAMED_FIELDS in cls.__features__:
+        if Toggles.FORBID_NON_NAMED_FIELDS in cls.__toggles__:
             _utils.check_non_named_fields(cls.__cls_store)
-        if Features.FORBID_UNANNOTATED_FIELDS in cls.__features__:
+        if Toggles.FORBID_UNANNOTATED_FIELDS in cls.__toggles__:
             _utils.check_unannotated_fields(cls.__cls_store)
 
     def __init__(self, **kwargs: t.Any) -> None:  # noqa: ANN401
         self.__kwargs = kwargs.copy()
-        self.__process_features()
+        self.__process_toggles()
         self.__populate_attrs()
         msg = self.__process_template(self.as_dict())
         msg = self._override_message(self.__cls_store, kwargs, msg)
         super().__init__(msg)
 
-    def __process_features(self) -> None:
-        """Trigger features."""
+    def __process_toggles(self) -> None:
+        """Trigger toggles."""
         store = self.__cls_store
         kws = frozenset(self.__kwargs)
 
-        if Features.FORBID_MISSING_FIELDS in self.__features__:
+        if Toggles.FORBID_MISSING_FIELDS in self.__toggles__:
             _utils.check_missing_fields(store, kws)
 
-        if Features.FORBID_UNDECLARED_FIELDS in self.__features__:
+        if Toggles.FORBID_UNDECLARED_FIELDS in self.__toggles__:
             _utils.check_undeclared_fields(store, kws)
 
-        if Features.FORBID_KWARG_CONSTS in self.__features__:
+        if Toggles.FORBID_KWARG_CONSTS in self.__toggles__:
             _utils.check_kwarg_consts(store, kws)
 
     def __populate_attrs(self) -> None:

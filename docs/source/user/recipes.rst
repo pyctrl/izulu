@@ -8,7 +8,7 @@ Recipes & Tips
 
     # intermediate class to centrally control the default behaviour
     class BaseError(Error):  # <-- inherit from this in your code (not directly from ``izulu``)
-        __features__ = Features.None
+        __toggles__ = Toggles.None
 
 
     class MyRealError(BaseError):

@@ -11,9 +11,9 @@ Some exceptions are *raised from* original exception (e.g. template formatting i
 so you can check ``e.__cause__`` and traceback output for details.
 
 
-The validation behavior depends on the set of enabled features.
-Changing feature set may cause different and raw exceptions being raised.
-Read and understand **"Features"** section to predict and experiment with different situations and behaviours.
+The validation behavior depends on the set of enabled toggles.
+Changing toggle set may cause different and raw exceptions being raised.
+Read and understand **"Toggles"** section to predict and experiment with different situations and behaviours.
 
 
 ``izulu`` has **2 validation stages:**
@@ -34,7 +34,7 @@ Read and understand **"Features"** section to predict and experiment with differ
       class MyError(Error):
           pass
 
-  * class attributes ``__template__`` and ``__features__`` are validated
+  * class attributes ``__template__`` and ``__toggles__`` are validated
 
     .. code-block:: python
 
@@ -51,7 +51,7 @@ Read and understand **"Features"** section to predict and experiment with differ
 
       root.Error()
 
-  * ``kwargs`` are validated according to enabled features
+  * ``kwargs`` are validated according to enabled toggles
 
     .. code-block:: python
 

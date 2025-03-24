@@ -3,40 +3,42 @@ import typing as t
 
 from izulu import root
 
-RootError = root.Error
+
+class RootError(root.Error):
+    __toggles__ = root.Toggles.DEFAULT ^ root.Toggles.FORBID_UNANNOTATED_FIELDS
 
 
-class TemplateOnlyError(root.Error):
+class TemplateOnlyError(RootError):
     __template__ = "The {name} is {age} years old"
 
 
-class ComplexTemplateOnlyError(root.Error):
+class ComplexTemplateOnlyError(RootError):
     __template__ = "{name:*^20} {age: f} {age:#b} {ts:%Y-%m-%d %H:%M:%S}"
-    __features__ = root.Features.NONE
+    __toggles__ = root.Toggles.NONE
 
 
-class AttributesOnlyError(root.Error):
+class AttributesOnlyError(RootError):
     __template__ = "Static message template"
 
     name: str
     age: int
 
 
-class AttributesWithStaticDefaultsError(root.Error):
+class AttributesWithStaticDefaultsError(RootError):
     __template__ = "Static message template"
 
     name: str
     age: int = 0
 
 
-class AttributesWithDynamicDefaultsError(root.Error):
+class AttributesWithDynamicDefaultsError(RootError):
     __template__ = "Static message template"
 
     name: str
     age: int = root.factory(default_factory=int)
 
 
-class ClassVarsError(root.Error):
+class ClassVarsError(RootError):
     __template__ = "Static message template"
 
     name: t.ClassVar[str] = "Username"
@@ -44,7 +46,7 @@ class ClassVarsError(root.Error):
     blah: t.ClassVar[float]
 
 
-class MixedError(root.Error):
+class MixedError(RootError):
     __template__ = "The {name} is {age} years old with {note}"
 
     entity: t.ClassVar[str] = "The Entity"
@@ -73,7 +75,7 @@ class DerivedError(MixedError):
     box: dict
 
 
-class MyError(root.Error):
+class MyError(RootError):
     __template__ = "The {name} is {age} years old with {ENTITY} {note}"
 
     DEFAULT = "default"

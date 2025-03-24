@@ -139,8 +139,8 @@ def test_as_dict(err, expected, wide):
 
 
 def test_as_dict_wide_override_const():
-    features = {"__features__": root.Features.NONE}
-    kls = type("Err", (errors.ClassVarsError,), features)
+    toggles = {"__toggles__": root.Toggles.NONE}
+    kls = type("Err", (errors.ClassVarsError,), toggles)
 
     err = kls(age=500)
 

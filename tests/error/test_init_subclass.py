@@ -133,15 +133,15 @@ def test_cls_store(kls, fields, hints, registered, defaults, consts):
 
 
 @pytest.mark.parametrize(
-    "features",
-    [root.Features.FORBID_NON_NAMED_FIELDS, root.Features.NONE],
+    "toggles",
+    [root.Toggles.FORBID_NON_NAMED_FIELDS, root.Toggles.NONE],
 )
 @mock.patch("izulu._utils.check_non_named_fields", return_value=0)
-def test_cls_validation(mocked_check, features):
+def test_cls_validation(mocked_check, toggles):
     """Validates feature checks from root.Error.__init_subclass__."""
-    type("Err", (errors.ClassVarsError,), {"__features__": features})
+    type("Err", (errors.ClassVarsError,), {"__toggles__": toggles})
 
-    if features is root.Features.NONE:
+    if toggles is root.Toggles.NONE:
         mocked_check.assert_not_called()
     else:
         mocked_check.assert_called_once()

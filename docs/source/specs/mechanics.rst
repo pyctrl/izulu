@@ -19,12 +19,12 @@ Mechanics
     class AmountError(Error):
         pass
 
-* **optionally** behaviour can be adjusted with ``__features__`` (not recommended)
+* **optionally** behaviour can be adjusted with ``__toggles__`` (not recommended)
 
 .. code-block:: python
 
     class AmountError(Error):
-        __features__ = Features.DEFAULT ^ Features.FORBID_UNDECLARED_FIELDS
+        __toggles__ = Toggles.DEFAULT ^ Toggles.FORBID_UNDECLARED_FIELDS
 
 * you should provide a template for the target error message with ``__template__``
 

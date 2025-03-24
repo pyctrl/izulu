@@ -14,7 +14,7 @@ TS = datetime.datetime.now(datetime.timezone.utc)
 @mock.patch("izulu.root.Error._override_message")
 @mock.patch("izulu.root.Error._Error__process_template")
 @mock.patch("izulu.root.Error._Error__populate_attrs")
-@mock.patch("izulu.root.Error._Error__process_features")
+@mock.patch("izulu.root.Error._Error__process_toggles")
 def test_init(
     fake_proc_ftrs,
     fake_set_attrs,
@@ -212,10 +212,10 @@ def test_instantiate_fail(kls, kwargs):
 def test_process_template(mock_format, kls, kwargs, expected_kwargs):
     with mock.patch.object(
         kls,
-        "__features__",
+        "__toggles__",
         new_callable=mock.PropertyMock,
     ) as mocked:
-        mocked.return_value = root.Features.NONE
+        mocked.return_value = root.Toggles.NONE
         kls(**kwargs)
 
     mock_format.assert_called_once_with(kls.__template__, expected_kwargs)
@@ -233,9 +233,10 @@ def test_override_message():
 
 def test_constants():
     e = errors.RootError()
+    toggles = root.Toggles.DEFAULT ^ root.Toggles.FORBID_UNANNOTATED_FIELDS
 
     assert e.__template__ == "Unspecified error"
-    assert e.__features__ == root.Features.DEFAULT
+    assert e.__toggles__ == toggles
     assert e._Error__cls_store == _utils.Store(
         fields=frozenset(),
         const_hints=types.MappingProxyType(dict()),

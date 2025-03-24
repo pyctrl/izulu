@@ -43,7 +43,7 @@ def test_str(err, expected):
 @pytest.mark.parametrize(
     ("err", "expected"),
     [
-        (errors.RootError(), "izulu.root.Error()"),
+        (errors.RootError(), "tests.errors.RootError()"),
         (
             errors.MixedError(name="John", age=10, note="...", timestamp=TS),
             (
@@ -73,7 +73,7 @@ def test_repl_repr():
 @pytest.mark.parametrize(
     ("err", "expected"),
     [
-        (errors.RootError(), "Error: Unspecified error"),
+        (errors.RootError(), "RootError: Unspecified error"),
         (
             errors.MixedError(name="John", age=10, note="..."),
             "MixedError: The John is 10 years old with ...",

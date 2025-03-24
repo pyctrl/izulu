@@ -8,7 +8,7 @@ import typing as t
 
 _IZULU_ATTRS = {
     "__template__",
-    "__features__",
+    "__toggles__",
     "_Error__cls_store",
     "__reraising__",
     "_ReraisingMixin__reraising",

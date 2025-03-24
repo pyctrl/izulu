@@ -9,7 +9,7 @@ The 6 pillars
 
   * template may contain *"fields"* for substitution from ``kwargs`` and *"defaults"* to produce final error message
 
-* ``__features__`` class attribute defines constraints and behaviour (see "Features" section below)
+* ``__toggles__`` class attribute defines constraints and behaviour (see "Toggles" section below)
 
   * by default all constraints are enabled
 
