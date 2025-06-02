@@ -31,9 +31,11 @@ With ``izulu`` you can forget about manual error message management all over the
 
     class ValidationError(Error):
         __template__ = "Data is invalid: {reason}"
+        reason: str
 
     class AmountValidationError(ValidationError):
         __template__ = "Invalid amount: {amount}"
+        amount: int
 
 
     if not data:
@@ -63,6 +65,7 @@ Neat #2: Attribute errors with useful fields
 
     class AmountValidationError(ValidationError):
         __template__ = "Data is invalid: {reason} ({amount})"
+        reason: str
         amount: int
 
 

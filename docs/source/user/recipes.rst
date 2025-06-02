@@ -13,6 +13,8 @@ Recipes & Tips
 
     class MyRealError(BaseError):
         __template__ = "Having count={count} for owner={owner}"
+        owner: str
+        count: int
 
 
 2. factories
@@ -57,6 +59,8 @@ TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
+        owner: str
+        count: int
 
         def __make_duration(self) -> timedelta:
             kwargs = self.as_kwargs()
@@ -88,6 +92,8 @@ TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
 
     class MyRealError(BaseError):
         __template__ = "Having count={count} for owner={owner}"
+        owner: str
+        count: int
 
 
 Additional examples

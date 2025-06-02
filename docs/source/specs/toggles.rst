@@ -27,6 +27,7 @@ Supported toggles
 
     class AmountError(Error):
         __template__ = "Some {amount} of money for {client_id} client"
+        amount: int
         client_id: int
 
     # I. enabled

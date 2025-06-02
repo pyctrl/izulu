@@ -57,6 +57,7 @@ Read and understand **"Toggles"** section to predict and experiment with differe
 
       class MyError(Error):
           __template__ = "Hello {name}"
+          name: str
 
       MyError()
       # TypeError: Missing arguments: 'name'

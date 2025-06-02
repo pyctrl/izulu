@@ -27,6 +27,8 @@ Let's start with defining our initial error class (exception)
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
+        owner: str
+        count: int
 
 
     print(MyError(count=10, owner="me"))
@@ -50,6 +52,7 @@ Move on and improve our class with attributes
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
         count: int
+        owner: str
         timestamp: datetime
 
     e = MyError(count=10, owner="me", timestamp=datetime.now())
