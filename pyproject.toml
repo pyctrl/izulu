@@ -38,7 +38,20 @@ rst = ["restructuredtext_lint", "Pygments"]
 #   docutils = `docutils README.rst README.html`
 mypy = ["mypy", "typing-extensions"]
 fmt = ["ruff"]
-doc = ["sphinx", "pydata-sphinx-theme", "sphinx-autobuild"]
+docs = [
+  # base
+  "sphinx",
+  "sphinx-autobuild",
+  # theme
+  "pydata-sphinx-theme",
+  # extensions
+  "sphinx-copybutton",
+  "sphinx-design",
+  "sphinx-favicon",
+  "sphinx-togglebutton",
+  # project
+  "setuptools-scm",
+]
 # release
 build = ["rst-include", "build", "twine"]
 upload = ["twine"]
@@ -295,5 +308,31 @@ commands = [
     "-rf",
     "{toxinidir}/dist/",
     "{toxinidir}/{[project]name}.egg-info/",
+  ],
+]
+
+[tool.tox.env.docs]
+dependency_groups = ["docs"]
+commands = [
+  [
+    "sphinx-build",
+    "-M",
+    "html",
+    "{toxinidir}/docs/source",
+    "{toxinidir}/docs/build",
+    "--fail-on-warning",
+  ],
+]
+
+[tool.tox.env.docs-serve]
+dependency_groups = ["docs"]
+commands = [
+  [
+    "sphinx-autobuild",
+    "-M",
+    "html",
+    "{toxinidir}/docs/source",
+    "{toxinidir}/docs/build",
+    "--fail-on-warning",
   ],
 ]

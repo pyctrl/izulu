@@ -2,7 +2,6 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-import datetime as dtm
 from importlib import metadata
 
 # -- Project information -----------------------------------------------------
@@ -14,6 +13,7 @@ copyright = "2023-%Y, " + author
 # -- setuptools_scm ----------------------------------------------------------
 version = metadata.version(project)
 release = ".".join(version.split(".")[:3])
+
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -29,11 +29,13 @@ extensions = [
     "sphinx_favicon",
     "sphinx_togglebutton",
     # not used
-    # "sphinx.ext.napoleon",     # Support for NumPy and Google style docstrings
-    # "sphinx.ext.autodoc",      # Include documentation from docstrings  # check sphinx.ext.apidoc
+    "sphinx.ext.autodoc",      # Include documentation from docstrings  # check sphinx.ext.apidoc
+    "sphinx.ext.napoleon",     # Support for NumPy and Google style docstrings
     # "sphinx.ext.autosummary",  # Generate autodoc summaries
     # "sphinx.ext.graphviz",     # Add Graphviz graphs
 ]
+
+autosummary_generate = True
 
 exclude_patterns = []
 
@@ -47,13 +49,17 @@ html_logo = "https://repository-images.githubusercontent.com/766241795/85494614-
 templates_path = ["_templates"]
 html_static_path = ["_static"]
 html_js_files = ["_js/custom-icon.js"]
+html_sourcelink_suffix = ""
 
 html_theme_options = {
     "use_edit_page_button": True,
 
+    "show_toc_level": 2,
+
     "secondary_sidebar_items": {
-      "**": ["page-toc", "sourcelink"],
-      "index": ["globaltoc"],
+      "**/*": ["page-toc", "edit-this-page", "sourcelink"],
+      "*": ["page-toc", "edit-this-page", "sourcelink"],
+      "index": [],
     },
 
     "icon_links": [
@@ -75,6 +81,8 @@ html_theme_options = {
         },
     ],
 
+    "footer_start": ["copyright"],
+    "footer_center": ["sphinx-version"],
 }
 
 html_context = {
