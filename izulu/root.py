@@ -16,7 +16,7 @@ _IMPORT_ERROR_TEXTS = (
     "  Extra compatibility dependency required.",
     "  Please add 'izulu[compatibility]' to your project dependencies.",
     "",
-    "Pip: `pip install izulu[compatibility]",
+    "Pip: `pip install izulu[compatibility]`",
 )
 
 
@@ -57,11 +57,12 @@ def factory(
     """
     Attaches factory for dynamic default values.
 
-    :param default_factory: callable factory receiving 0 or 1 argument
-        (see `self` param)
-    :param bool self: controls callable factory argument
-        if `True` factory will receive single argument of error instance
-        otherwise factory will be invoked without argument
+    Args:
+        default_factory: callable factory receiving 0 or 1 argument
+            (see ``self`` param)
+        self: controls callable factory argument
+            if ``True`` factory will receive single argument of error instance
+            otherwise factory will be invoked without argument
     """
     target = default_factory if self else (lambda _: default_factory())
     return functools.cached_property(target)
@@ -95,33 +96,36 @@ class Error(Exception):
     """
     Base class for your exception trees.
 
-    Example:
+    Example::
+
         class MyError(root.Error):
             __template__ = "{smth} has happened at {ts}"
+
+            smth: str
             ts: root.factory(datetime.now)
 
     Provides 4 main features:
 
-      * instead of manual error message formatting (and copying it all over
-        the codebase) provide just `kwargs`:
-        - before: `raise MyError(f"{smth} has happened at {datetime.now()}")`
-        - after: `raise MyError(smth=smth)`
+    * Instead of manual error message formatting (and copying it all over
+      the codebase) provide just ``kwargs``:
 
-        Just provide `__template__` class attribute with your error message
-        template string. New style formatting is used:
-        - `str.format()`
-        - https://pyformat.info/
-        - https://docs.python.org/3/library/string.html#formatspec
+      - before: ``raise MyError(f"{smth} has happened at {datetime.now()}")``
+      - after: ``raise MyError(smth=smth)``
 
-      * Automatic `kwargs` conversion into error instance attributes
-        if such kwarg is present in type hints
-        (for example above `ts` would be an attribute and `smth` won't)
+      Just provide ``__template__`` class attribute with your error message
+      template string. New style formatting is used:
 
-      * you can attach static and dynamic default values:
-        this is why `datetime.now()` was omitted above
+      - ``str.format()``
+      - https://pyformat.info/
+      - https://docs.python.org/3/library/string.html#formatspec
 
-      * out-of-box validation for provided `kwargs`
-        (individually enable/disable checks with `__toggles__` attribute)
+    * Automatic ``kwargs`` conversion into error instance attributes
+
+    * You can attach static and dynamic default values:
+      this is why ``datetime.now()`` was omitted above
+
+    * Out-of-box validation for provided ``kwargs``
+      (individually enable/disable checks with ``__toggles__`` attribute)
 
     """
 
@@ -202,16 +206,16 @@ class Error(Exception):
         This is the place to override message/formatting if regular mechanics
         don't work for you. It has to return original or your flavored message.
         The method is invoked between izulu preparations and original
-        `Exception` constructor receiving the result of this hook.
+        ``Exception`` constructor receiving the result of this hook.
 
         You can also do any other logic here. You will be provided with
         complete set of prepared data from izulu. But it's recommended
         to use classic OOP inheritance for ordinary behaviour extension.
 
-        Params:
-          * store: dataclass containing inner error class specifications
-          * kwargs: original kwargs from user
-          * msg: formatted message from the error template
+        Args:
+            store: dataclass containing inner error class specifications
+            kwargs: original kwargs from user
+            msg: formatted message from the error template
         """
         return msg
 
@@ -248,7 +252,8 @@ class Error(Exception):
 
         By default, only *instance* data and defaults are provided.
 
-        :param bool wide: if `True` *class* defaults will be included in result
+        Args:
+            bool wide: if ``True`` *class* defaults will be included in result
         """
         d = self.__kwargs.copy()
         for field in self.__cls_store.defaults:

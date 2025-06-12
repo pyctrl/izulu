@@ -13,7 +13,7 @@ _IMPORT_ERROR_TEXTS = (
     "  Extra compatibility dependency required.",
     "  Please add 'izulu[compatibility]' to your project dependencies.",
     "",
-    "Pip: `pip install izulu[compatibility]",
+    "Pip: `pip install izulu[compatibility]`",
 )
 
 
@@ -59,6 +59,12 @@ DecReturnType = t.TypeVar("DecReturnType")
 
 
 class FatalMixin:
+    """Mark exception as non-recoverable.
+
+    Should be directly inherited. You can't inherit from fatal exception.
+    Fatal exceptions are by-passed by ``ReraisingMixin`` tools.
+    """
+
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         if FatalMixin not in cls.__bases__:
             raise TypeError("Fatal can't be indirectly inherited")
@@ -150,10 +156,40 @@ class ReraisingMixin:
         exc: Exception,
         reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
+        original_over_none: bool = False,
     ) -> t.Union[Exception, None]:
-        if reraising is None:
-            reraising_ = cls.__reraising
-        else:
+        """Return remapped exception instance.
+
+        Remapping rules:
+
+        1. if the result of remapping is to leave the original exception
+           method will return
+
+           a. ``None`` for ``original_over_none=False``,
+           b. original exception for ``original_over_none=True``.
+
+        2. early-return rule works first to abort remapping process for:
+
+           a. exception with ``FatalMixin``,
+           b. descendant exceptions for used class.
+
+        3. Default behaviour is not to remap exception.
+
+        4. Rules: ...
+
+        Args:
+            exc: original exception to be remapped
+            reraising: manual overriding reraising rules
+            remap_kwargs: provide kwargs for reraise exception
+            original_over_none: if ``True`` return original
+                                exception instead of ``None``
+
+        Returns:
+            reraising context manager
+        """
+
+        reraising_ = cls.__reraising
+        if reraising is not None:
             reraising_ = cls.__compile_rules(reraising)
 
         if (
@@ -161,6 +197,8 @@ class ReraisingMixin:
             or not reraising_
             or FatalMixin in exc.__class__.__bases__
         ):
+            if original_over_none:
+                return exc
             return None
 
         remap_kwargs = remap_kwargs or {}
@@ -181,10 +219,12 @@ class ReraisingMixin:
 
             e = rule(exc, remap_kwargs)
             if e is None:
-                return None
+                break
 
             return e
 
+        if original_over_none:
+            return exc
         return None
 
     @classmethod
@@ -194,6 +234,16 @@ class ReraisingMixin:
         reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Generator[None, None, None]:
+        """Context Manager to raise class exception over original.
+
+        Args:
+            reraising: manual overriding reraising rules
+            remap_kwargs: provide kwargs for reraise exception
+
+        Returns:
+            reraising context manager
+        """
+
         try:
             yield
         except Exception as e:
@@ -220,6 +270,8 @@ class ReraisingMixin:
         [t.Callable[DecParam, DecReturnType]],
         t.Callable[DecParam, DecReturnType],
     ]:
+        """Same as ``reraise`` but decorator."""
+
         def decorator(
             func: t.Callable[DecParam, DecReturnType],
         ) -> t.Callable[DecParam, DecReturnType]:
