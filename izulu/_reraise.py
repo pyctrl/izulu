@@ -328,3 +328,21 @@ class chain:  # noqa: N801
             err_klasses.append(kls)
 
         return cls(*err_klasses)
+
+
+# TODO
+#
+# class BaseDomainExc(excs.BaseExc):
+#     __template__ = "Unspecified domain error"
+#
+#
+# class UnexpectedDomainExc(BaseDomainExc, _reraise.FatalMixin):
+#     __reraising__ = (
+#         # Pass all another domain exceptions
+#         (BaseDomainExc, None),
+#         # Handle and reraise any another exceptions
+#         (BaseException, t.Self),
+#         (Exception, t.Self),  # ?????
+#     )
+
+# TODO: not <my|this> subtree

@@ -24,7 +24,7 @@ if hasattr(t, "dataclass_transform"):
     t_ext = t
 else:
     try:
-        import typing_extensions as t_ext  # type: ignore [no-redef]
+        import typing_extensions as t_ext  # type: ignore[no-redef]
     except ImportError:
         for message in _IMPORT_ERROR_TEXTS:
             logging.error(message)  # noqa: LOG015,TRY400
@@ -64,8 +64,39 @@ def factory(
             if ``True`` factory will receive single argument of error instance
             otherwise factory will be invoked without argument
     """
-    target = default_factory if self else (lambda _: default_factory())
-    return functools.cached_property(target)
+    return _Factory(default_factory=default_factory, provide_self=self)
+
+
+class _Factory(functools.cached_property):
+    def __init__(
+        self,
+        *,
+        default_factory: t.Callable[..., t.Any],
+        provide_self: bool = False,
+    ) -> None:
+        # TODO: validate callable(func)
+        if not callable(default_factory):
+            raise ValueError  # TODO: msg
+        self._provide_self = provide_self
+        self._factory = default_factory
+        self._method = None
+        super().__init__(self)
+
+    def __set_name__(self, owner, name):
+        self._method = getattr(owner, self._factory.__name__, None)
+        return super().__set_name__(owner, name)
+
+    def __call__(self, obj) -> t.Any:
+        if self._provide_self:
+            return self._factory(obj)
+
+        if self._provide_self is False:
+            return self._factory()
+
+        if self._factory is self._method:
+            return self._factory(obj)
+
+        return self._factory()
 
 
 class Toggles(enum.Flag):
@@ -74,6 +105,7 @@ class Toggles(enum.Flag):
     FORBID_KWARG_CONSTS = enum.auto()
     FORBID_NON_NAMED_FIELDS = enum.auto()
     FORBID_UNANNOTATED_FIELDS = enum.auto()
+    # TODO: properties in template Toggle
 
     NONE = 0
     DEFAULT = (
@@ -137,6 +169,7 @@ class Error(Exception):
         const_hints=types.MappingProxyType(dict()),
         inst_hints=types.MappingProxyType(dict()),
         consts=types.MappingProxyType(dict()),
+        # props=frozenset(),
         defaults=frozenset(),
     )
 
@@ -147,12 +180,14 @@ class Error(Exception):
         fields = frozenset(_utils.iter_fields(cls.__template__))
         const_hints, inst_hints = _utils.split_cls_hints(cls)
         consts = _utils.get_cls_defaults(cls, const_hints)
+        # props = _utils.get_cls_props(cls)
         defaults = _utils.get_cls_defaults(cls, inst_hints)
         cls.__cls_store = _utils.Store(
             fields=fields,
             const_hints=types.MappingProxyType(const_hints),
             inst_hints=types.MappingProxyType(inst_hints),
             consts=types.MappingProxyType(consts),
+            # props=frozenset(defaults),
             defaults=frozenset(defaults),
         )
         if Toggles.FORBID_NON_NAMED_FIELDS in cls.__toggles__:

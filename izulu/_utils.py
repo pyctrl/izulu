@@ -23,6 +23,7 @@ class Store:
     const_hints: types.MappingProxyType[str, type]
     inst_hints: types.MappingProxyType[str, type]
     consts: types.MappingProxyType[str, t.Any]
+    # props: t.FrozenSet[str]
     defaults: t.FrozenSet[str]
 
     registered: t.FrozenSet[str] = dataclasses.field(init=False)
@@ -103,6 +104,14 @@ def split_cls_hints(
             inst_hints[k] = v
 
     return const_hints, inst_hints
+
+
+def get_cls_props(cls: type) -> frozenset[str]:
+    return frozenset(
+        field
+        for field, value in vars(cls)
+        if isinstance(value, property)
+    )
 
 
 def get_cls_defaults(
