@@ -37,14 +37,15 @@ _T_FACTORY = t.Callable[
     t.Optional[Exception],
 ]
 _T_ACTION = t.Union[str, t.Type[Exception], _T_FACTORY, None]
+_T_RULE = t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_ACTION], ...]
 _T_RULES = t.Union[
     bool,
-    t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_ACTION], ...],  # tup, chain?
+    _T_RULE,  # tup, chain?
 ]
 _T_RERAISING = t.Union[
     None,
     bool,
-    t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_ACTION], ...],  # tup, chain?
+    _T_RULE,  # tup, chain?
 ]
 _T_COMPILED_ACTION = t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]
 _T_COMPILED_RULES = t.Union[
@@ -291,11 +292,18 @@ class ReraisingMixin:
         return decorator
 
 
-def skip(target):
+def skip(target: t.Type[Exception]) -> _T_RULE:
     return ((target, None),)
 
 
-def catch(target=Exception, *, exclude=None, new=t.Self):
+def catch(
+    target: t.Type[Exception] = Exception,
+    *,
+    exclude: t.Optional[t.Type[Exception]] = None,
+    new: t.Any = None,  # TODO(d.burmistrov): t.Self
+) -> _T_RULE:
+    if new is None:
+        new = t.Self
     rule = (target, new)
     if exclude:
         return (exclude, None), rule
