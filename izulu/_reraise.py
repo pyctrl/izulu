@@ -235,7 +235,7 @@ class ReraisingMixin:
         reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Generator[None, None, None]:
-        """Context Manager to raise class exception over original.
+        """Context Manager & Decorator to raise class exception over original.
 
         Args:
             reraising: manual overriding reraising rules
@@ -261,35 +261,6 @@ class ReraisingMixin:
             raise
 
         raise exc from orig
-
-    @classmethod
-    def rewrap(
-        cls,
-        reraising: _T_RERAISING = None,
-        remap_kwargs: t.Optional[_T_KWARGS] = None,
-    ) -> t.Callable[
-        [t.Callable[DecParam, DecReturnType]],
-        t.Callable[DecParam, DecReturnType],
-    ]:
-        """Same as ``reraise`` but decorator."""
-
-        def decorator(
-            func: t.Callable[DecParam, DecReturnType],
-        ) -> t.Callable[DecParam, DecReturnType]:
-            @functools.wraps(func)
-            def wrapped(
-                *args: DecParam.args,
-                **kwargs: DecParam.kwargs,
-            ) -> DecReturnType:
-                with cls.reraise(
-                    reraising=reraising,
-                    remap_kwargs=remap_kwargs,
-                ):
-                    return func(*args, **kwargs)
-
-            return wrapped
-
-        return decorator
 
 
 def skip(target: t.Type[Exception]) -> _T_RULE:
