@@ -291,6 +291,17 @@ class ReraisingMixin:
         return decorator
 
 
+def skip(target):
+    return ((target, None),)
+
+
+def catch(target=Exception, *, exclude=None, new=t.Self):
+    rule = (target, new)
+    if exclude:
+        return (exclude, None), rule
+    return (rule,)
+
+
 class chain:  # noqa: N801
     def __init__(self, kls: ReraisingMixin, *klasses: ReraisingMixin) -> None:
         self._klasses = (kls, *klasses)
