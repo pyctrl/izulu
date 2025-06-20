@@ -24,7 +24,7 @@ if hasattr(t, "dataclass_transform"):
     t_ext = t
 else:
     try:
-        import typing_extensions as t_ext  # type: ignore [no-redef]
+        import typing_extensions as t_ext  # type: ignore[no-redef]
     except ImportError:
         for message in _IMPORT_ERROR_TEXTS:
             logging.error(message)  # noqa: LOG015,TRY400
