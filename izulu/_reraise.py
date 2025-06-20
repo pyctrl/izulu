@@ -341,8 +341,18 @@ class chain:  # noqa: N801
 #         # Pass all another domain exceptions
 #         (BaseDomainExc, None),
 #         # Handle and reraise any another exceptions
-#         (BaseException, t.Self),
-#         (Exception, t.Self),  # ?????
+#         (BaseException, t.Self),  # ?????
+#         (Exception, t.Self),
 #     )
 
 # TODO: not <my|this> subtree
+
+def skip(target):
+    return ((target, None),)
+
+
+def catch(target=Exception, *, exclude=None, new=t.Self):
+    rule = (target, new)
+    if exclude:
+        return (exclude, None), rule
+    return (rule,)

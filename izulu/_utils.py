@@ -23,17 +23,19 @@ class Store:
     const_hints: types.MappingProxyType[str, type]
     inst_hints: types.MappingProxyType[str, type]
     consts: types.MappingProxyType[str, t.Any]
-    # props: t.FrozenSet[str]
+    props: t.FrozenSet[str]
     defaults: t.FrozenSet[str]
 
     registered: t.FrozenSet[str] = dataclasses.field(init=False)
+    valued: t.FrozenSet[str] = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
         self.registered = self.fields.union(self.inst_hints)
+        self.valued = self.props.union(self.consts, self.defaults)
 
 
 def check_missing_fields(store: Store, kws: t.FrozenSet[str]) -> None:
-    missing = store.registered.difference(store.defaults, store.consts, kws)
+    missing = store.registered.difference(kws)
     if missing:
         raise TypeError(f"Missing arguments: {join_items(missing)}")
 
@@ -60,7 +62,12 @@ def check_non_named_fields(store: Store) -> None:
 
 
 def check_unannotated_fields(store: Store) -> None:
-    unannotated = store.fields - set(store.const_hints) - set(store.inst_hints)
+    unannotated = (
+        store.fields
+        - set(store.const_hints)
+        - set(store.props)
+        - set(store.inst_hints)
+    )
     if unannotated:
         msg = f"Fields must be annotated: {join_items(unannotated)}"
         raise ValueError(msg)
@@ -106,10 +113,10 @@ def split_cls_hints(
     return const_hints, inst_hints
 
 
-def get_cls_props(cls: type) -> frozenset[str]:
+def get_cls_prop_names(cls: type) -> frozenset[str]:
     return frozenset(
         field
-        for field, value in vars(cls)
+        for field, value in vars(cls).items()
         if isinstance(value, property)
     )
 

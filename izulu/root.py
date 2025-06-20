@@ -52,7 +52,7 @@ def factory(  # noqa: UP047
 def factory(
     *,
     default_factory: t.Callable[..., t.Any],
-    self: bool = False,
+    self: bool | None = None,
 ) -> t.Any:
     """
     Attaches factory for dynamic default values.
@@ -72,7 +72,7 @@ class _Factory(functools.cached_property):
         self,
         *,
         default_factory: t.Callable[..., t.Any],
-        provide_self: bool = False,
+        provide_self: bool | None,
     ) -> None:
         # TODO: validate callable(func)
         if not callable(default_factory):
@@ -169,7 +169,7 @@ class Error(Exception):
         const_hints=types.MappingProxyType(dict()),
         inst_hints=types.MappingProxyType(dict()),
         consts=types.MappingProxyType(dict()),
-        # props=frozenset(),
+        props=frozenset(),
         defaults=frozenset(),
     )
 
@@ -180,14 +180,14 @@ class Error(Exception):
         fields = frozenset(_utils.iter_fields(cls.__template__))
         const_hints, inst_hints = _utils.split_cls_hints(cls)
         consts = _utils.get_cls_defaults(cls, const_hints)
-        # props = _utils.get_cls_props(cls)
+        props = _utils.get_cls_prop_names(cls)
         defaults = _utils.get_cls_defaults(cls, inst_hints)
         cls.__cls_store = _utils.Store(
             fields=fields,
             const_hints=types.MappingProxyType(const_hints),
             inst_hints=types.MappingProxyType(inst_hints),
             consts=types.MappingProxyType(consts),
-            # props=frozenset(defaults),
+            props=frozenset(props),
             defaults=frozenset(defaults),
         )
         if Toggles.FORBID_NON_NAMED_FIELDS in cls.__toggles__:
@@ -199,7 +199,10 @@ class Error(Exception):
         self.__kwargs = kwargs.copy()
         self.__process_toggles()
         self.__populate_attrs()
-        msg = self.__process_template(self.as_dict())
+        msg = _utils.format_template(
+            self.__template__,
+            self.as_dict(wide=True),
+        )
         msg = self._override_message(self.__cls_store, kwargs, msg)
         super().__init__(msg)
 
@@ -222,12 +225,6 @@ class Error(Exception):
         for k, v in self.__kwargs.items():
             if k in self.__cls_store.inst_hints:
                 setattr(self, k, v)
-
-    def __process_template(self, data: t.Dict[str, t.Any]) -> str:
-        """Format the error template from provided data (kwargs & defaults)."""
-        kwargs = self.__cls_store.consts.copy()
-        kwargs.update(data)
-        return _utils.format_template(self.__template__, kwargs)
 
     def _override_message(  # noqa: PLR6301
         self,
@@ -293,7 +290,11 @@ class Error(Exception):
         d = self.__kwargs.copy()
         for field in self.__cls_store.defaults:
             d.setdefault(field, getattr(self, field))
-        if wide:
-            for field, const in self.__cls_store.consts.items():
-                d.setdefault(field, const)
+        if not wide:
+            return d
+
+        for field in self.__cls_store.props:
+            d.setdefault(field, getattr(self, field))
+        for field, const in self.__cls_store.consts.items():
+            d.setdefault(field, const)
         return d
