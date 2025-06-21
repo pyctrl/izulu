@@ -7,7 +7,6 @@ import types
 import typing as t
 
 from izulu import _utils
-from izulu import causes
 
 
 if hasattr(t, "dataclass_transform"):
@@ -20,6 +19,22 @@ else:
         raise
 
 FactoryReturnType = t.TypeVar("FactoryReturnType")
+
+
+def iterate_causes(
+    exc: BaseException,
+    *,
+    self: bool = False,
+) -> t.Generator[BaseException, None, None]:
+    """Returns iterator over all exception chain."""
+
+    if self:
+        yield exc
+    cause = exc.__cause__
+    while cause is not None:
+        yield cause
+        exc = cause
+        cause = exc.__cause__
 
 
 @t.overload
@@ -161,7 +176,7 @@ class Error(Exception):
         defaults=frozenset(),
     )
 
-    iter_causes = causes.iterate_causes
+    iter_causes = iterate_causes
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
