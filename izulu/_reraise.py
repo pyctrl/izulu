@@ -86,9 +86,6 @@ class ReraisingMixin:
                 provide kwargs for reraise exception
             or_original:
                 if ``True`` return original exception instead of ``None``
-
-        Returns:
-            ...
         """
 
         kls = t.cast(_t.EXC_CLS, cls)
