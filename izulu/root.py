@@ -301,7 +301,7 @@ class Error(Exception):
         return f"{self.__class__.__qualname__}: {self}"
 
     def as_kwargs(self) -> t.Dict[str, t.Any]:
-        """Return the copy of original kwargs used to initialize the error."""
+        """Return a shallow copy of the original kwargs."""
         return self.__kwargs.copy()
 
     def as_dict(self, *, wide: bool = False) -> t.Dict[str, t.Any]:
