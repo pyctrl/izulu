@@ -54,7 +54,7 @@ class Store:
         self.valued = self.props.union(self.consts, self.defaults)
 
 
-def check_missing_fields(store: Store, kws: t.FrozenSet[str]) -> None:
+def check_missing_fields(store: Store, kws: t.Iterable[str]) -> None:
     """Raise if kwargs missing required field."""
     missing = store.declared.difference(store.valued, kws)
     if missing:

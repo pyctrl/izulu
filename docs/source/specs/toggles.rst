@@ -10,36 +10,6 @@ see **Validation and behavior in case of problems** below)
 Supported toggles
 -----------------
 
-* ``FORBID_MISSING_FIELDS``: checks provided ``kwargs`` contain data for all template *"fields"*
-  and *"instance attributes"* that have no *"defaults"*
-
-  * always should be enabled (provides consistent and detailed ``TypeError`` exceptions
-    for appropriate arguments)
-  * if disabled raw exceptions from ``izulu`` machinery internals could appear
-
-  =======  =============
-   Stage      Raises
-  =======  =============
-  runtime  ``TypeError``
-  =======  =============
-
-.. code-block:: python
-
-    class AmountError(Error):
-        __template__ = "Some {amount} of money for {client_id} client"
-        amount: int
-        client_id: int
-
-    # I. enabled
-    AmountError()
-    # TypeError: Missing arguments: client_id, amount
-
-    # II. disabled
-    AmountError.__toggles__ ^= Toggles.FORBID_MISSING_FIELDS
-
-    AmountError()
-    # ValueError: Failed to format template with provided kwargs:
-
 * ``FORBID_UNDECLARED_FIELDS``: forbids undefined arguments in provided ``kwargs``
   (names not present in template *"fields"* and *"instance/class hints"*)
 
@@ -81,39 +51,6 @@ Supported toggles
   =======  =============
   runtime  ``TypeError``
   =======  =============
-
-.. code-block:: python
-
-    class MyError(Error):
-        __template__ = "My error occurred {_TYPE}"
-        _TYPE: ClassVar[str]
-
-    # I. enabled
-    MyError(_TYPE="SOME_ERROR_TYPE")
-    # TypeError: Constants in arguments: _TYPE
-
-    # II. disabled
-    MyError.__toggles__ ^= Toggles.FORBID_KWARG_CONSTS
-    err = MyError(_TYPE="SOME_ERROR_TYPE")
-
-    print(err)
-    # My error occurred SOME_ERROR_TYPE
-    print(repr(err))
-    # __main__.MyError(_TYPE='SOME_ERROR_TYPE')
-    err._TYPE
-    # AttributeError: 'MyError' object has no attribute '_TYPE'
-
-* ``FORBID_NON_NAMED_FIELDS``: forbids empty and digit field names in ``__template__``
-
-  * if disabled validation (runtime issues)
-  * ``izulu`` relies on ``kwargs`` and named fields
-  * by default it's forbidden to provide empty (``{}``) and digit (``{0}``) fields in ``__template__``
-
-  ================  ==============
-   Stage               Raises
-  ================  ==============
-  class definition  ``ValueError``
-  ================  ==============
 
 .. code-block:: python
 

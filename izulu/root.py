@@ -98,34 +98,50 @@ class _Factory(functools.cached_property):  # type: ignore[type-arg]
 
 
 class Toggles(enum.Flag):
-    """."""
-
-    FORBID_MISSING_FIELDS = enum.auto()
-    """."""
+    """Controls ``izulu`` behavior with flags."""
 
     FORBID_UNDECLARED_FIELDS = enum.auto()
-    """."""
+    """Handling undeclared fields.
+
+    **Enabled**
+        forbids undeclared fields in provided ``kwargs``
+
+    **Disabled**
+        allows and **completely ignores** unknown data in ``kwargs``
+    """
 
     FORBID_KWARG_CONSTS = enum.auto()
-    """."""
+    """Handling non-instance fields in ``kwargs``.
 
-    FORBID_NON_NAMED_FIELDS = enum.auto()
-    """."""
+    **Enabled**
+        forbids ``ClassVar``/``Final`` fields in ``kwargs``
+
+    **Disabled**
+        allows to overlap class attributes values with ``kwargs`` data
+        during template formatting
+        (overlapping data won't modify class values)
+    """
 
     FORBID_UNANNOTATED_FIELDS = enum.auto()
-    """."""
+    """Handling unannotated fields.
+
+    **Enabled**
+        forbids unannotated fields in template
+
+    **Disabled**
+        ``kwargs`` fields without annotations will be used
+         during template formatting
+    """
 
     NONE = 0
-    """."""
+    """All toggles disabled."""
 
     DEFAULT = (
-        FORBID_MISSING_FIELDS
-        | FORBID_UNDECLARED_FIELDS
+        FORBID_UNDECLARED_FIELDS
         | FORBID_KWARG_CONSTS
-        | FORBID_NON_NAMED_FIELDS
         | FORBID_UNANNOTATED_FIELDS
     )
-    """."""
+    """All toggles enabled."""
 
 
 @t_ext.dataclass_transform(
@@ -145,7 +161,7 @@ class Error(Exception):
             __template__ = "{smth} has happened at {ts}"
 
             smth: str
-            ts: root.factory(datetime.now)
+            ts: root.factory(default_factory=datetime.now)
 
     Provides 4 main features:
 
@@ -199,12 +215,12 @@ class Error(Exception):
             props=frozenset(props),
             defaults=frozenset(defaults),
         )
-        if Toggles.FORBID_NON_NAMED_FIELDS in cls.__toggles__:
-            _utils.check_non_named_fields(cls.__cls_store)
+        _utils.check_non_named_fields(cls.__cls_store)
         if Toggles.FORBID_UNANNOTATED_FIELDS in cls.__toggles__:
             _utils.check_unannotated_fields(cls.__cls_store)
 
     def __init__(self, **kwargs: t.Any) -> None:  # noqa: ANN401
+        _utils.check_missing_fields(self.__cls_store, kwargs.keys())
         self.__kwargs = kwargs.copy()
         self.__process_toggles()
         self.__populate_attrs()
@@ -219,9 +235,6 @@ class Error(Exception):
         """Trigger toggles."""
         store = self.__cls_store
         kws = frozenset(self.__kwargs)
-
-        if Toggles.FORBID_MISSING_FIELDS in self.__toggles__:
-            _utils.check_missing_fields(store, kws)
 
         if Toggles.FORBID_UNDECLARED_FIELDS in self.__toggles__:
             _utils.check_undeclared_fields(store, kws)

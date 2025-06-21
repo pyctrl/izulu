@@ -162,7 +162,13 @@ def test_instantiate_fail(kls, kwargs):
         (errors.ClassVarsError, dict(name="John"), dict(name="John", age=42)),
         (
             errors.MixedError,
-            dict(name="John", surname="Brown", updated_at=TS, timestamp=TS),
+            dict(
+                name="John",
+                surname="Brown",
+                updated_at=TS,
+                timestamp=TS,
+                note="...",
+            ),
             dict(
                 name="John",
                 surname="Brown",
@@ -171,22 +177,19 @@ def test_instantiate_fail(kls, kwargs):
                 entity="The Entity",
                 updated_at=TS,
                 timestamp=TS,
-            ),
-        ),
-        (
-            errors.MixedError,
-            dict(updated_at=TS, timestamp=TS),
-            dict(
-                age=0,
-                my_type="MixedError",
-                entity="The Entity",
-                updated_at=TS,
-                timestamp=TS,
+                note="...",
             ),
         ),
         (
             errors.DerivedError,
-            dict(name="John", surname="Brown", updated_at=TS, timestamp=TS),
+            dict(
+                name="John",
+                surname="Brown",
+                updated_at=TS,
+                timestamp=TS,
+                note="...",
+                box={},
+            ),
             dict(
                 name="John",
                 surname="Brown",
@@ -197,6 +200,8 @@ def test_instantiate_fail(kls, kwargs):
                 location=(50.3, 3.608),
                 updated_at=TS,
                 timestamp=TS,
+                note="...",
+                box={},
             ),
         ),
     ],

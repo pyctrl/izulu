@@ -11,10 +11,6 @@ TS = datetime.datetime.now(datetime.timezone.utc)
 @pytest.mark.parametrize(
     "kwargs",
     [
-        dict(),
-        dict(name="John"),
-        dict(age=42),
-        dict(name="John", age=42),
         dict(name="John", age=42, ts=53452345.3465),
         dict(name="John", age="Karl", ts=TS),
     ],
