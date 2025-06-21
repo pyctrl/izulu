@@ -8,6 +8,15 @@ import typing as t
 
 from izulu import _utils
 
+CONST = 42  #: line comment
+
+#: pre comment
+CONST2 = 42
+
+CONST3 = 42
+"""asdasdasd"""
+
+
 FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 if hasattr(t, "dataclass_transform"):
@@ -103,10 +112,15 @@ class _Factory(functools.cached_property):  # type: ignore[type-arg]
 
 
 class Toggles(enum.Flag):
+    # это ...
     FORBID_MISSING_FIELDS = enum.auto()
+    # это ...
     FORBID_UNDECLARED_FIELDS = enum.auto()
+    # это ...
     FORBID_KWARG_CONSTS = enum.auto()
+    # это ...
     FORBID_NON_NAMED_FIELDS = enum.auto()
+    # это ...
     FORBID_UNANNOTATED_FIELDS = enum.auto()
 
     NONE = 0
@@ -180,9 +194,9 @@ class Error(Exception):
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
         fields = frozenset(_utils.iter_fields(cls.__template__))
+        props = _utils.get_cls_prop_names(cls)
         const_hints, inst_hints = _utils.split_cls_hints(cls)
         consts = _utils.get_cls_defaults(cls, const_hints)
-        props = _utils.get_cls_prop_names(cls)
         defaults = _utils.get_cls_defaults(cls, inst_hints)
         cls.__cls_store = _utils.Store(
             fields=fields,

@@ -47,14 +47,28 @@ _FORMATTER = string.Formatter()
 @dataclasses.dataclass
 class Store:
     fields: t.FrozenSet[str]
+    """Template fields."""
+
     const_hints: types.MappingProxyType[str, type]
+    """Mapping attribute names to their hints with ``ClassVar`` mark."""
+
     inst_hints: types.MappingProxyType[str, type]
-    consts: types.MappingProxyType[str, t.Any]
+    """Mapping attribute names to their hints without ``ClassVar`` mark."""
+
     props: t.FrozenSet[str]
+    """Property attribute names."""
+
+    consts: types.MappingProxyType[str, t.Any]
+    """Mapping ``ClassVar``/``Final`` attribute names to their values."""
+
     defaults: t.FrozenSet[str]
+    """Mapping attribute names to their values without ``ClassVar`` mark."""
 
     registered: t.FrozenSet[str] = dataclasses.field(init=False)
+    """Attribute names that already have values."""
+
     valued: t.FrozenSet[str] = dataclasses.field(init=False)
+    """Attribute names that already have values."""
 
     def __post_init__(self) -> None:
         self.registered = self.fields.union(self.inst_hints)
@@ -62,12 +76,14 @@ class Store:
 
 
 def check_missing_fields(store: Store, kws: t.FrozenSet[str]) -> None:
+    """Raise on ..."""
     missing = store.registered.difference(kws)
     if missing:
         raise TypeError(f"Missing arguments: {join_items(missing)}")
 
 
 def check_undeclared_fields(store: Store, kws: t.FrozenSet[str]) -> None:
+    """Raise on ..."""
     undeclared = kws.difference(store.registered, store.const_hints)
     if undeclared:
         raise TypeError(f"Undeclared arguments: {join_items(undeclared)}")
@@ -117,22 +133,34 @@ def format_template(template: str, kwargs: t.Dict[str, t.Any]) -> str:
 
 
 def iter_fields(template: str) -> t.Generator[str, None, None]:
+    """Extract fields from the template."""
+
     # https://docs.python.org/3/library/string.html#format-string-syntax
     for _, fn, _, _ in _FORMATTER.parse(template):
         if fn is not None:
             yield _string.formatter_field_name_split(fn)[0]
 
 
+# TODO(d.burmistrov): t.Final? t.Literal?
 def split_cls_hints(
     cls: type,
 ) -> t.Tuple[t.Dict[str, type], t.Dict[str, type]]:
+    """Split class annotations into class and non-class hints.
+
+    The criterion is based on presence or absence
+    of ``ClassVar``/``Final`` marks.
+    """
     const_hints: t.Dict[str, type] = {}
     inst_hints: t.Dict[str, type] = {}
 
     for k, v in t.get_type_hints(cls).items():
         if k in _IZULU_ATTRS:
             continue
-        if t.get_origin(v) is t.ClassVar:
+
+        hint = t.get_origin(v)
+        if hint is t.ClassVar:
+            const_hints[k] = v
+        elif hint is t.Final:
             const_hints[k] = v
         else:
             inst_hints[k] = v
@@ -152,6 +180,7 @@ def get_cls_defaults(
     cls: type,
     attrs: t.Iterable[str],
 ) -> t.Dict[str, t.Any]:
+    """Create a mapping for attributes that have values."""
     return {attr: getattr(cls, attr) for attr in attrs if hasattr(cls, attr)}
 
 

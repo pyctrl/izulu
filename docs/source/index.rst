@@ -26,5 +26,5 @@ izulu documentation
 
           user/index
           specs/index
-          ref
+          ref/index
           contributors
