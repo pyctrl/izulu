@@ -20,7 +20,7 @@ if hasattr(t, "dataclass_transform"):
     t_ext = t
 else:
     try:
-        import typing_extensions as t_ext  # type: ignore [no-redef]
+        import typing_extensions as t_ext  # type: ignore[no-redef]
     except ImportError:
         for message in _IMPORT_ERROR_TEXTS:
             logging.error(message)  # noqa: LOG015,TRY400
@@ -104,10 +104,7 @@ class ReraisingMixin:
             ) -> t.Optional[Exception]:
                 return None
 
-        elif (
-            action is getattr(t, "Self", _MISSING)
-            or action == cls.__qualname__
-        ):
+        elif action is t_ext.Self:
 
             def compiled_action(
                 orig: Exception,  # noqa: ARG001
@@ -270,10 +267,8 @@ def catch(
     target: t.Type[Exception] = Exception,
     *,
     exclude: t.Optional[t.Type[Exception]] = None,
-    new: t.Any = None,  # TODO(d.burmistrov): t.Self
+    new: t.Any = t_ext.Self,
 ) -> _T_RULE:
-    if new is None:
-        new = t.Self
     rule = (target, new)
     if exclude:
         return (exclude, None), rule
