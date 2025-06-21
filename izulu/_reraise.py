@@ -136,7 +136,7 @@ class ReraisingMixin:
             remap_kwargs: provide kwargs for reraise exception
 
         Returns:
-            reraising context manager
+            reraising Context Manager & Decorator
         """
 
         try:
