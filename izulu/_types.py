@@ -11,7 +11,7 @@ EXC_CLS = t.Type[Exception]
 EXC_MATCH = t.Union[EXC_CLS, t.Tuple[EXC_CLS, ...]]
 
 USER_FN = t.Callable[[EXC_CLS, Exception, KWARGS], MAYBE_EXC]
-ACTION = t.Union[EXC_CLS, USER_FN, None]  # TODO(d.burmistrov): t.Self
+ACTION = t.Union[EXC_CLS, USER_FN, None, t._SpecialForm]
 
 RULE = t.Tuple[EXC_MATCH, ACTION]
 RULES = t.Tuple[RULE, ...]

@@ -18,9 +18,6 @@ else:
 
 _MISSING = object()
 
-DecParam = t_ext.ParamSpec("DecParam")
-DecReturnType = t.TypeVar("DecReturnType")
-
 
 class FatalMixin:
     """Mark exception as non-recoverable.
@@ -39,6 +36,12 @@ class ReraisingMixin:
     """
 
     Rules...
+
+    ``__reraising__`` values and meaning:
+      - ``False``: bypass original exception; no remapping
+      - ``True``: force and always
+    __reraising__ = tuple()
+    __reraising__ = tuple((Exception, t.Self))
     """
     __reraising__: _t.RERAISING = False
 
@@ -171,7 +174,7 @@ def catch(
     match: _t.EXC_CLS = Exception,
     *,
     exclude: t.Optional[_t.EXC_CLS] = None,
-    new: t.Any = t_ext.Self,
+    new: _t.ACTION = t_ext.Self,
 ) -> _t.RULES:
     """Make rules to bypass excluded exceptions and remap matched."""
     rule = (match, new)
@@ -180,7 +183,7 @@ def catch(
     return (exclude, None), rule
 
 
-class chain:  # noqa: N801
+class _chain:  # noqa: N801
     def __init__(self, kls: ReraisingMixin, *klasses: ReraisingMixin) -> None:
         self._klasses = (kls, *klasses)
 

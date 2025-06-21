@@ -172,7 +172,7 @@ class ReraiseHandler:
 
         if action is None:
             self._handler = self.__action_is_none
-        elif action is t_ext.Self:  # type: ignore[comparison-overlap]
+        elif action is t_ext.Self:
             self._handler = self.__action_is_self
         elif isinstance(action, type) and issubclass(action, Exception):
             self._handler = self.__action_is_exc_cls
