@@ -1,4 +1,3 @@
-# noqa
 import logging
 import typing as t
 
