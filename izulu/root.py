@@ -3,21 +3,11 @@ from __future__ import annotations
 import copy
 import enum
 import functools
-import logging
 import types
 import typing as t
 
 from izulu import _utils
 from izulu import causes
-
-_IMPORT_ERROR_TEXTS = (
-    "",
-    "You have early version of Python.",
-    "  Extra compatibility dependency required.",
-    "  Please add 'izulu[compatibility]' to your project dependencies.",
-    "",
-    "Pip: `pip install izulu[compatibility]`",
-)
 
 
 if hasattr(t, "dataclass_transform"):
@@ -26,8 +16,7 @@ else:
     try:
         import typing_extensions as t_ext  # type: ignore[no-redef]
     except ImportError:
-        for message in _IMPORT_ERROR_TEXTS:
-            logging.error(message)  # noqa: LOG015,TRY400
+        _utils.log_import_error()
         raise
 
 FactoryReturnType = t.TypeVar("FactoryReturnType")
@@ -52,7 +41,7 @@ def factory(  # noqa: UP047
 def factory(
     *,
     default_factory: t.Callable[..., t.Any],
-    self: bool = False,
+    self: bool | None = None,
 ) -> t.Any:
     """
     Attaches factory for dynamic default values.
@@ -64,8 +53,39 @@ def factory(
             if ``True`` factory will receive single argument of error instance
             otherwise factory will be invoked without argument
     """
-    target = default_factory if self else (lambda _: default_factory())
-    return functools.cached_property(target)
+    return _Factory(default_factory=default_factory, provide_self=self)
+
+
+class _Factory(functools.cached_property):  # type: ignore[type-arg]
+    def __init__(
+        self,
+        *,
+        default_factory: t.Callable[..., t.Any],
+        provide_self: bool | None,
+    ) -> None:
+        # TODO(d.burmistrov): validate callable(func)
+        if not callable(default_factory):
+            raise ValueError  # TODO(d.burmistrov): msg
+        self._provide_self = provide_self
+        self._factory = default_factory
+        self._method = None
+        super().__init__(self)
+
+    def __set_name__(self, owner: type, name: str) -> None:
+        self._method = getattr(owner, self._factory.__name__, None)
+        return super().__set_name__(owner, name)
+
+    def __call__(self, obj: t.Any) -> t.Any:
+        if self._provide_self:
+            return self._factory(obj)
+
+        if self._provide_self is False:
+            return self._factory()
+
+        if self._factory is self._method:
+            return self._factory(obj)
+
+        return self._factory()
 
 
 class Toggles(enum.Flag):
@@ -137,6 +157,7 @@ class Error(Exception):
         const_hints=types.MappingProxyType(dict()),
         inst_hints=types.MappingProxyType(dict()),
         consts=types.MappingProxyType(dict()),
+        props=frozenset(),
         defaults=frozenset(),
     )
 
@@ -147,12 +168,14 @@ class Error(Exception):
         fields = frozenset(_utils.iter_fields(cls.__template__))
         const_hints, inst_hints = _utils.split_cls_hints(cls)
         consts = _utils.get_cls_defaults(cls, const_hints)
+        props = _utils.get_cls_prop_names(cls)
         defaults = _utils.get_cls_defaults(cls, inst_hints)
         cls.__cls_store = _utils.Store(
             fields=fields,
             const_hints=types.MappingProxyType(const_hints),
             inst_hints=types.MappingProxyType(inst_hints),
             consts=types.MappingProxyType(consts),
+            props=frozenset(props),
             defaults=frozenset(defaults),
         )
         if Toggles.FORBID_NON_NAMED_FIELDS in cls.__toggles__:
@@ -164,7 +187,10 @@ class Error(Exception):
         self.__kwargs = kwargs.copy()
         self.__process_toggles()
         self.__populate_attrs()
-        msg = self.__process_template(self.as_dict())
+        msg = _utils.format_template(
+            self.__template__,
+            self.as_dict(wide=True),
+        )
         msg = self._override_message(self.__cls_store, kwargs, msg)
         super().__init__(msg)
 
@@ -187,12 +213,6 @@ class Error(Exception):
         for k, v in self.__kwargs.items():
             if k in self.__cls_store.inst_hints:
                 setattr(self, k, v)
-
-    def __process_template(self, data: t.Dict[str, t.Any]) -> str:
-        """Format the error template from provided data (kwargs & defaults)."""
-        kwargs = self.__cls_store.consts.copy()
-        kwargs.update(data)
-        return _utils.format_template(self.__template__, kwargs)
 
     def _override_message(  # noqa: PLR6301
         self,
@@ -258,7 +278,11 @@ class Error(Exception):
         d = self.__kwargs.copy()
         for field in self.__cls_store.defaults:
             d.setdefault(field, getattr(self, field))
-        if wide:
-            for field, const in self.__cls_store.consts.items():
-                d.setdefault(field, const)
+        if not wide:
+            return d
+
+        for field in self.__cls_store.props:
+            d.setdefault(field, getattr(self, field))
+        for field, const in self.__cls_store.consts.items():
+            d.setdefault(field, const)
         return d

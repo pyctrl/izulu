@@ -2,9 +2,36 @@ from __future__ import annotations
 
 import _string  # type: ignore[import-not-found]
 import dataclasses
+import logging
 import string
 import types
 import typing as t
+
+from izulu import _types as _t
+
+_IMPORT_ERROR_TEXT = (
+    "",
+    "You have early version of Python.",
+    "  Extra compatibility dependency required.",
+    "  Please add 'izulu[compatibility]' to your project dependencies.",
+    "",
+    "Pip: `pip install izulu[compatibility]`",
+)
+
+
+def log_import_error() -> None:
+    for message in _IMPORT_ERROR_TEXT:
+        logging.error(message)  # noqa: LOG015,TRY400
+
+
+if hasattr(t, "dataclass_transform"):
+    t_ext = t
+else:
+    try:
+        import typing_extensions as t_ext  # type: ignore[no-redef]
+    except ImportError:
+        log_import_error()
+        raise
 
 _IZULU_ATTRS = {
     "__template__",
@@ -23,16 +50,19 @@ class Store:
     const_hints: types.MappingProxyType[str, type]
     inst_hints: types.MappingProxyType[str, type]
     consts: types.MappingProxyType[str, t.Any]
+    props: t.FrozenSet[str]
     defaults: t.FrozenSet[str]
 
     registered: t.FrozenSet[str] = dataclasses.field(init=False)
+    valued: t.FrozenSet[str] = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
         self.registered = self.fields.union(self.inst_hints)
+        self.valued = self.props.union(self.consts, self.defaults)
 
 
 def check_missing_fields(store: Store, kws: t.FrozenSet[str]) -> None:
-    missing = store.registered.difference(store.defaults, store.consts, kws)
+    missing = store.registered.difference(kws)
     if missing:
         raise TypeError(f"Missing arguments: {join_items(missing)}")
 
@@ -59,7 +89,12 @@ def check_non_named_fields(store: Store) -> None:
 
 
 def check_unannotated_fields(store: Store) -> None:
-    unannotated = store.fields - set(store.const_hints) - set(store.inst_hints)
+    unannotated = (
+        store.fields
+        - set(store.const_hints)
+        - set(store.props)
+        - set(store.inst_hints)
+    )
     if unannotated:
         msg = f"Fields must be annotated: {join_items(unannotated)}"
         raise ValueError(msg)
@@ -105,6 +140,14 @@ def split_cls_hints(
     return const_hints, inst_hints
 
 
+def get_cls_prop_names(cls: type) -> frozenset[str]:
+    return frozenset(
+        field
+        for field, value in vars(cls).items()
+        if isinstance(value, property)
+    )
+
+
 def get_cls_defaults(
     cls: type,
     attrs: t.Iterable[str],
@@ -120,3 +163,72 @@ def traverse_tree(cls: type) -> t.Generator[type, None, None]:
         discovered.append(item)
         workload.extend(item.__subclasses__())
     yield from discovered
+
+
+class ReraiseHandler:
+    def __init__(self, match: _t.EXC_MATCH, action: _t.ACTION) -> None:
+        self.match = match
+        self._orig = action
+
+        if action is None:
+            self._handler = self.__action_is_none
+        elif action is t_ext.Self:  # type: ignore[comparison-overlap]
+            self._handler = self.__action_is_self
+        elif isinstance(action, type) and issubclass(action, Exception):
+            self._handler = self.__action_is_exc_cls
+        elif callable(action):
+            self._handler = self.__action_is_user_fn
+        else:
+            raise ValueError(f"Unsupported action: {action}")
+
+    def __call__(
+        self,
+        handler_cls: _t.EXC_CLS,
+        exc: Exception,
+        map_kwargs: _t.KWARGS,
+    ) -> _t.MAYBE_EXC:
+        return self._handler(handler_cls, exc, map_kwargs)
+
+    def __action_is_none(
+        self,
+        handler_cls: _t.EXC_CLS,
+        exc: Exception,
+        map_kwargs: _t.KWARGS,
+    ) -> _t.MAYBE_EXC:
+        return None
+
+    def __action_is_self(
+        self,
+        handler_cls: _t.EXC_CLS,
+        exc: Exception,
+        map_kwargs: _t.KWARGS,
+    ) -> _t.MAYBE_EXC:
+        return handler_cls(**map_kwargs)
+
+    def __action_is_exc_cls(
+        self,
+        handler_cls: _t.EXC_CLS,
+        exc: Exception,
+        map_kwargs: _t.KWARGS,
+    ) -> _t.MAYBE_EXC:
+        exc_cls = t.cast(_t.EXC_CLS, self._orig)
+        return exc_cls(**map_kwargs)
+
+    def __action_is_user_fn(
+        self,
+        handler_cls: _t.EXC_CLS,
+        exc: Exception,
+        map_kwargs: _t.KWARGS,
+    ) -> _t.MAYBE_EXC:
+        fn = t.cast(_t.USER_FN, self._orig)
+        return fn(handler_cls, exc, map_kwargs)
+
+    @classmethod
+    def factory(
+        cls,
+        reraising: _t.RERAISING,
+    ) -> t.Union[bool, tuple[t_ext.Self, ...]]:
+        if isinstance(reraising, bool):
+            return reraising
+
+        return tuple(cls(*r) for r in reraising)
