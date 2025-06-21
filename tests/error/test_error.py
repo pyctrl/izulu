@@ -12,33 +12,26 @@ TS = datetime.datetime.now(datetime.timezone.utc)
 
 
 @mock.patch("izulu.root.Error._override_message")
-@mock.patch("izulu.root.Error._Error__process_template")
 @mock.patch("izulu.root.Error._Error__populate_attrs")
 @mock.patch("izulu.root.Error._Error__process_toggles")
 def test_init(
     fake_proc_ftrs,
     fake_set_attrs,
-    fake_proc_tpl,
     fake_override_message,
 ):
-    fake_proc_tpl.return_value = errors.RootError.__template__
     overriden_message = "overriden message"
     fake_override_message.return_value = overriden_message
     store = errors.RootError._Error__cls_store
     manager = mock.Mock()
     manager.attach_mock(fake_proc_ftrs, "fake_proc_ftrs")
     manager.attach_mock(fake_set_attrs, "fake_set_attrs")
-    manager.attach_mock(fake_proc_tpl, "fake_proc_tpl")
     manager.attach_mock(fake_override_message, "fake_override_message")
     fake_override_message_call = mock.call.fake_override_message(
-        store,
-        {},
-        errors.RootError.__template__,
+        store, {}, errors.RootError.__template__
     )
     expected_calls = [
         mock.call.fake_proc_ftrs(),
         mock.call.fake_set_attrs(),
-        mock.call.fake_proc_tpl({}),
         fake_override_message_call,
     ]
 
@@ -239,6 +232,7 @@ def test_constants():
     assert e.__toggles__ == toggles
     assert e._Error__cls_store == _utils.Store(
         fields=frozenset(),
+        props=frozenset(),
         const_hints=types.MappingProxyType(dict()),
         inst_hints=types.MappingProxyType(dict()),
         consts=types.MappingProxyType(dict()),

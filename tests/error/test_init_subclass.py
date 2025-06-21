@@ -124,8 +124,8 @@ def test_cls_store(kls, fields, hints, registered, defaults, consts):
     assert store.fields == fields
     assert type(store.inst_hints) is type(hints)
     assert store.inst_hints == hints
-    assert type(store.registered) is type(registered)
-    assert store.registered == registered
+    assert type(store.declared) is type(registered)
+    assert store.declared == registered
     assert type(store.defaults) is type(defaults)
     assert store.defaults == defaults
     assert type(store.consts) is type(consts)

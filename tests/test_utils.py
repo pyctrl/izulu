@@ -41,7 +41,7 @@ dt = datetime.datetime.now(datetime.timezone.utc)
     ],
 )
 def test_store_post_init(kwargs, expected):
-    assert _utils.Store(**kwargs).registered == expected
+    assert _utils.Store(**kwargs).declared == expected
 
 
 @pytest.mark.parametrize(

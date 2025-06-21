@@ -5,28 +5,14 @@ import enum
 import functools
 import types
 import typing as t
+try:
+    import typing_extensions as t_ext
+except ImportError:
+    t_ext: types.ModuleType = t  # type: ignore[no-redef]
 
 from izulu import _utils
 
-CONST = 42  #: line comment
-
-#: pre comment
-CONST2 = 42
-
-CONST3 = 42
-"""asdasdasd"""
-
-
 FactoryReturnType = t.TypeVar("FactoryReturnType")
-
-if hasattr(t, "dataclass_transform"):
-    t_ext = t
-else:
-    try:
-        import typing_extensions as t_ext  # type: ignore[no-redef]
-    except ImportError:
-        _utils.log_import_error()
-        raise
 
 
 def iterate_causes(
@@ -35,9 +21,9 @@ def iterate_causes(
     self: bool = False,
 ) -> t.Generator[BaseException, None, None]:
     """Returns iterator over all exception chain."""
-
     if self:
         yield exc
+
     cause = exc.__cause__
     while cause is not None:
         yield cause
@@ -112,18 +98,26 @@ class _Factory(functools.cached_property):  # type: ignore[type-arg]
 
 
 class Toggles(enum.Flag):
-    # это ...
+    """."""
+
     FORBID_MISSING_FIELDS = enum.auto()
-    # это ...
+    """."""
+
     FORBID_UNDECLARED_FIELDS = enum.auto()
-    # это ...
+    """."""
+
     FORBID_KWARG_CONSTS = enum.auto()
-    # это ...
+    """."""
+
     FORBID_NON_NAMED_FIELDS = enum.auto()
-    # это ...
+    """."""
+
     FORBID_UNANNOTATED_FIELDS = enum.auto()
+    """."""
 
     NONE = 0
+    """."""
+
     DEFAULT = (
         FORBID_MISSING_FIELDS
         | FORBID_UNDECLARED_FIELDS
@@ -131,6 +125,7 @@ class Toggles(enum.Flag):
         | FORBID_NON_NAMED_FIELDS
         | FORBID_UNANNOTATED_FIELDS
     )
+    """."""
 
 
 @t_ext.dataclass_transform(
@@ -188,8 +183,6 @@ class Error(Exception):
         props=frozenset(),
         defaults=frozenset(),
     )
-
-    iter_causes = iterate_causes
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
@@ -267,21 +260,25 @@ class Error(Exception):
         """
         return msg
 
+    def __iter__(self) -> t.Generator[BaseException, None, None]:
+        return iterate_causes(self, self=True)
+
     def __repr__(self) -> str:
         kwargs = _utils.join_kwargs(**self.as_dict())
+        # TODO(d.burmistrov): just f"{self.__class__.__qualname__}({kwargs})"?
         return f"{self.__module__}.{self.__class__.__qualname__}({kwargs})"
 
-    def __copy__(self) -> "Error":
+    def __copy__(self) -> t_ext.Self:
         return type(self)(**self.as_dict())
 
-    def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> "Error":
+    def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> t_ext.Self:
         id_ = id(self)
         if id_ not in memo:
             kwargs = {
                 k: copy.deepcopy(v, memo) for k, v in self.as_dict().items()
             }
             memo[id_] = type(self)(**kwargs)
-        return t.cast("Error", memo[id_])
+        return t.cast(t_ext.Self, memo[id_])
 
     def __reduce__(self) -> t.Tuple[t.Any, ...]:
         return functools.partial(self.__class__, **self.as_dict()), tuple()

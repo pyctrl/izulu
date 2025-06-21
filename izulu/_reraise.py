@@ -1,21 +1,17 @@
 from __future__ import annotations
 
 import contextlib
+import types
 import typing as t
+try:
+    import typing_extensions as t_ext
+except ImportError:
+    t_ext: types.ModuleType = t  # type: ignore[no-redef]
 
 from izulu import _types as _t
 from izulu import _utils
 
 _MISSING = object()
-
-if hasattr(t, "dataclass_transform"):
-    t_ext = t
-else:
-    try:
-        import typing_extensions as t_ext  # type: ignore[no-redef]
-    except ImportError:
-        _utils.log_import_error()
-        raise
 
 
 class FatalMixin:

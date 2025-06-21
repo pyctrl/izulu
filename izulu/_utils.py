@@ -2,36 +2,15 @@ from __future__ import annotations
 
 import _string  # type: ignore[import-not-found]
 import dataclasses
-import logging
 import string
 import types
 import typing as t
+try:
+    import typing_extensions as t_ext
+except ImportError:
+    t_ext: types.ModuleType = t  # type: ignore[no-redef]
 
 from izulu import _types as _t
-
-_IMPORT_ERROR_TEXT = (
-    "",
-    "You have early version of Python.",
-    "  Extra compatibility dependency required.",
-    "  Please add 'izulu[compatibility]' to your project dependencies.",
-    "",
-    "Pip: `pip install izulu[compatibility]`",
-)
-
-
-def log_import_error() -> None:
-    for message in _IMPORT_ERROR_TEXT:
-        logging.error(message)  # noqa: LOG015,TRY400
-
-
-if hasattr(t, "dataclass_transform"):
-    t_ext = t
-else:
-    try:
-        import typing_extensions as t_ext  # type: ignore[no-redef]
-    except ImportError:
-        log_import_error()
-        raise
 
 _IZULU_ATTRS = {
     "__template__",
@@ -64,38 +43,40 @@ class Store:
     defaults: t.FrozenSet[str]
     """Mapping attribute names to their values without ``ClassVar`` mark."""
 
-    registered: t.FrozenSet[str] = dataclasses.field(init=False)
-    """Attribute names that already have values."""
+    declared: t.FrozenSet[str] = dataclasses.field(init=False)
+    """Names that have been declared in template or instance type hints."""
 
     valued: t.FrozenSet[str] = dataclasses.field(init=False)
     """Attribute names that already have values."""
 
     def __post_init__(self) -> None:
-        self.registered = self.fields.union(self.inst_hints)
+        self.declared = self.fields.union(self.inst_hints)
         self.valued = self.props.union(self.consts, self.defaults)
 
 
 def check_missing_fields(store: Store, kws: t.FrozenSet[str]) -> None:
-    """Raise on ..."""
-    missing = store.registered.difference(kws)
+    """Raise if kwargs missing required field."""
+    missing = store.declared.difference(store.valued, kws)
     if missing:
         raise TypeError(f"Missing arguments: {join_items(missing)}")
 
 
 def check_undeclared_fields(store: Store, kws: t.FrozenSet[str]) -> None:
-    """Raise on ..."""
-    undeclared = kws.difference(store.registered, store.const_hints)
+    """Raise if kwargs have undeclared fields."""
+    undeclared = kws.difference(store.declared, store.const_hints)
     if undeclared:
         raise TypeError(f"Undeclared arguments: {join_items(undeclared)}")
 
 
 def check_kwarg_consts(store: Store, kws: t.FrozenSet[str]) -> None:
+    """Raise if kwargs have class or final fields."""
     consts = kws.intersection(store.const_hints)
     if consts:
         raise TypeError(f"Constants in arguments: {join_items(consts)}")
 
 
 def check_non_named_fields(store: Store) -> None:
+    """Raise if template contains empty or int fields."""
     for field in store.fields:
         if isinstance(field, int):
             msg = f"Field names can't be digits: {field}"
@@ -105,11 +86,9 @@ def check_non_named_fields(store: Store) -> None:
 
 
 def check_unannotated_fields(store: Store) -> None:
-    unannotated = (
-        store.fields
-        - set(store.const_hints)
-        - set(store.props)
-        - set(store.inst_hints)
+    """Raise if template contains unannotated fields."""
+    unannotated = store.fields.difference(
+        store.props, store.const_hints, store.inst_hints
     )
     if unannotated:
         msg = f"Fields must be annotated: {join_items(unannotated)}"
@@ -134,14 +113,12 @@ def format_template(template: str, kwargs: t.Dict[str, t.Any]) -> str:
 
 def iter_fields(template: str) -> t.Generator[str, None, None]:
     """Extract fields from the template."""
-
     # https://docs.python.org/3/library/string.html#format-string-syntax
     for _, fn, _, _ in _FORMATTER.parse(template):
         if fn is not None:
             yield _string.formatter_field_name_split(fn)[0]
 
 
-# TODO(d.burmistrov): t.Final? t.Literal?
 def split_cls_hints(
     cls: type,
 ) -> t.Tuple[t.Dict[str, type], t.Dict[str, type]]:
@@ -169,9 +146,10 @@ def split_cls_hints(
 
 
 def get_cls_prop_names(cls: type) -> frozenset[str]:
+    """Get property attribute names for class"""
     return frozenset(
-        field
-        for field, value in vars(cls).items()
+        attr
+        for attr, value in vars(cls).items()
         if isinstance(value, property)
     )
 
