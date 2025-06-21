@@ -8,6 +8,7 @@ import typing as t
 
 from izulu import _utils
 
+FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 if hasattr(t, "dataclass_transform"):
     t_ext = t
@@ -17,8 +18,6 @@ else:
     except ImportError:
         _utils.log_import_error()
         raise
-
-FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 
 def iterate_causes(
