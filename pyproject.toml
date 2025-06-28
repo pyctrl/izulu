@@ -431,7 +431,7 @@ commands = [["yamllint", "--strict", { replace = "posargs", default = ["{tox_roo
 [tool.tox.env.lint-git]
 description = "Lint git branch commits"
 skip_install = true
-commands = [["uv", "--quiet", "run", "gitlint", "--commits", "42ba17d99fb9e3d4f29cdbe52f229204ad27a412..HEAD"]]
+commands = [["uv", "--quiet", "run", "gitlint", "--commits", "HEAD~10..HEAD"]]
 
 [tool.tox.env.pre-commit]
 description = "Run pre-commit"
