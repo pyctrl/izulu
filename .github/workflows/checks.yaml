@@ -8,7 +8,7 @@ name: tests
 jobs:
 
   misc:
-    name: "Check tools"
+    name: "Linting configs and git"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +32,7 @@ jobs:
           tox -e lint-git
 
   lint:
+    name: "Linting and type checking"
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
@@ -46,11 +47,12 @@ jobs:
       - name: "Lint formatting"
         run: |
           tox -e lint-py
-      - name: "Lint typing"
+      - name: "Type checking"
         run: |
           tox -e lint-mypy
 
   tests:
+    name: "Run unit tests"
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
