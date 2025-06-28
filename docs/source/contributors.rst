@@ -13,7 +13,11 @@ For developers
        uv sync
        tox run -e init
 
-3. Run tests
+3. Install required tools
+
+   * `Taplo <https://taplo.tamasfe.dev/>`__
+
+4. Run tests
 
    .. code-block:: shell
 
@@ -35,7 +39,7 @@ For developers
        # run all envs
        tox run
 
-4. Contributing — start from opening an `issue <https://github.com/pyctrl/izulu/issues>`__
+5. Contributing — start from opening an `issue <https://github.com/pyctrl/izulu/issues>`__
 
 
 Versioning
