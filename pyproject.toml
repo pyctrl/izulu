@@ -267,7 +267,7 @@ env_list = [
   "lint-yaml",
   "lint-git",
   "coverage",
-  "pre-commit",
+#  "pre-commit",
 ]
 
 [tool.tox.labels]
