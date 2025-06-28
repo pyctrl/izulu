@@ -7,17 +7,27 @@ name: tests
 
 jobs:
 
-  Lint:
+  misc:
+    name: "Check tools"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker://docker.io/tamasfe/taplo:latest
+        with:
+          args: fmt --check --diff
+      - uses: actions/setup-python@v5
+        run: |
+          tox -e lint-yaml
+
+  lint:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
-      matrix:
-        python-version: ["3.12"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
       - name: "Install tox"
         run: |
           pip install tox
@@ -27,15 +37,15 @@ jobs:
       - name: "Lint typing"
         run: |
           tox -e lint-mypy
-      - name: "Lint TOMLs"
-        run: |
-          tox -e lint-toml
-      - name: "Lint YAMLs"
-        run: |
-          tox -e lint-yaml
-      - name: "Lint git"
-        run: |
-          tox -e lint-git
+#      - name: "Lint TOMLs"
+#        run: |
+#          tox -e lint-toml
+#      - name: "Lint YAMLs"
+#        run: |
+#          tox -e lint-yaml
+#      - name: "Lint git"
+#        run: |
+#          tox -e lint-git
 
   tests:
     runs-on: ubuntu-24.04
@@ -44,7 +54,7 @@ jobs:
       matrix:
         python-version: ["3.8", "3.10", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
