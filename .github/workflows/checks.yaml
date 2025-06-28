@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        fetch-depth: 10
+        with:
+          fetch-depth: 10
 
       - uses: docker://docker.io/tamasfe/taplo:latest
         name: "Lint TOMLs"
@@ -48,15 +49,6 @@ jobs:
       - name: "Lint typing"
         run: |
           tox -e lint-mypy
-#      - name: "Lint TOMLs"
-#        run: |
-#          tox -e lint-toml
-#      - name: "Lint YAMLs"
-#        run: |
-#          tox -e lint-yaml
-#      - name: "Lint git"
-#        run: |
-#          tox -e lint-git
 
   tests:
     runs-on: ubuntu-24.04
