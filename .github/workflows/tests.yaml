@@ -12,13 +12,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: docker://docker.io/tamasfe/taplo:latest
+        name: "Lint TOMLs"
         with:
           args: fmt --check --diff
+
       - uses: actions/setup-python@v5
-      - name: ttttttttt
+      - name: "Install tox"
+        run: |
+          pip install tox
+      - name: "Lint YAMLs"
         run: |
           tox -e lint-yaml
+      - name: "Lint git"
+        run: |
+          tox -e lint-git
 
   lint:
     runs-on: ubuntu-24.04
