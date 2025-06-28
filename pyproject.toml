@@ -37,6 +37,7 @@ dev = [
   "mypy",
   "gitlint",
   "typing-extensions",
+  { include-group = "docs" },
   { include-group = "tests" },
 ]
 
@@ -187,50 +188,7 @@ exclude = ["docs", "tests", ".venv"]
 #requires = ["tox>4.23"]
 #env_list = ["pep8", "rst", "py312", "mypy"]
 #use_develop = true
-#
-#[tool.tox.env_run_base]
-#use_develop = true
-#dependency_groups = ["test"]
-#commands = [
-#  [
-#    "coverage",
-#    "run",
-#    "--source={toxinidir}{/}{[project]name}{/}",
-#    "-m",
-#    "pytest",
-#    "{toxinidir}{/}tests{/}",
-#    "-v",
-#    { replace = "posargs", extend = true },
-#  ],
-#  [
-#    "coverage",
-#    "report",
-#    "-m",
-#  ],
-#  [
-#    "coverage",
-#    "xml",
-#  ],
-#]
-#
-#[tool.tox.env.dev]
-#use_develop = true
-#dependency_groups = ["contributor"]
-#
-#[tool.tox.env.pep8]
-#skip_install = true
-#dependency_groups = ["pep8"]
-#commands = [
-#  [
-#    "flake8",
-#    "--extend-ignore=H404,H405",
-#    { replace = "posargs", default = [
-#      "{toxinidir}{/}{[project]name}{/}",
-#      "{toxinidir}{/}tests{/}",
-#    ], extend = true },
-#  ],
-#]
-#
+
 #[tool.tox.env.rst]
 #skip_install = true
 #dependency_groups = ["rst"]
@@ -241,19 +199,7 @@ exclude = ["docs", "tests", ".venv"]
 #    "{toxinidir}{/}README.rst",
 #  ],
 #]
-#
-#[tool.tox.env.mypy]
-#dependency_groups = ["mypy"]
-#skip_install = true
-#commands = [
-#  [
-#    "mypy",
-#    { replace = "posargs", default = [
-#      "{toxinidir}{/}{[project]name}{/}",
-#    ], extend = true },
-#  ],
-#]
-#
+
 #[tool.tox.env.build]
 #skip_install = true
 #dependency_groups = ["build"]
@@ -310,32 +256,6 @@ exclude = ["docs", "tests", ".venv"]
 #    "-rf",
 #    "{toxinidir}/dist/",
 #    "{toxinidir}/{[project]name}.egg-info/",
-#  ],
-#]
-#
-#[tool.tox.env.docs]
-#dependency_groups = ["docs"]
-#commands = [
-#  [
-#    "sphinx-build",
-#    "-M",
-#    "html",
-#    "{toxinidir}/docs/source",
-#    "{toxinidir}/docs/build",
-#    "--fail-on-warning",
-#  ],
-#]
-#
-#[tool.tox.env.docs-serve]
-#dependency_groups = ["docs"]
-#commands = [
-#  [
-#    "sphinx-autobuild",
-#    "-M",
-#    "html",
-#    "{toxinidir}/docs/source",
-#    "{toxinidir}/docs/build",
-#    "--fail-on-warning",
 #  ],
 #]
 
@@ -469,3 +389,29 @@ description = "Format TOML files"
 allowlist_externals = ["taplo"]
 skip_install = true
 commands = [["taplo", "format", { replace = "posargs", extend = true }]]
+
+[tool.tox.env.docs]
+dependency_groups = ["docs"]
+commands = [
+  [
+    "sphinx-build",
+    "-M",
+    "html",
+    "{toxinidir}/docs/source",
+    "{toxinidir}/docs/build",
+    "--fail-on-warning",
+  ],
+]
+
+[tool.tox.env.docs-serve]
+dependency_groups = ["docs"]
+commands = [
+  [
+    "sphinx-autobuild",
+    "-M",
+    "html",
+    "{toxinidir}/docs/source",
+    "{toxinidir}/docs/build",
+    "--fail-on-warning",
+  ],
+]

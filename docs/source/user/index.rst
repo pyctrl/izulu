@@ -10,3 +10,4 @@ User Guide
    tutorial
    recipes
    faq
+   features
