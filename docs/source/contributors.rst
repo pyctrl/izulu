@@ -4,18 +4,24 @@ Contributors
 For developers
 **************
 
-1. Clone `repository <https://github.com/pyctrl/izulu>`__
+1. Install required tools
 
-2. Initialize developer's environment
+   * `uv <https://docs.astral.sh/uv/>`__ (manually)
+   * `Taplo <https://taplo.tamasfe.dev/>`__ (manually)
+   * `Tox <https://tox.wiki/en/stable/>`__
+
+     .. code-block:: shell
+
+        uv tool install tox --with tox-uv
+
+2. Clone `repository <https://github.com/pyctrl/izulu>`__
+
+3. Initialize developer's environment
 
    .. code-block:: shell
 
        uv sync
        tox run -e init
-
-3. Install required tools
-
-   * `Taplo <https://taplo.tamasfe.dev/>`__
 
 4. Run tests
 
