@@ -4,17 +4,38 @@ Contributors
 For developers
 **************
 
-* Use regular virtualenv or any other (no pre-defined preparations provided)
+1. Clone `repository <https://github.com/pyctrl/izulu>`__
 
-* Running tests::
+2. Initialize developer's environment
 
-    tox
+   .. code-block:: shell
 
-* Building package::
+       uv sync
+       tox run -e init
 
-    tox -e build
+3. Run tests
 
-* Contributing: contact me through `Issues <https://github.com/pyctrl/izulu/issues>`__
+   .. code-block:: shell
+
+       # run only mypy env
+       tox run -e lint-mypy
+
+       # run all linting envs (labeled)
+       tox run -m lint
+
+       # run only ruff formatting env
+       tox run -e fmt-py
+
+       # run all formatting envs (labeled)
+       tox run -m fmt
+
+       # list all envs
+       tox list
+
+       # run all envs
+       tox run
+
+4. Contributing — start from opening an `issue <https://github.com/pyctrl/izulu/issues>`__
 
 
 Versioning
