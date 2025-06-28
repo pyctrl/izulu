@@ -8,7 +8,6 @@ import types
 import typing as t
 
 from izulu import _utils
-from izulu import causes
 
 _IMPORT_ERROR_TEXTS = (
     "",
@@ -31,6 +30,21 @@ else:
         raise
 
 FactoryReturnType = t.TypeVar("FactoryReturnType")
+
+
+def iterate_causes(
+    exc: BaseException,
+    *,
+    self: bool = False,
+) -> t.Generator[BaseException, None, None]:
+    """Return iterator over all exception chain."""
+    if self:
+        yield exc
+    cause = exc.__cause__
+    while cause is not None:
+        yield cause
+        exc = cause
+        cause = exc.__cause__
 
 
 @t.overload
@@ -141,7 +155,8 @@ class Error(Exception):
         defaults=frozenset(),
     )
 
-    iter_causes = causes.iterate_causes
+    def __iter__(self) -> t.Iterator[BaseException]:
+        return iterate_causes(self, self=True)
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
@@ -162,6 +177,7 @@ class Error(Exception):
             _utils.check_unannotated_fields(cls.__cls_store)
 
     def __init__(self, **kwargs: t.Any) -> None:  # noqa: ANN401
+        self.__iter = None
         self.__kwargs = kwargs.copy()
         self.__process_toggles()
         self.__populate_attrs()
