@@ -196,7 +196,7 @@ exclude = ["docs", "tests", ".venv"]
 #  [
 #    "rst-lint",
 #    { replace = "posargs", extend = true },
-#    "{toxinidir}{/}README.rst",
+#    "{tox_root}{/}README.rst",
 #  ],
 #]
 
@@ -245,19 +245,6 @@ exclude = ["docs", "tests", ".venv"]
 #[tool.tox.env.upload_prod]
 #base = ["tool.tox.env.upload_test"]
 #set_env.PYPI_REPOSITORY = "pypi"
-#
-#[tool.tox.env.clean]
-#skip_install = true
-#dependency_groups = []
-#allowlist_externals = ["rm"]
-#commands = [
-#  [
-#    "rm",
-#    "-rf",
-#    "{toxinidir}/dist/",
-#    "{toxinidir}/{[project]name}.egg-info/",
-#  ],
-#]
 
 
 # Tox config
@@ -397,8 +384,8 @@ commands = [
     "sphinx-build",
     "-M",
     "html",
-    "{toxinidir}/docs/source",
-    "{toxinidir}/docs/build",
+    "{tox_root}/docs/source",
+    "{tox_root}/docs/build",
     "--fail-on-warning",
   ],
 ]
@@ -410,8 +397,24 @@ commands = [
     "sphinx-autobuild",
     "-M",
     "html",
-    "{toxinidir}/docs/source",
-    "{toxinidir}/docs/build",
+    "{tox_root}/docs/source",
+    "{tox_root}/docs/build",
     "--fail-on-warning",
+  ],
+]
+
+[tool.tox.env.clean]
+dependency_groups = []
+skip_install = true
+allowlist_externals = ["rm"]
+commands = [
+  [
+    "rm",
+    "-rf",
+    "{tox_root}/.coverage",
+    "{tox_root}/coverage.xml",
+    "{tox_root}/dist/",
+    "{tox_root}/docs/build/",
+    "{tox_root}/{[project]name}.egg-info/",
   ],
 ]
