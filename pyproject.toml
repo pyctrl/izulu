@@ -1,10 +1,10 @@
 [project]
 name = "izulu"
 dynamic = ["version"]
-authors = [{ name = "Dima Burmistrov", email = "pyctrl.dev@gmail.com" }]
 description = "The exceptional library"
-readme = "README.rst"
+authors = [{ name = "Dima Burmistrov", email = "pyctrl.dev@gmail.com" }]
 license = { file = "LICENSE" }
+readme = "README.rst"
 
 requires-python = ">=3.8"
 classifiers = [
@@ -26,18 +26,31 @@ documentation = "https://izulu.readthedocs.io/en/latest/"
 issues = "https://github.com/pyctrl/izulu/issues"
 
 
+[project.optional-dependencies]
+compatibility = ["typing-extensions>=4.5.0"]
+
+
 [dependency-groups]
-# development
-dev = ["ipython"]
-test = ["pytest", "coverage", "typing-extensions"]
-pep8 = ["hacking", "pyproject-flake8"]
-rst = ["restructuredtext_lint", "Pygments"]
-# readme:
-#   rst
-#   rst-include = `rst_include include <in> <out>`
-#   docutils = `docutils README.rst README.html`
-mypy = ["mypy", "typing-extensions"]
-fmt = ["ruff"]
+dev = [
+  "ipython",
+  "ruff",
+  "mypy",
+  "gitlint",
+  "typing-extensions",
+  { include-group = "tests" },
+]
+
+tests = [
+  "pytest",
+  "pytest-cov",
+]
+
+#rst = ["restructuredtext_lint", "Pygments"]
+## readme:
+##   rst
+##   rst-include = `rst_include include <in> <out>`
+##   docutils = `docutils README.rst README.html`
+
 docs = [
   # base
   "sphinx",
@@ -52,25 +65,11 @@ docs = [
   # project
   "setuptools-scm",
 ]
-# release
-build = ["rst-include", "build", "twine"]
-upload = ["twine"]
-# extras
-# aliases
-contributor = [
-  { include-group = "dev" },
-  { include-group = "test" },
-  { include-group = "pep8" },
-  { include-group = "rst" },
-  { include-group = "mypy" },
-  { include-group = "fmt" },
-  { include-group = "build" },
-  { include-group = "upload" },
-]
-# taplo - toml toolbox
 
-[project.optional-dependencies]
-compatibility = ["typing-extensions>=4.5.0"]
+## release
+#build = ["rst-include", "build", "twine"]
+#upload = ["twine"]
+
 
 [build-system]
 requires = ["setuptools>=61.2", "setuptools-scm", "wheel"]
@@ -80,19 +79,19 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.ruff]
-target-version = "py312"
-line-length = 79  # 88
-extend-exclude = [".git", ".venv"]
+target-version = "py38"
+line-length = 79
+extend-exclude = [".git", ".venv", "docs"]
 
 [tool.ruff.lint]
 preview = true
 extend-select = ["ALL"]
 extend-ignore = [
-  "D10",     # missing documentation
-  "D203",    # 1 of conflicting code-styles
-  "D212",    # 1 of conflicting code-styles
-  "C408",    # allow `dict()` instead of literal
-  "TD003",   # don't require issue link
+  "D10",   # missing documentation
+  "D203",  # 1 of conflicting code-styles
+  "D212",  # 1 of conflicting code-styles
+  "C408",  # allow `dict()` instead of literal
+  "TD003", # don't require issue link
   # Completely disable
   "FIX",
   "CPY",
@@ -101,8 +100,12 @@ extend-ignore = [
   "E111",
   "E114",
   "E117",
+  "EM101",
+  "EM102",
   "D206",
   "D300",
+  "DOC201",
+  "DOC402",
   "Q000",
   "Q001",
   "Q002",
@@ -111,29 +114,33 @@ extend-ignore = [
   "COM819",
   "ISC001",
   "ISC002",
+  "TRY003",
+  "UP006",
+  "UP007",
+  "UP035",
+  "UP045",
+  "FA100",
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "**/tests/*" = [
-  "S101",   # allow assert
-  "SLF001", # allow private member access
-  "ANN",    # annotations not required in tests
+  "S101",    # allow assert
+  "SLF001",  # allow private member access
+  "ANN",     # annotations not required in tests
+  "PLR0913", # Too many arguments in function definition
+  "PLR0917", # Too many positional arguments
+  "PLC2701", # Private name import
 ]
+"tests/error/test_dumping.py" = ["S301", "S403"]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
-"constants" = "c"
-"exceptions" = "excs"
 "typing" = "t"
 
 [tool.ruff.lint.flake8-import-conventions]
-banned-from = [
-  "constants",
-  "exceptions",
-  "typing",
-]
+banned-from = ["typing"]
 
-# [tool.ruff.lint.isort]
-# force-single-line = true
+[tool.ruff.lint.isort]
+force-single-line = true
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -171,168 +178,294 @@ exclude_also = [
 
 [tool.mypy]
 strict = true
-exclude = ["tests", ".venv"]
+exclude = ["docs", "tests", ".venv"]
 
 
-[tool.flake8]
-show-source = true
-ignore = ["H404", "H405"]
+#[tool.tox]
+## requires = ["tox>4.23", "tox-uv>=1.13"]
+## runner = "uv-venv-lock-runner"
+#requires = ["tox>4.23"]
+#env_list = ["pep8", "rst", "py312", "mypy"]
+#use_develop = true
+#
+#[tool.tox.env_run_base]
+#use_develop = true
+#dependency_groups = ["test"]
+#commands = [
+#  [
+#    "coverage",
+#    "run",
+#    "--source={toxinidir}{/}{[project]name}{/}",
+#    "-m",
+#    "pytest",
+#    "{toxinidir}{/}tests{/}",
+#    "-v",
+#    { replace = "posargs", extend = true },
+#  ],
+#  [
+#    "coverage",
+#    "report",
+#    "-m",
+#  ],
+#  [
+#    "coverage",
+#    "xml",
+#  ],
+#]
+#
+#[tool.tox.env.dev]
+#use_develop = true
+#dependency_groups = ["contributor"]
+#
+#[tool.tox.env.pep8]
+#skip_install = true
+#dependency_groups = ["pep8"]
+#commands = [
+#  [
+#    "flake8",
+#    "--extend-ignore=H404,H405",
+#    { replace = "posargs", default = [
+#      "{toxinidir}{/}{[project]name}{/}",
+#      "{toxinidir}{/}tests{/}",
+#    ], extend = true },
+#  ],
+#]
+#
+#[tool.tox.env.rst]
+#skip_install = true
+#dependency_groups = ["rst"]
+#commands = [
+#  [
+#    "rst-lint",
+#    { replace = "posargs", extend = true },
+#    "{toxinidir}{/}README.rst",
+#  ],
+#]
+#
+#[tool.tox.env.mypy]
+#dependency_groups = ["mypy"]
+#skip_install = true
+#commands = [
+#  [
+#    "mypy",
+#    { replace = "posargs", default = [
+#      "{toxinidir}{/}{[project]name}{/}",
+#    ], extend = true },
+#  ],
+#]
+#
+#[tool.tox.env.build]
+#skip_install = true
+#dependency_groups = ["build"]
+#commands = [
+#  [
+#    "rst_include",
+#    "include",
+#    "README.tpl.rst",
+#    "README.rst",
+#  ],
+#  [
+#    "python3",
+#    "-m",
+#    "build",
+#    { replace = "posargs", extend = true },
+#  ],
+#  [
+#    "python3",
+#    "-m",
+#    "twine",
+#    "check",
+#    { replace = "posargs", extend = true },
+#    "dist{/}*",
+#  ],
+#]
+#
+#[tool.tox.env.upload_test]
+#skip_install = true
+#dependency_groups = ["upload"]
+#commands = [
+#  [
+#    "python3",
+#    "-m",
+#    "twine",
+#    "upload",
+#    { replace = "posargs", extend = true },
+#    "--repository",
+#    "{env:PYPI_REPOSITORY:testpypi}",
+#    "dist{/}*",
+#  ],
+#]
+#
+#[tool.tox.env.upload_prod]
+#base = ["tool.tox.env.upload_test"]
+#set_env.PYPI_REPOSITORY = "pypi"
+#
+#[tool.tox.env.clean]
+#skip_install = true
+#dependency_groups = []
+#allowlist_externals = ["rm"]
+#commands = [
+#  [
+#    "rm",
+#    "-rf",
+#    "{toxinidir}/dist/",
+#    "{toxinidir}/{[project]name}.egg-info/",
+#  ],
+#]
+#
+#[tool.tox.env.docs]
+#dependency_groups = ["docs"]
+#commands = [
+#  [
+#    "sphinx-build",
+#    "-M",
+#    "html",
+#    "{toxinidir}/docs/source",
+#    "{toxinidir}/docs/build",
+#    "--fail-on-warning",
+#  ],
+#]
+#
+#[tool.tox.env.docs-serve]
+#dependency_groups = ["docs"]
+#commands = [
+#  [
+#    "sphinx-autobuild",
+#    "-M",
+#    "html",
+#    "{toxinidir}/docs/source",
+#    "{toxinidir}/docs/build",
+#    "--fail-on-warning",
+#  ],
+#]
 
 
+# Tox config
 [tool.tox]
-# requires = ["tox>4.23", "tox-uv>=1.13"]
-# runner = "uv-venv-lock-runner"
-requires = ["tox>4.23"]
-env_list = ["pep8", "rst", "py312", "mypy"]
-use_develop = true
+requires = ["tox>=4.23", "tox-uv>=1.13"]
+runner = "uv-venv-lock-runner"
+skip_missing_interpreters = true
+env_list = [
+  "py38",
+  "py39",
+  "py310",
+  "py311",
+  "py312",
+  "py313",
+  "fmt-py",
+  "fmt-toml",
+  "lint-py",
+  "lint-mypy",
+  "lint-toml",
+  "lint-yaml",
+  "lint-git",
+  "coverage",
+  "pre-commit",
+]
+
+[tool.tox.labels]
+fmt = [
+  "fmt-py",
+  "fmt-toml",
+]
+lint = [
+  "lint-py",
+  "lint-mypy",
+  "lint-toml",
+  "lint-yaml",
+  "lint-git",
+]
 
 [tool.tox.env_run_base]
-use_develop = true
-dependency_groups = ["test"]
+description = "Run unit tests with coverage report ({env_name})"
+dependency_groups = ["tests"]
 commands = [
   [
-    "coverage",
-    "run",
-    "--source={toxinidir}{/}{[project]name}{/}",
-    "-m",
     "pytest",
-    "{toxinidir}{/}tests{/}",
-    "-v",
-    { replace = "posargs", extend = true },
-  ],
-  [
-    "coverage",
-    "report",
-    "-m",
-  ],
-  [
-    "coverage",
-    "xml",
+    "--cov={[project]name}",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+    "tests",
+    { replace = "posargs", default = ["--cov-report=xml:coverage.xml"], extend = true },
   ],
 ]
 
-[tool.tox.env.dev]
-use_develop = true
-dependency_groups = ["contributor"]
 
-[tool.tox.env.pep8]
+[tool.tox.env.init]
+description = "Configure developer's environment"
 skip_install = true
-dependency_groups = ["pep8"]
+commands = [
+  ["uv", "--quiet", "run", "pre-commit", "install"],
+  ["uv", "--quiet", "run", "gitlint", "install-hook"],
+]
+
+[tool.tox.env.lint-py]
+description = "Lint python files"
+deps = ["ruff"]
+skip_install = true
+commands = [
+  ["ruff", "format", "--diff", { replace = "posargs", default = ["{tox_root}"], extend = true }],
+  ["ruff", "check", { replace = "posargs", default = ["{tox_root}"], extend = true }],
+]
+
+[tool.tox.env.lint-mypy]
+description = "Lint python typing"
+deps = ["mypy"]
+commands = [["mypy", { replace = "posargs", default = ["{tox_root}"], extend = true }]]
+
+[tool.tox.env.lint-toml]
+description = "Lint TOML files"
+allowlist_externals = ["taplo"]
+skip_install = true
+commands = [
+  ["taplo", "lint", { replace = "posargs", extend = true }],
+  ["taplo", "format", "--check", "--diff", { replace = "posargs", extend = true }],
+]
+
+[tool.tox.env.lint-yaml]
+description = "Lint YAML files"
+deps = ["yamllint"]
+skip_install = true
+commands = [["yamllint", "--strict", { replace = "posargs", default = ["{tox_root}"], extend = true }]]
+
+[tool.tox.env.lint-git]
+description = "Lint git branch commits"
+skip_install = true
+commands = [["uv", "--quiet", "run", "gitlint", "--commits", "42ba17d99fb9e3d4f29cdbe52f229204ad27a412..HEAD"]]
+
+[tool.tox.env.pre-commit]
+description = "Run pre-commit"
+skip_install = true
+deps = ["pre-commit-uv"]
 commands = [
   [
-    "flake8",
-    "--extend-ignore=H404,H405",
-    { replace = "posargs", default = [
-      "{toxinidir}{/}{[project]name}{/}",
-      "{toxinidir}{/}tests{/}",
-    ], extend = true },
+    "pre-commit",
+    "run",
+    { replace = "posargs", default = ["--all-files", "--show-diff-on-failure"], extend = true },
   ],
 ]
 
-[tool.tox.env.rst]
-skip_install = true
-dependency_groups = ["rst"]
-commands = [
-  [
-    "rst-lint",
-    { replace = "posargs", extend = true },
-    "{toxinidir}{/}README.rst",
-  ],
-]
-
-[tool.tox.env.mypy]
-dependency_groups = ["mypy"]
+[tool.tox.env.fmt-py]
+description = "Format python files"
+deps = ["ruff"]
 skip_install = true
 commands = [
   [
-    "mypy",
-    { replace = "posargs", default = [
-      "{toxinidir}{/}{[project]name}{/}",
-    ], extend = true },
-  ],
-]
-
-[tool.tox.env.build]
-skip_install = true
-dependency_groups = ["build"]
-commands = [
-  [
-    "rst_include",
-    "include",
-    "README.tpl.rst",
-    "README.rst",
+    "ruff",
+    "format",
+    { replace = "posargs", default = ["{tox_root}"], extend = true },
   ],
   [
-    "python3",
-    "-m",
-    "build",
-    { replace = "posargs", extend = true },
-  ],
-  [
-    "python3",
-    "-m",
-    "twine",
+    "ruff",
     "check",
-    { replace = "posargs", extend = true },
-    "dist{/}*",
+    "--fix",
+    "--show-fixes",
+    { replace = "posargs", default = ["{tox_root}"], extend = true },
   ],
 ]
 
-[tool.tox.env.upload_test]
+[tool.tox.env.fmt-toml]
+description = "Format TOML files"
+allowlist_externals = ["taplo"]
 skip_install = true
-dependency_groups = ["upload"]
-commands = [
-  [
-    "python3",
-    "-m",
-    "twine",
-    "upload",
-    { replace = "posargs", extend = true },
-    "--repository",
-    "{env:PYPI_REPOSITORY:testpypi}",
-    "dist{/}*",
-  ],
-]
-
-[tool.tox.env.upload_prod]
-base = ["tool.tox.env.upload_test"]
-set_env.PYPI_REPOSITORY = "pypi"
-
-[tool.tox.env.clean]
-skip_install = true
-dependency_groups = []
-allowlist_externals = ["rm"]
-commands = [
-  [
-    "rm",
-    "-rf",
-    "{toxinidir}/dist/",
-    "{toxinidir}/{[project]name}.egg-info/",
-  ],
-]
-
-[tool.tox.env.docs]
-dependency_groups = ["docs"]
-commands = [
-  [
-    "sphinx-build",
-    "-M",
-    "html",
-    "{toxinidir}/docs/source",
-    "{toxinidir}/docs/build",
-    "--fail-on-warning",
-  ],
-]
-
-[tool.tox.env.docs-serve]
-dependency_groups = ["docs"]
-commands = [
-  [
-    "sphinx-autobuild",
-    "-M",
-    "html",
-    "{toxinidir}/docs/source",
-    "{toxinidir}/docs/build",
-    "--fail-on-warning",
-  ],
-]
+commands = [["taplo", "format", { replace = "posargs", extend = true }]]

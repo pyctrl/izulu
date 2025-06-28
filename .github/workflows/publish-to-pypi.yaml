@@ -1,5 +1,5 @@
 ---
-name: Publish Python 🐍 distribution 📦 to PyPI
+name: "Publish Python 🐍 distribution 📦 to PyPI"
 
 "on":
   push:
@@ -8,34 +8,33 @@ name: Publish Python 🐍 distribution 📦 to PyPI
 
 jobs:
   build:
-    name: Build distribution 📦
+    name: "Build distribution 📦"
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install pypa/build
+      - name: "Install pypa/build"
         run: >-
           python3 -m
           pip install
           build
           --user
-      - name: Build a binary wheel and a source tarball
+      - name: "Build a binary wheel and a source tarball"
         run: python3 -m build
-      - name: Store the distribution packages
+      - name: "Store the distribution packages"
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
 
   publish-to-pypi:
-    name: >-
-      Publish Python 🐍 distribution 📦 to PyPI
+    name: "Publish Python 🐍 distribution 📦 to PyPI"
     needs:
       - build
     runs-on: ubuntu-latest
@@ -46,12 +45,12 @@ jobs:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
     steps:
-      - name: Download all the dists
+      - name: "Download all the dists"
         uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
-      - name: Publish distribution 📦 to PyPI
+      - name: "Publish distribution 📦 to PyPI"
         uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
@@ -67,18 +66,18 @@ jobs:
       id-token: write  # IMPORTANT: mandatory for sigstore
 
     steps:
-      - name: Download all the dists
+      - name: "Download all the dists"
         uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
-      - name: Sign the dists with Sigstore
+      - name: "Sign the dists with Sigstore"
         uses: sigstore/gh-action-sigstore-python@v3.0.0
         with:
           inputs: >-
             ./dist/*.tar.gz
             ./dist/*.whl
-      - name: Create GitHub Release
+      - name: "Create GitHub Release"
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
@@ -86,7 +85,7 @@ jobs:
           "$GITHUB_REF_NAME"
           --repo "$GITHUB_REPOSITORY"
           --notes ""
-      - name: Upload artifact signatures to GitHub Release
+      - name: "Upload artifact signatures to GitHub Release"
         env:
           GITHUB_TOKEN: ${{ github.token }}
         # Upload to GitHub Release using the `gh` CLI.

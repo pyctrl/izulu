@@ -6,25 +6,37 @@ name: tests
   pull_request:
 
 jobs:
+
   Lint:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.8", "3.10", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install tox
-        run: pip install tox
-      - name: pep8
+      - name: "Install tox"
         run: |
-          tox -e pep8
-      - name: mypy
+          pip install tox
+      - name: "Lint formatting"
         run: |
-          tox -e mypy
+          tox -e lint-py
+      - name: "Lint typing"
+        run: |
+          tox -e lint-mypy
+      - name: "Lint TOMLs"
+        run: |
+          tox -e lint-toml
+      - name: "Lint YAMLs"
+        run: |
+          tox -e lint-yaml
+      - name: "Lint git"
+        run: |
+          tox -e lint-git
+
   tests:
     runs-on: ubuntu-24.04
     strategy:
@@ -36,8 +48,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install tox
+      - name: "Install tox"
         run: pip install tox
-      - name: Unit tests
+      - name: "Unit tests"
         run: |
-          tox -e ${{ matrix.python-version }}
+          tox run -e ${{ matrix.python-version }}

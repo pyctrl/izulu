@@ -34,7 +34,7 @@ FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 
 @t.overload
-def factory(  # noqa: UP047
+def factory(
     *,
     default_factory: t.Callable[[], FactoryReturnType],
     self: t.Literal[False] = False,
@@ -42,7 +42,7 @@ def factory(  # noqa: UP047
 
 
 @t.overload
-def factory(  # noqa: UP047
+def factory(
     *,
     default_factory: t.Callable[[Error], FactoryReturnType],
     self: t.Literal[True],
@@ -63,6 +63,7 @@ def factory(
         self: controls callable factory argument
             if ``True`` factory will receive single argument of error instance
             otherwise factory will be invoked without argument
+
     """
     target = default_factory if self else (lambda _: default_factory())
     return functools.cached_property(target)
@@ -216,6 +217,7 @@ class Error(Exception):
             store: dataclass containing inner error class specifications
             kwargs: original kwargs from user
             msg: formatted message from the error template
+
         """
         return msg
 
@@ -223,10 +225,10 @@ class Error(Exception):
         kwargs = _utils.join_kwargs(**self.as_dict())
         return f"{self.__module__}.{self.__class__.__qualname__}({kwargs})"
 
-    def __copy__(self) -> "Error":
+    def __copy__(self) -> Error:
         return type(self)(**self.as_dict())
 
-    def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> "Error":
+    def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> Error:
         id_ = id(self)
         if id_ not in memo:
             kwargs = {
@@ -253,7 +255,8 @@ class Error(Exception):
         By default, only *instance* data and defaults are provided.
 
         Args:
-            bool wide: if ``True`` *class* defaults will be included in result
+            wide: if ``True`` *class* defaults will be included in result
+
         """
         d = self.__kwargs.copy()
         for field in self.__cls_store.defaults:

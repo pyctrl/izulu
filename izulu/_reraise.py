@@ -42,9 +42,9 @@ _T_RULES = t.Union[
     _T_RULE,  # tup, chain?
 ]
 _T_RERAISING = t.Union[
-    None,
-    bool,
     _T_RULE,  # tup, chain?
+    bool,
+    None,
 ]
 _T_COMPILED_ACTION = t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]
 _T_COMPILED_RULES = t.Union[
@@ -59,7 +59,8 @@ DecReturnType = t.TypeVar("DecReturnType")
 
 
 class FatalMixin:
-    """Mark exception as non-recoverable.
+    """
+    Mark exception as non-recoverable.
 
     Should be directly inherited. You can't inherit from fatal exception.
     Fatal exceptions are by-passed by ``ReraisingMixin`` tools.
@@ -104,13 +105,14 @@ class ReraisingMixin:
             ) -> t.Optional[Exception]:
                 return None
 
-        elif action is t_ext.Self:
+        # TODO(d.burmistrov): temporary ignore
+        elif action is t_ext.Self:  # type: ignore[comparison-overlap]
 
             def compiled_action(
                 orig: Exception,  # noqa: ARG001
                 kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
-                kls = t.cast(t.Type[Exception], cls)
+                kls = t.cast("t.Type[Exception]", cls)
                 return kls(**kwargs)
 
         elif isinstance(action, str):
@@ -120,7 +122,7 @@ class ReraisingMixin:
                 kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
                 action_ = t.cast(
-                    t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]],
+                    "t.Callable[[Exception, _T_KWARGS], t.Optional[Exception]]",  # noqa: E501
                     getattr(cls, action),
                 )
                 return action_(orig, kwargs)
@@ -139,8 +141,8 @@ class ReraisingMixin:
                 orig: Exception,
                 kwargs: _T_KWARGS,
             ) -> t.Optional[Exception]:
-                kls = t.cast(t.Type[Exception], cls)
-                return t.cast(_T_FACTORY, action)(kls, orig, kwargs)
+                kls = t.cast("t.Type[Exception]", cls)
+                return t.cast("_T_FACTORY", action)(kls, orig, kwargs)
 
         else:
             raise ValueError(f"Unsupported action: {action}")
@@ -151,11 +153,13 @@ class ReraisingMixin:
     def remap(
         cls,
         exc: Exception,
+        *,
         reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
         original_over_none: bool = False,
     ) -> t.Union[Exception, None]:
-        """Return remapped exception instance.
+        """
+        Return remapped exception instance.
 
         Remapping rules:
 
@@ -183,8 +187,8 @@ class ReraisingMixin:
 
         Returns:
             reraising context manager
-        """
 
+        """
         reraising_ = cls.__reraising
         if reraising is not None:
             reraising_ = cls.__compile_rules(reraising)
@@ -202,11 +206,11 @@ class ReraisingMixin:
 
         # greedy remapping (any occurred exception)
         if reraising_ is True:
-            kls = t.cast(t.Type[Exception], cls)
+            kls = t.cast("t.Type[Exception]", cls)
             return kls(**remap_kwargs)
 
         reraising__ = t.cast(
-            t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_COMPILED_ACTION], ...],
+            "t.Tuple[t.Tuple[_T_EXC_CLASS_OR_TUPLE, _T_COMPILED_ACTION], ...]",
             reraising_,
         )
 
@@ -231,19 +235,17 @@ class ReraisingMixin:
         reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Generator[None, None, None]:
-        """Context Manager & Decorator to raise class exception over original.
+        """
+        Context Manager & Decorator to raise class exception over original.
 
         Args:
             reraising: manual overriding reraising rules
             remap_kwargs: provide kwargs for reraise exception
 
-        Returns:
-            reraising context manager
         """
-
         try:
             yield
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             orig = e
         else:
             return
@@ -254,7 +256,7 @@ class ReraisingMixin:
             remap_kwargs=remap_kwargs,
         )
         if exc is None:
-            raise
+            raise  # noqa: PLE0704
 
         raise exc from orig
 
@@ -267,7 +269,7 @@ def catch(
     target: t.Type[Exception] = Exception,
     *,
     exclude: t.Optional[t.Type[Exception]] = None,
-    new: t.Any = t_ext.Self,
+    new: t.Any = t_ext.Self,  # noqa: ANN401
 ) -> _T_RULE:
     rule = (target, new)
     if exclude:
@@ -283,7 +285,7 @@ class chain:  # noqa: N801
         self,
         actor: t.Type[Exception],  # noqa: ARG002
         exc: Exception,
-        reraising: _T_RERAISING = None,
+        reraising: _T_RERAISING = None,  # noqa: ARG002
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Optional[Exception]:
         for kls in self._klasses:
@@ -293,14 +295,15 @@ class chain:  # noqa: N801
         return None
 
     @classmethod
-    def from_subtree(cls, klass: t.Type[ReraisingMixin]) -> "chain":
+    def from_subtree(cls, klass: t.Type[ReraisingMixin]) -> chain:
         it = (
-            t.cast(ReraisingMixin, kls) for kls in _utils.traverse_tree(klass)
+            t.cast("ReraisingMixin", kls)
+            for kls in _utils.traverse_tree(klass)
         )
         return cls(*it)
 
     @classmethod
-    def from_names(cls, name: str, *names: str) -> "chain":
+    def from_names(cls, name: str, *names: str) -> chain:
         objects = globals()
         err_klasses = []
         for name in (name, *names):  # noqa: B020,PLR1704

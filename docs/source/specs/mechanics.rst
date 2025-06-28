@@ -264,4 +264,3 @@ Mechanics
       # Amount is too large: 500
       print(AmountError(amount=500).amount)
       # AttributeError: 'AmountError' object has no attribute 'amount'
-

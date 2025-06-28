@@ -6,8 +6,7 @@ def iterate_causes(
     *,
     self: bool = False,
 ) -> t.Generator[BaseException, None, None]:
-    """Returns iterator over all exception chain."""
-
+    """Return iterator over all exception chain."""
     if self:
         yield exc
     cause = exc.__cause__

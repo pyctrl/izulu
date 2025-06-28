@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-import _string  # type: ignore[import-not-found]
+import _string  # type: ignore[import-not-found]  # noqa: PLC2701
 import dataclasses
 import string
-import types
 import typing as t
+
+if t.TYPE_CHECKING:
+    import types
 
 _IZULU_ATTRS = {
     "__template__",

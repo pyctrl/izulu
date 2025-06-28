@@ -171,4 +171,3 @@ Examples:
 
     class AmountError(Error):
         __toggles__ = Toggles.DEFAULT ^ Toggles.FORBID_UNDECLARED_FIELDS
-

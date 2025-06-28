@@ -1070,4 +1070,3 @@ License
 
 This project is licensed under the X11 License (extended MIT) - see the
 `LICENSE <https://github.com/pyctrl/izulu/blob/main/LICENSE>`__ file for details
-
