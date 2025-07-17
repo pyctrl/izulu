@@ -11,4 +11,4 @@ def suppress(*excs: Exception) -> t.Generator[None, None, None]:
     try:
         yield
     except excs as e:
-        LOG.error("Error suppressed: %s", e)
+        _LOG.error("Error suppressed: %s", e)  # noqa: TRY400
