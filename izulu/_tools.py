@@ -1,8 +1,12 @@
 import contextlib
+import logging
+import typing as t
+
+_LOG = logging.getLogger(__name__)
 
 
 @contextlib.contextmanager
-def suppress(*excs: Exception):
+def suppress(*excs: Exception) -> t.Generator[None, None, None]:
     excs = excs or Exception
     try:
         yield
