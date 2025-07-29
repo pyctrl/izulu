@@ -85,7 +85,7 @@ def format_template(template: str, kwargs: t.Dict[str, t.Any]) -> str:
 
 def iter_fields(template: str) -> t.Generator[str, None, None]:
     # https://docs.python.org/3/library/string.html#format-string-syntax
-    for _, fn, _, _ in _FORMATTER.parse(template):
+    for _, fn, _, _ in _FORMATTER.parse(str(template)):
         if fn is not None:
             yield _string.formatter_field_name_split(fn)[0]
 
