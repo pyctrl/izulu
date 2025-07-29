@@ -268,7 +268,7 @@ class ReraisingMixin:
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ):
         """
-        Async Context Manager & Decorator to raise class exception over original.
+        Async version of `reraise`.
 
         Args:
             reraising: manual overriding reraising rules
