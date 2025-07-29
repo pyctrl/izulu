@@ -229,20 +229,11 @@ class ReraisingMixin:
         return None
 
     @classmethod
-    @contextlib.contextmanager
-    def reraise(
+    def _reraise(
         cls,
         reraising: _T_RERAISING = None,
         remap_kwargs: t.Optional[_T_KWARGS] = None,
     ) -> t.Generator[None, None, None]:
-        """
-        Context Manager & Decorator to raise class exception over original.
-
-        Args:
-            reraising: manual overriding reraising rules
-            remap_kwargs: provide kwargs for reraise exception
-
-        """
         try:
             yield
         except Exception as e:  # noqa: BLE001
@@ -259,6 +250,43 @@ class ReraisingMixin:
             raise  # noqa: PLE0704
 
         raise exc from orig
+
+    @classmethod
+    @contextlib.contextmanager
+    def reraise(  # type: ignore[no-untyped-def] # noqa: ANN206
+        cls,
+        reraising: _T_RERAISING = None,
+        remap_kwargs: t.Optional[_T_KWARGS] = None,
+    ):
+        """
+        Context Manager & Decorator to raise class exception over original.
+
+        Args:
+            reraising: manual overriding reraising rules
+            remap_kwargs: provide kwargs for reraise exception
+
+        """
+        return cls._reraise(reraising=reraising, remap_kwargs=remap_kwargs)
+
+    @classmethod
+    @contextlib.asynccontextmanager
+    async def async_reraise(  # type: ignore[no-untyped-def] # noqa: ANN206
+        cls,
+        reraising: _T_RERAISING = None,
+        remap_kwargs: t.Optional[_T_KWARGS] = None,
+    ):
+        """
+        Context Manager & Decorator to raise class exception over original.
+
+        Args:
+            reraising: manual overriding reraising rules
+            remap_kwargs: provide kwargs for reraise exception
+
+        """
+        for item in cls._reraise(
+            reraising=reraising, remap_kwargs=remap_kwargs
+        ):
+            yield item
 
 
 def skip(target: t.Type[Exception]) -> _T_RULE:
