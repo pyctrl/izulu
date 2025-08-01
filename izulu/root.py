@@ -32,19 +32,11 @@ else:
 FactoryReturnType = t.TypeVar("FactoryReturnType")
 
 
-def iterate_causes(
-    exc: BaseException,
-    *,
-    self: bool = False,
-) -> t.Generator[BaseException, None, None]:
-    """Return iterator over all exception chain."""
-    if self:
-        yield exc
-    cause = exc.__cause__
-    while cause is not None:
-        yield cause
-        exc = cause
-        cause = exc.__cause__
+class ErrorDumpDict(t.TypedDict):
+    type: str
+    reason: str
+    fields: t.Dict[str, t.Any] | None
+    details: t.Dict[t.Any, t.Any]
 
 
 @t.overload
@@ -156,7 +148,13 @@ class Error(Exception):
     )
 
     def __iter__(self) -> t.Iterator[BaseException]:
-        return iterate_causes(self, self=True)
+        """Return iterator over the whole exception chain."""
+        yield self
+        cause = self.__cause__
+        while cause is not None:
+            yield cause
+            exc = cause
+            cause = exc.__cause__
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
@@ -281,3 +279,37 @@ class Error(Exception):
             for field, const in self.__cls_store.consts.items():
                 d.setdefault(field, const)
         return d
+
+
+@t.overload
+def dump(exc: BaseException, /) -> ErrorDumpDict: ...
+
+
+@t.overload
+def dump(
+    exc: BaseException,
+    /,
+    *excs: BaseException,
+) -> t.Tuple[ErrorDumpDict, ...]: ...
+
+
+def dump(
+    exc: BaseException,
+    /,
+    *excs: BaseException,
+) -> t.Union[ErrorDumpDict, t.Tuple[ErrorDumpDict, ...]]:
+    fields = None
+    if isinstance(exc, Error):
+        fields = exc.as_dict(wide=True)
+
+    dumped: ErrorDumpDict = dict(
+        type=exc.__class__.__name__,
+        reason=str(exc),
+        fields=fields,
+        details={},
+    )
+
+    if excs:
+        return dumped, *(dump(e) for e in excs)
+
+    return dumped

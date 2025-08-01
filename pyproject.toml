@@ -204,42 +204,42 @@ exclude = ["docs", "tests", ".venv"]
 skip_install = true
 dependency_groups = ["build"]
 commands = [
- # [
- #   "rst_include",
- #   "include",
- #   "README.tpl.rst",
- #   "README.rst",
- # ],
- [
-   "python3",
-   "-m",
-   "build",
-   { replace = "posargs", extend = true },
- ],
- [
-   "python3",
-   "-m",
-   "twine",
-   "check",
-   { replace = "posargs", extend = true },
-   "dist{/}*",
- ],
+  # [
+  #   "rst_include",
+  #   "include",
+  #   "README.tpl.rst",
+  #   "README.rst",
+  # ],
+  [
+    "python3",
+    "-m",
+    "build",
+    { replace = "posargs", extend = true },
+  ],
+  [
+    "python3",
+    "-m",
+    "twine",
+    "check",
+    { replace = "posargs", extend = true },
+    "dist{/}*",
+  ],
 ]
 
 [tool.tox.env.upload_test]
 skip_install = true
 dependency_groups = ["upload"]
 commands = [
- [
-   "python3",
-   "-m",
-   "twine",
-   "upload",
-   { replace = "posargs", extend = true },
-   "--repository",
-   "{env:PYPI_REPOSITORY:testpypi}",
-   "dist{/}*",
- ],
+  [
+    "python3",
+    "-m",
+    "twine",
+    "upload",
+    { replace = "posargs", extend = true },
+    "--repository",
+    "{env:PYPI_REPOSITORY:testpypi}",
+    "dist{/}*",
+  ],
 ]
 
 [tool.tox.env.upload_prod]
