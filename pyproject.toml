@@ -3,7 +3,7 @@ name = "izulu"
 dynamic = ["version"]
 description = "The exceptional library"
 authors = [{ name = "Dima Burmistrov", email = "pyctrl.dev@gmail.com" }]
-license = { file = "LICENSE" }
+license-files = ["LICENSE"]
 readme = "README.rst"
 
 requires-python = ">=3.8"
