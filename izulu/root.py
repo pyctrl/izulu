@@ -149,12 +149,7 @@ class Error(Exception):
 
     def __iter__(self) -> t.Iterator[BaseException]:
         """Return iterator over the whole exception chain."""
-        yield self
-        cause = self.__cause__
-        while cause is not None:
-            yield cause
-            exc = cause
-            cause = exc.__cause__
+        return error_chain(self)
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
@@ -279,6 +274,14 @@ class Error(Exception):
             for field, const in self.__cls_store.consts.items():
                 d.setdefault(field, const)
         return d
+
+
+def error_chain(exc: BaseException) -> t.Generator[BaseException, None, None]:
+    """Return generator over the whole exception chain."""
+    yield exc
+    while exc.__cause__ is not None:
+        exc = exc.__cause__
+        yield exc
 
 
 @t.overload
