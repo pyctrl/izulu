@@ -8,6 +8,7 @@ import types
 import typing as t
 
 from izulu import _utils
+from izulu import tools
 
 _IMPORT_ERROR_TEXTS = (
     "",
@@ -30,13 +31,6 @@ else:
         raise
 
 FactoryReturnType = t.TypeVar("FactoryReturnType")
-
-
-class ErrorDumpDict(t.TypedDict):
-    type: str
-    reason: str
-    fields: t.Dict[str, t.Any] | None
-    details: t.Dict[t.Any, t.Any]
 
 
 @t.overload
@@ -119,7 +113,7 @@ class Error(Exception):
       - before: ``raise MyError(f"{smth} has happened at {datetime.now()}")``
       - after: ``raise MyError(smth=smth)``
 
-      Just provide ``__template__`` class attribute with your error message
+      Provide ``__template__`` class attribute with your error message
       template string. New style formatting is used:
 
       - ``str.format()``
@@ -149,7 +143,7 @@ class Error(Exception):
 
     def __iter__(self) -> t.Iterator[BaseException]:
         """Return iterator over the whole exception chain."""
-        return error_chain(self)
+        return tools.error_chain(self)
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
@@ -219,8 +213,8 @@ class Error(Exception):
         ``Exception`` constructor receiving the result of this hook.
 
         You can also do any other logic here. You will be provided with
-        complete set of prepared data from izulu. But it's recommended
-        to use classic OOP inheritance for ordinary behaviour extension.
+        a complete set of prepared data from izulu. But it's recommended
+        to use classic OOP inheritance for ordinary behavior extension.
 
         Args:
             store: dataclass containing inner error class specifications
@@ -250,7 +244,7 @@ class Error(Exception):
         return functools.partial(self.__class__, **self.as_dict()), tuple()
 
     def as_str(self) -> str:
-        """Represent error as exception type with message."""
+        """Represent error as an exception type with message."""
         return f"{self.__class__.__qualname__}: {self}"
 
     def as_kwargs(self) -> t.Dict[str, t.Any]:
@@ -274,45 +268,3 @@ class Error(Exception):
             for field, const in self.__cls_store.consts.items():
                 d.setdefault(field, const)
         return d
-
-
-def error_chain(exc: BaseException) -> t.Generator[BaseException, None, None]:
-    """Return generator over the whole exception chain."""
-    yield exc
-    while exc.__cause__ is not None:
-        exc = exc.__cause__
-        yield exc
-
-
-@t.overload
-def dump(exc: BaseException, /) -> ErrorDumpDict: ...
-
-
-@t.overload
-def dump(
-    exc: BaseException,
-    /,
-    *excs: BaseException,
-) -> t.Tuple[ErrorDumpDict, ...]: ...
-
-
-def dump(
-    exc: BaseException,
-    /,
-    *excs: BaseException,
-) -> t.Union[ErrorDumpDict, t.Tuple[ErrorDumpDict, ...]]:
-    fields = None
-    if isinstance(exc, Error):
-        fields = exc.as_dict(wide=True)
-
-    dumped: ErrorDumpDict = dict(
-        type=exc.__class__.__name__,
-        reason=str(exc),
-        fields=fields,
-        details={},
-    )
-
-    if excs:
-        return dumped, *(dump(e) for e in excs)
-
-    return dumped
