@@ -237,7 +237,9 @@ class Error(Exception):
             kwargs = {
                 k: copy.deepcopy(v, memo) for k, v in self.as_dict().items()
             }
-            memo[id_] = type(self)(**kwargs)
+            new = type(self)(**kwargs)
+            new.__cause__ = copy.deepcopy(self.__cause__, memo)
+            memo[id_] = new
         return t.cast("Error", memo[id_])
 
     def __reduce__(self) -> t.Tuple[t.Any, ...]:
