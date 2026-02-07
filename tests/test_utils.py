@@ -9,7 +9,7 @@ from tests import helpers as h
 
 count = 42
 owner = "somebody"
-dt = datetime.datetime.now(datetime.timezone.utc)
+dt = datetime.datetime.now(datetime.UTC)
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@ import pytest
 
 from tests import errors
 
-TS = datetime.datetime.now(datetime.timezone.utc)
+TS = datetime.datetime.now(datetime.UTC)
 
 
 @pytest.mark.parametrize(
