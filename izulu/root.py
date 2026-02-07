@@ -3,32 +3,11 @@ from __future__ import annotations
 import copy
 import enum
 import functools
-import logging
 import types
 import typing as t
 
 from izulu import _utils
 from izulu import tools
-
-_IMPORT_ERROR_TEXTS = (
-    "",
-    "You have early version of Python.",
-    "  Extra compatibility dependency required.",
-    "  Please add 'izulu[compatibility]' to your project dependencies.",
-    "",
-    "Pip: `pip install izulu[compatibility]`",
-)
-
-
-if hasattr(t, "dataclass_transform"):
-    t_ext = t
-else:
-    try:
-        import typing_extensions as t_ext  # type: ignore[no-redef]
-    except ImportError:
-        for message in _IMPORT_ERROR_TEXTS:
-            logging.error(message)  # noqa: LOG015,TRY400
-        raise
 
 FactoryReturnType = t.TypeVar("FactoryReturnType")
 
@@ -86,7 +65,7 @@ class Toggles(enum.Flag):
     )
 
 
-@t_ext.dataclass_transform(
+@t.dataclass_transform(
     eq_default=False,
     order_default=False,
     kw_only_default=True,

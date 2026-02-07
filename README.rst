@@ -13,15 +13,9 @@ izulu
 
 **Installation**
 
-For Python versions prior to 3.11 also install ``izulu[compatibility]``.
-
 ::
 
-    # py311 and higher
     pip install izulu
-
-    # py38-py310
-    pip install izulu izulu[compatibility]
 
 Presenting "izulu"
 ******************
@@ -56,9 +50,11 @@ With ``izulu`` you can forget about manual error message management all over the
 
     class ValidationError(Error):
         __template__ = "Data is invalid: {reason}"
+        reason: str
 
     class AmountValidationError(ValidationError):
         __template__ = "Invalid amount: {amount}"
+        amount: int
 
 
     if not data:
@@ -88,6 +84,7 @@ Neat #2: Attribute errors with useful fields
 
     class AmountValidationError(ValidationError):
         __template__ = "Data is invalid: {reason} ({amount})"
+        reason: str
         amount: int
 
 
@@ -146,6 +143,8 @@ Let's start with defining our initial error class (exception)
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
+        owner: str
+        count: int
 
 
     print(MyError(count=10, owner="me"))
@@ -169,6 +168,7 @@ Move on and improve our class with attributes
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
         count: int
+        owner: str
         timestamp: datetime
 
     e = MyError(count=10, owner="me", timestamp=datetime.now())
@@ -252,7 +252,7 @@ Specifications
 
   * template may contain *"fields"* for substitution from ``kwargs`` and *"defaults"* to produce final error message
 
-* ``__features__`` class attribute defines constraints and behaviour (see "Features" section below)
+* ``__toggles__`` class attribute defines constraints and behaviour (see "Toggles" section below)
 
   * by default all constraints are enabled
 
@@ -299,12 +299,12 @@ Mechanics
     class AmountError(Error):
         pass
 
-* **optionally** behaviour can be adjusted with ``__features__`` (not recommended)
+* **optionally** behaviour can be adjusted with ``__toggles__`` (not recommended)
 
 .. code-block:: python
 
     class AmountError(Error):
-        __features__ = Features.DEFAULT ^ Features.FORBID_UNDECLARED_FIELDS
+        __toggles__ = Toggles.DEFAULT ^ Toggles.FORBID_UNDECLARED_FIELDS
 
 * you should provide a template for the target error message with ``__template__``
 
@@ -548,14 +548,14 @@ Mechanics
 Features
 ========
 
-The ``izulu`` error class behaviour is controlled by ``__features__`` class attribute.
+The ``izulu`` error class behaviour is controlled by ``__toggles__`` class attribute.
 
 (For details about "runtime" and "class definition" stages
 see **Validation and behavior in case of problems** below)
 
 
-Supported features
-------------------
+Supported toggles
+-----------------
 
 * ``FORBID_MISSING_FIELDS``: checks provided ``kwargs`` contain data for all template *"fields"*
   and *"instance attributes"* that have no *"defaults"*
@@ -574,6 +574,7 @@ Supported features
 
     class AmountError(Error):
         __template__ = "Some {amount} of money for {client_id} client"
+        amount: int
         client_id: int
 
     # I. enabled
@@ -581,7 +582,7 @@ Supported features
     # TypeError: Missing arguments: client_id, amount
 
     # II. disabled
-    AmountError.__features__ ^= Features.FORBID_MISSING_FIELDS
+    AmountError.__toggles__ ^= Toggles.FORBID_MISSING_FIELDS
 
     AmountError()
     # ValueError: Failed to format template with provided kwargs:
@@ -607,7 +608,7 @@ Supported features
     # Undeclared arguments: unknown_data
 
     # II. disabled
-    MyError.__features__ ^= Features.FORBID_UNDECLARED_FIELDS
+    MyError.__toggles__ ^= Toggles.FORBID_UNDECLARED_FIELDS
     err = MyError(unknown_data="data")
 
     print(err)
@@ -639,7 +640,7 @@ Supported features
     # TypeError: Constants in arguments: _TYPE
 
     # II. disabled
-    MyError.__features__ ^= Features.FORBID_KWARG_CONSTS
+    MyError.__toggles__ ^= Toggles.FORBID_KWARG_CONSTS
     err = MyError(_TYPE="SOME_ERROR_TYPE")
 
     print(err)
@@ -672,7 +673,7 @@ Supported features
     # TypeError: Constants in arguments: _TYPE
 
     # II. disabled
-    MyError.__features__ ^= Features.FORBID_KWARG_CONSTS
+    MyError.__toggles__ ^= Toggles.FORBID_KWARG_CONSTS
     err = MyError(_TYPE="SOME_ERROR_TYPE")
 
     print(err)
@@ -683,10 +684,10 @@ Supported features
     # AttributeError: 'MyError' object has no attribute '_TYPE'
 
 
-Tuning ``__features__``
+Tuning ``__toggles__``
 -----------------------
 
-Features are represented as *"Flag Enum"*, so you can use regular operations
+Toggles are represented as *"Flag Enum"*, so you can use regular operations
 to configure desired behaviour.
 Examples:
 
@@ -695,28 +696,28 @@ Examples:
 .. code-block:: python
 
     class AmountError(Error):
-        __features__ = Features.FORBID_MISSING_FIELDS
+        __toggles__ = Toggles.FORBID_MISSING_FIELDS
 
 * Use presets
 
 .. code-block:: python
 
     class AmountError(Error):
-        __features__ = Features.NONE
+        __toggles__ = Toggles.NONE
 
-* Combining wanted features:
-
-.. code-block:: python
-
-    class AmountError(Error):
-        __features__ = Features.FORBID_MISSING_FIELDS | Features.FORBID_KWARG_CONSTS
-
-* Discarding unwanted feature from default feature set:
+* Combining wanted toggles:
 
 .. code-block:: python
 
     class AmountError(Error):
-        __features__ = Features.DEFAULT ^ Features.FORBID_UNDECLARED_FIELDS
+        __toggles__ = Toggles.FORBID_MISSING_FIELDS | Toggles.FORBID_KWARG_CONSTS
+
+* Discarding unwanted toggle from default toggle set:
+
+.. code-block:: python
+
+    class AmountError(Error):
+        __toggles__ = Toggles.DEFAULT ^ Toggles.FORBID_UNDECLARED_FIELDS
 
 Validation and behavior in case of problems
 ===========================================
@@ -731,9 +732,9 @@ Some exceptions are *raised from* original exception (e.g. template formatting i
 so you can check ``e.__cause__`` and traceback output for details.
 
 
-The validation behavior depends on the set of enabled features.
-Changing feature set may cause different and raw exceptions being raised.
-Read and understand **"Features"** section to predict and experiment with different situations and behaviours.
+The validation behavior depends on the set of enabled toggles.
+Changing toggle set may cause different and raw exceptions being raised.
+Read and understand **"Toggles"** section to predict and experiment with different situations and behaviours.
 
 
 ``izulu`` has **2 validation stages:**
@@ -754,7 +755,7 @@ Read and understand **"Features"** section to predict and experiment with differ
       class MyError(Error):
           pass
 
-  * class attributes ``__template__`` and ``__features__`` are validated
+  * class attributes ``__template__`` and ``__toggles__`` are validated
 
     .. code-block:: python
 
@@ -771,12 +772,13 @@ Read and understand **"Features"** section to predict and experiment with differ
 
       root.Error()
 
-  * ``kwargs`` are validated according to enabled features
+  * ``kwargs`` are validated according to enabled toggles
 
     .. code-block:: python
 
       class MyError(Error):
           __template__ = "Hello {name}"
+          name: str
 
       MyError()
       # TypeError: Missing arguments: 'name'
@@ -912,10 +914,12 @@ But it should not be need in 99,9% cases. Avoid it, please.
 
 .. code-block:: python
 
-    def _hook(self,
-              store: _utils.Store,
-              kwargs: dict[str, t.Any],
-              msg: str) -> str:
+    def _override_message(
+        self,
+        store: _utils.Store,  # noqa: ARG002
+        kwargs: t.Dict[str, t.Any],  # noqa: ARG002
+        msg: str,
+    ) -> str:
         """Adapter method to wedge user logic into izulu machinery
 
         This is the place to override message/formatting if regular mechanics
@@ -945,11 +949,13 @@ Recipes & Tips
 
     # intermediate class to centrally control the default behaviour
     class BaseError(Error):  # <-- inherit from this in your code (not directly from ``izulu``)
-        __features__ = Features.None
+        __toggles__ = Toggles.None
 
 
     class MyRealError(BaseError):
         __template__ = "Having count={count} for owner={owner}"
+        owner: str
+        count: int
 
 
 2. factories
@@ -994,6 +1000,8 @@ TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
 
     class MyError(Error):
         __template__ = "Having count={count} for owner={owner}"
+        owner: str
+        count: int
 
         def __make_duration(self) -> timedelta:
             kwargs = self.as_kwargs()
@@ -1025,6 +1033,8 @@ TODO: self=True / self.as_kwargs()  (as_dict forbidden? - recursion)
 
     class MyRealError(BaseError):
         __template__ = "Having count={count} for owner={owner}"
+        owner: str
+        count: int
 
 
 Additional examples
@@ -1035,17 +1045,48 @@ TBD
 For developers
 **************
 
-* Use regular virtualenv or any other (no pre-defined preparations provided)
+1. Install required tools
 
-* Running tests::
+   * `uv <https://docs.astral.sh/uv/>`__ (manually)
+   * `Taplo <https://taplo.tamasfe.dev/>`__ (manually)
+   * `Tox <https://tox.wiki/en/stable/>`__
 
-    tox
+     .. code-block:: shell
 
-* Building package::
+        uv tool install tox --with tox-uv
 
-    tox -e build
+2. Clone `repository <https://github.com/pyctrl/izulu>`__
 
-* Contributing: contact me through `Issues <https://github.com/pyctrl/izulu/issues>`__
+3. Initialize developer's environment
+
+   .. code-block:: shell
+
+       uv sync
+       tox run -e init
+
+4. Run tests
+
+   .. code-block:: shell
+
+       # run only mypy env
+       tox run -e lint-mypy
+
+       # run all linting envs (labeled)
+       tox run -m lint
+
+       # run only ruff formatting env
+       tox run -e fmt-py
+
+       # run all formatting envs (labeled)
+       tox run -m fmt
+
+       # list all envs
+       tox list
+
+       # run all envs
+       tox run
+
+5. Contributing — start from opening an `issue <https://github.com/pyctrl/izulu/issues>`__
 
 
 Versioning
