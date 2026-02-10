@@ -80,7 +80,7 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py39"
 line-length = 79
 extend-exclude = [".git", ".venv", "docs"]
 
@@ -253,6 +253,8 @@ requires = ["tox>=4.23", "tox-uv>=1.13"]
 runner = "uv-venv-lock-runner"
 skip_missing_interpreters = true
 env_list = [
+  "py39",
+  "py310",
   "py311",
   "py312",
   "py313",
