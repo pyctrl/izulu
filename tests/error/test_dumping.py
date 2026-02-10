@@ -7,7 +7,7 @@ import pytest
 from izulu import root
 from tests import errors
 
-TS = datetime.datetime.now(datetime.UTC)
+TS = datetime.datetime.now(datetime.timezone.utc)
 
 
 @pytest.mark.parametrize(

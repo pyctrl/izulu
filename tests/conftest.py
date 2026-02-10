@@ -7,7 +7,7 @@ from tests import errors
 
 @pytest.fixture
 def derived_error():
-    ts = datetime.datetime.now(datetime.UTC)
+    ts = datetime.datetime.now(datetime.timezone.utc)
     return errors.DerivedError(
         name="John",
         surname="Brown",
