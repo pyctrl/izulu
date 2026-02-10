@@ -18,6 +18,14 @@ _IZULU_ATTRS = {
 _FORMATTER = string.Formatter()
 
 
+def collect_annotations(cls: type) -> dict[str, t.Any]:
+    merged: dict[str, t.Any] = {}
+    for base in reversed(cls.__mro__):
+        if base is not object:
+            merged.update(getattr(base, "__annotations__", {}))
+    return merged
+
+
 # TODO(d.burmistrov): dataclass options
 @dataclasses.dataclass
 class Store:
@@ -96,7 +104,7 @@ def split_cls_hints(
     const_hints: t.Dict[str, type] = {}
     inst_hints: t.Dict[str, type] = {}
 
-    for k, v in t.get_type_hints(cls).items():
+    for k, v in collect_annotations(cls).items():
         if k in _IZULU_ATTRS:
             continue
         if t.get_origin(v) is t.ClassVar:
