@@ -48,8 +48,8 @@ Features
 
 .. include:: docs/source/user/recipes.rst
 
-.. include:: docs/source/contributors.rst
-   :start-line: 3
+.. include:: docs/source/dev/index.rst
+   :start-line: 6
 
 
 Authors

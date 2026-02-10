@@ -1,9 +1,30 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 import typing as t
 
 from izulu import _utils
+
+_IMPORT_ERROR_TEXTS = (
+    "",
+    "You have early version of Python.",
+    "  Extra compatibility dependency required.",
+    "  Please add 'izulu[compatibility]' to your project dependencies.",
+    "",
+    "Pip: `pip install izulu[compatibility]`",
+)
+
+
+if hasattr(t, "dataclass_transform"):
+    t_ext = t
+else:
+    try:
+        import typing_extensions as t_ext  # type: ignore[no-redef]
+    except ImportError:
+        for message in _IMPORT_ERROR_TEXTS:
+            logging.error(message)  # noqa: LOG015,TRY400
+        raise
 
 _T_KWARGS = t.Dict[str, t.Any]
 _T_EXC_CLASS_OR_TUPLE = t.Union[
@@ -33,7 +54,7 @@ _T_COMPILED_RULES = t.Union[
 
 _MISSING = object()
 
-DecParam = t.ParamSpec("DecParam")
+DecParam = t_ext.ParamSpec("DecParam")
 DecReturnType = t.TypeVar("DecReturnType")
 
 
@@ -85,7 +106,7 @@ class ReraisingMixin:
                 return None
 
         # TODO(d.burmistrov): temporary ignore
-        elif action is t.Self:  # type: ignore[comparison-overlap]
+        elif action is t_ext.Self:  # type: ignore[comparison-overlap]
 
             def compiled_action(
                 orig: Exception,  # noqa: ARG001
@@ -266,7 +287,7 @@ def catch(
     target: t.Type[Exception] = Exception,
     *,
     exclude: t.Optional[t.Type[Exception]] = None,
-    new: t.Any = t.Self,  # noqa: ANN401
+    new: t.Any = t_ext.Self,  # noqa: ANN401
 ) -> _T_RULE:
     rule = (target, new)
     if exclude:
