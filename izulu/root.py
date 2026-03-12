@@ -141,10 +141,6 @@ class Error(Exception):
         defaults=frozenset(),
     )
 
-    def __iter__(self) -> t.Iterator[BaseException]:
-        """Return iterator over the whole exception chain."""
-        return tools.error_chain(self)
-
     def __init_subclass__(cls, **kwargs: t.Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
         fields = frozenset(_utils.iter_fields(cls.__template__))
@@ -171,6 +167,31 @@ class Error(Exception):
         msg = self.__process_template(self.as_dict())
         msg = self._override_message(self.__cls_store, kwargs, msg)
         super().__init__(msg)
+
+    def __iter__(self) -> t.Iterator[BaseException]:
+        """Return iterator over the whole exception chain."""
+        return tools.error_chain(self)
+
+    def __reduce__(self) -> t.Tuple[t.Any, ...]:
+        return functools.partial(self.__class__, **self.as_dict()), tuple()
+
+    def __copy__(self) -> Error:
+        return type(self)(**self.as_dict())
+
+    def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> Error:
+        id_ = id(self)
+        if id_ not in memo:
+            kwargs = {
+                k: copy.deepcopy(v, memo) for k, v in self.as_dict().items()
+            }
+            new = type(self)(**kwargs)
+            new.__cause__ = copy.deepcopy(self.__cause__, memo)
+            memo[id_] = new
+        return t.cast("Error", memo[id_])
+
+    def __repr__(self) -> str:
+        kwargs = _utils.join_kwargs(**self.as_dict())
+        return f"{self.__module__}.{self.__class__.__qualname__}({kwargs})"
 
     def __process_toggles(self) -> None:
         """Trigger toggles."""
@@ -223,27 +244,6 @@ class Error(Exception):
 
         """
         return msg
-
-    def __repr__(self) -> str:
-        kwargs = _utils.join_kwargs(**self.as_dict())
-        return f"{self.__module__}.{self.__class__.__qualname__}({kwargs})"
-
-    def __copy__(self) -> Error:
-        return type(self)(**self.as_dict())
-
-    def __deepcopy__(self, memo: t.Dict[int, t.Any]) -> Error:
-        id_ = id(self)
-        if id_ not in memo:
-            kwargs = {
-                k: copy.deepcopy(v, memo) for k, v in self.as_dict().items()
-            }
-            new = type(self)(**kwargs)
-            new.__cause__ = copy.deepcopy(self.__cause__, memo)
-            memo[id_] = new
-        return t.cast("Error", memo[id_])
-
-    def __reduce__(self) -> t.Tuple[t.Any, ...]:
-        return functools.partial(self.__class__, **self.as_dict()), tuple()
 
     def as_str(self) -> str:
         """Represent error as an exception type with message."""
