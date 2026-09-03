@@ -295,6 +295,23 @@ def catch(
     return (rule,)
 
 
+# TODO: async?
+@contextlib.contextmanager
+def add_note(
+    note: str,
+    *,
+    target: t.Type[Exception] = Exception,
+    exclude: t.Optional[t.Type[Exception]] = None,
+):
+    try:
+        yield
+    except target as exc:
+        if exclude and isinstance(exc, exclude):
+            raise
+        exc.add_note(note)
+        raise
+
+
 class chain:  # noqa: N801
     def __init__(self, kls: ReraisingMixin, *klasses: ReraisingMixin) -> None:
         self._klasses = (kls, *klasses)
